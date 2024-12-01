@@ -4,7 +4,7 @@ using MatchPoint.Api.Shared.Models;
 
 namespace MatchPoint.ClubService.Entities
 {
-    public class ClubEntity : ITrackable, IAuditable, IAddressable, IDeactivable
+    public class ClubEntity : ITrackable, IAuditable, IAddressable, IDeactivable, IPatchable
     {
         public Guid Id { get; set; }
         public required string Email { get; set; }
