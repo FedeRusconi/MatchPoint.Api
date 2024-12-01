@@ -1,0 +1,6 @@
+@MatchPoint.ClubService_HostAddress = http://localhost:5004
+
+GET {{MatchPoint.ClubService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
