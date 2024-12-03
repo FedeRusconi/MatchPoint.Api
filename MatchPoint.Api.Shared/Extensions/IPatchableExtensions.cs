@@ -15,10 +15,10 @@ namespace MatchPoint.Api.Shared.Extensions
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="InvalidCastException"></exception>
-        public static void Patch(this IPatchable entity, IEnumerable<PropertyUpdate> updates)
+        public static IPatchable Patch(this IPatchable entity, IEnumerable<PropertyUpdate> updates)
         {
             ArgumentNullException.ThrowIfNull(entity, nameof(entity));
-            ArgumentNullException.ThrowIfNull(entity, nameof(updates));
+            ArgumentNullException.ThrowIfNull(updates, nameof(updates));
 
             // Get the type of the entity
             var entityType = entity.GetType();
@@ -33,7 +33,7 @@ namespace MatchPoint.Api.Shared.Extensions
                 if (patchProperty.Value == null)
                 {
                     // Check to see if the property is not nullable 
-                    if (Nullable.GetUnderlyingType(propertyInfo.PropertyType) == null)
+                    if (!propertyInfo.IsNullable())
                     {
                         throw new InvalidOperationException($"Non-nullable property {patchProperty.Property} received as null and cannot be updated.");
                     }
@@ -90,6 +90,8 @@ namespace MatchPoint.Api.Shared.Extensions
                     propertyInfo.SetValue(entity, parameters[1]);
                 }
             }
+
+            return entity;
         }
     }
 }

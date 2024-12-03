@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using MatchPoint.Api.Shared.Enums;
 using MatchPoint.Api.Shared.Models;
 using MatchPoint.ClubService.Entities;
 
@@ -73,6 +74,17 @@ namespace MatchPoint.ClubService.Tests.Integration.Helpers
         public ClubEntityBuilder WithAddress(Address address)
         {
             _entity.Address = address;
+            return this;
+        }
+
+        /// <summary>
+        /// Set a specific ActiveStatus to the <see cref="ClubEntity"/>.
+        /// </summary>
+        /// <param name="activeStatus"> The <see cref="ActiveStatus"/> to use. </param>
+        /// <returns> This <see cref="ClubEntityBuilder"/>. </returns>
+        public ClubEntityBuilder WithActiveStatus(ActiveStatus activeStatus)
+        {
+            _entity.ActiveStatus = activeStatus;
             return this;
         }
 

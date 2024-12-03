@@ -1,6 +1,7 @@
-﻿using MatchPoint.Api.Shared.Models;
+﻿using MatchPoint.Api.Shared.Enums;
+using MatchPoint.Api.Shared.Exceptions;
+using MatchPoint.Api.Shared.Models;
 using MatchPoint.ClubService.Entities;
-using MatchPoint.ClubService.Exceptions;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
 using MatchPoint.ClubService.Interfaces;
@@ -67,19 +68,211 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         [TestMethod]
-        public async Task GetByIdAsync_WhenIdDoesNotExist_ShouldReturnNull()
+        public async Task GetByIdAsync_WhenIdDoesNotExist_ShouldThrowthrowEntityNotFoundException()
         {
             #region Arrange
             Guid clubId = Guid.NewGuid();
             #endregion
 
             #region Act
-            var result = await _clubRepository.GetByIdAsync(clubId);
+            await Assert.ThrowsExceptionAsync<EntityNotFoundException>(() => _clubRepository.GetByIdAsync(clubId));
             #endregion
+        }
 
-            #region Assert
-            Assert.IsNull(result);
-            #endregion
+        #endregion
+        #region GetAllWithSpecificationAsync
+
+        [TestMethod]
+        public async Task GetAllWithSpecificationAsync_WithValidFilters_ShouldReturnFilteredClubs()
+        {
+            #region Arrange
+            var searchName = "Integration Testing Club";
+            var searchStatus = ActiveStatus.Active;
+            var clubEntity1 = _clubEntityBuilder
+                .WithName(searchName)
+                .WithActiveStatus(searchStatus)
+                .Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity2 = _clubEntityBuilder
+                .WithName(searchName)
+                .WithActiveStatus(ActiveStatus.Inactive)
+                .Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity3 = _clubEntityBuilder
+                .WithName("Should not be found")
+                .WithActiveStatus(searchStatus)
+                .Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity4 = _clubEntityBuilder
+                .WithName(searchName)
+                .WithActiveStatus(searchStatus)
+                .Build();
+
+            Dictionary<string, object> filters = new()
+            {
+                { nameof(ClubEntity.Name), searchName},
+                { nameof(ClubEntity.ActiveStatus), searchStatus }
+            };
+
+            try
+            {
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                clubEntity3 = await _clubRepository.CreateAsync(clubEntity3);
+                clubEntity4 = await _clubRepository.CreateAsync(clubEntity4);
+                #endregion
+
+                #region Act
+                var result = await _clubRepository.GetAllWithSpecificationAsync(
+                    filters: filters);
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(2, result.Data.Count());
+                Assert.AreEqual(2, result.TotalCount);
+                Assert.IsTrue(result.Data.All(c => c.Name == searchName && c.ActiveStatus == searchStatus));
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                await _clubRepository.DeleteAsync(clubEntity1.Id);
+                await _clubRepository.DeleteAsync(clubEntity2.Id);
+                await _clubRepository.DeleteAsync(clubEntity3.Id);
+                await _clubRepository.DeleteAsync(clubEntity4.Id);
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task GetAllWithSpecificationAsync_WithValidOrderingAscending_ShouldReturnOrderedClubs()
+        {
+            #region Arrange
+            KeyValuePair<string, SortDirection> orderBy = new(nameof(ClubEntity.Name), SortDirection.Ascending);
+            var clubEntity1 = _clubEntityBuilder
+                .WithName("Integration Testing Club")
+                .Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity2 = _clubEntityBuilder
+                .WithName("Another. This should come first.")
+                .Build();
+
+            try
+            {
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                #endregion
+
+                #region Act
+                var result = await _clubRepository.GetAllWithSpecificationAsync(
+                    orderBy: orderBy);
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(2, result.Data.Count());
+                Assert.AreEqual(2, result.TotalCount);
+                Assert.IsTrue(result.Data.First().Name == clubEntity2.Name);
+                Assert.IsTrue(result.Data.ElementAt(1).Name == clubEntity1.Name);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                await _clubRepository.DeleteAsync(clubEntity1.Id);
+                await _clubRepository.DeleteAsync(clubEntity2.Id);
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task GetAllWithSpecificationAsync_WithValidOrderingDescending_ShouldReturnOrderedClubs()
+        {
+            #region Arrange
+            KeyValuePair<string, SortDirection> orderBy = new(nameof(ClubEntity.Name), SortDirection.Descending);
+            var clubEntity1 = _clubEntityBuilder
+                .WithName("Integration Testing Club")
+                .Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity2 = _clubEntityBuilder
+                .WithName("Another. This should come last.")
+                .Build();
+
+            try
+            {
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                #endregion
+
+                #region Act
+                var result = await _clubRepository.GetAllWithSpecificationAsync(
+                    orderBy: orderBy);
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(2, result.Data.Count());
+                Assert.AreEqual(2, result.TotalCount);
+                Assert.IsTrue(result.Data.First().Name == clubEntity1.Name);
+                Assert.IsTrue(result.Data.ElementAt(1).Name == clubEntity2.Name);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                await _clubRepository.DeleteAsync(clubEntity1.Id);
+                await _clubRepository.DeleteAsync(clubEntity2.Id);
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task GetAllWithSpecificationAsync_WithValidPaging_ShouldReturnPagedClubs()
+        {
+            #region Arrange
+            int pageSize = 1;
+            int currentPage = 2;
+            var clubEntity1 = _clubEntityBuilder
+                .WithName("Integration Testing Club")
+                .Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity2 = _clubEntityBuilder
+                .WithName("Integration Testing Club")
+                .Build();
+
+            try
+            {
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                #endregion
+
+                #region Act
+                var result = await _clubRepository.GetAllWithSpecificationAsync(
+                    pageNumber: currentPage, pageSize: pageSize);
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(1, result.Data.Count());
+                Assert.AreEqual(2, result.TotalCount);
+                Assert.AreEqual(2, result.TotalPages);
+                Assert.AreEqual(2, result.CurrentPage);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                await _clubRepository.DeleteAsync(clubEntity1.Id);
+                await _clubRepository.DeleteAsync(clubEntity2.Id);
+                #endregion
+            }
         }
 
         #endregion
@@ -187,7 +380,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         [TestMethod]
-        public async Task CreateAsync_WhenClubExistsAlready_ShouldThrowInvalidOperationException()
+        public async Task CreateAsync_WhenClubExistsAlready_ShouldThrowDuplicateEntityException()
         {
             #region Arrange
             var clubEntity = _clubEntityBuilder
@@ -202,7 +395,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             try
             {
                 #region Act
-                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => _clubRepository.CreateAsync(clubEntity));
+                await Assert.ThrowsExceptionAsync<DuplicateEntityException>(() => _clubRepository.CreateAsync(clubEntity));
                 #endregion
             }
             finally
