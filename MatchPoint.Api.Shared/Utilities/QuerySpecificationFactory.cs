@@ -14,7 +14,7 @@ namespace MatchPoint.Api.Shared.Utilities
             if (filters.Count == 0) throw new ArgumentException("Param 'filters' must have at least one entry."); 
 
             Expression<Func<T, bool>> filtersExpression = null!;
-            var parameter = Expression.Parameter(typeof(T), "param");
+            var parameter = Expression.Parameter(typeof(T), "entity");
 
             foreach (var filter in filters)
             {
@@ -32,7 +32,8 @@ namespace MatchPoint.Api.Shared.Utilities
                 // If there are existing criteria, add them with a logical AND.
                 else
                 {
-                    filtersExpression = Expression.Lambda<Func<T, bool>>(Expression.AndAlso(filtersExpression.Body, equalExpression), parameter);
+                    filtersExpression = Expression.Lambda<Func<T, bool>>(
+                        Expression.AndAlso(filtersExpression.Body, equalExpression), parameter);
                 }
             }
 
@@ -46,10 +47,13 @@ namespace MatchPoint.Api.Shared.Utilities
         /// <returns> An <see cref="Expression"/> ready to be used in a OrderBy clause for filtering. </returns>
         public static Expression<Func<T, object>> CreateOrderBy(string propertyName)
         {
+            ArgumentNullException.ThrowIfNull(propertyName);
+
             var parameter = Expression.Parameter(typeof(T), "entity");
             var propertyExpression = Expression.Property(parameter, propertyName);
             return Expression.Lambda<Func<T, object>>(
-                Expression.Convert(propertyExpression, typeof(object)), parameter);
+                Expression.Convert(propertyExpression, typeof(object)), 
+                parameter);
         }
     }
 }

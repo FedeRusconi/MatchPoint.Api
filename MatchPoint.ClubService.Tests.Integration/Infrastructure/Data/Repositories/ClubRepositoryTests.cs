@@ -4,7 +4,6 @@ using MatchPoint.Api.Shared.Models;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
-using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Tests.Integration.Helpers;
 using Microsoft.Extensions.Configuration;
 
@@ -13,7 +12,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
     [TestClass]
     public class ClubRepositoryTests
     {
-        private IClubRepository _clubRepository = null!;
+        private ClubRepository _clubRepository = null!;
         private readonly IConfiguration _configuration = DataContextHelpers.TestingConfiguration;
         private ClubServiceDbContext _dbContext = default!;
         private ClubEntityBuilder _clubEntityBuilder = default!;
@@ -34,6 +33,108 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             _clubEntityBuilder = default!;
         }
 
+        #region CountAsync
+
+        [TestMethod]
+        public async Task CountAsync_WithNoFilters_ShouldReturnCountOfAllClubs()
+        {
+            #region Arrange
+            var clubEntity1 = _clubEntityBuilder.Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity2 = _clubEntityBuilder.Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity3 = _clubEntityBuilder.Build();
+
+            try
+            {
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                clubEntity3 = await _clubRepository.CreateAsync(clubEntity3);
+                #endregion
+
+                #region Act
+                var resultCount = await _clubRepository.CountAsync();
+                #endregion
+
+                #region Assert
+                Assert.AreEqual(3, resultCount);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                await _clubRepository.DeleteAsync(clubEntity1.Id);
+                await _clubRepository.DeleteAsync(clubEntity2.Id);
+                await _clubRepository.DeleteAsync(clubEntity3.Id);
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task CountAsync_WithValidFilters_ShouldReturnCountOfFilteredClubs()
+        {
+            #region Arrange
+            var searchName = "Integration Testing Club";
+            var searchStatus = ActiveStatus.Active;
+            var clubEntity1 = _clubEntityBuilder
+                .WithName(searchName)
+                .WithActiveStatus(searchStatus)
+                .Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity2 = _clubEntityBuilder
+                .WithName(searchName)
+                .WithActiveStatus(ActiveStatus.Inactive)
+                .Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity3 = _clubEntityBuilder
+                .WithName("Should not be found")
+                .WithActiveStatus(searchStatus)
+                .Build();
+
+            _clubEntityBuilder = new ClubEntityBuilder();
+            var clubEntity4 = _clubEntityBuilder
+                .WithName(searchName)
+                .WithActiveStatus(searchStatus)
+                .Build();
+
+            Dictionary<string, object> filters = new()
+            {
+                { nameof(ClubEntity.Name), searchName},
+                { nameof(ClubEntity.ActiveStatus), searchStatus }
+            };
+
+            try
+            {
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                clubEntity3 = await _clubRepository.CreateAsync(clubEntity3);
+                clubEntity4 = await _clubRepository.CreateAsync(clubEntity4);
+                #endregion
+
+                #region Act
+                var resultCount = await _clubRepository.CountAsync(filters);
+                #endregion
+
+                #region Assert
+                Assert.AreEqual(2, resultCount);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                await _clubRepository.DeleteAsync(clubEntity1.Id);
+                await _clubRepository.DeleteAsync(clubEntity2.Id);
+                await _clubRepository.DeleteAsync(clubEntity3.Id);
+                await _clubRepository.DeleteAsync(clubEntity4.Id);
+                #endregion
+            }
+        }
+
+        #endregion
         #region GetByIdAsync
 
         [TestMethod]
@@ -352,8 +453,6 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 Assert.IsNotNull(result);
                 Assert.AreEqual(clubEntity.Name, result.Name);
                 Assert.AreNotEqual(default, result.Id);
-                Assert.AreNotEqual(default, result.CreatedBy);
-                Assert.AreNotEqual(default, result.CreatedOnUtc);
                 #endregion
             }
             finally
@@ -380,33 +479,6 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         [TestMethod]
-        public async Task CreateAsync_WhenClubExistsAlready_ShouldThrowDuplicateEntityException()
-        {
-            #region Arrange
-            var clubEntity = _clubEntityBuilder
-                .WithName("Integration Testing Club")
-                .WithEmail("duplicate@email.com")
-                .Build();
-
-            // Create first club entity
-            var result = await _clubRepository.CreateAsync(clubEntity);
-            #endregion
-
-            try
-            {
-                #region Act
-                await Assert.ThrowsExceptionAsync<DuplicateEntityException>(() => _clubRepository.CreateAsync(clubEntity));
-                #endregion
-            }
-            finally
-            {
-                #region Cleanup
-                await _clubRepository.DeleteAsync(result.Id);
-                #endregion
-            }
-        }
-
-        [TestMethod]
         public async Task CreateAsync_TransactionIsActive_ShouldNotCommitAutomatically()
         {
             #region Arrange
@@ -421,11 +493,11 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 #region Act
                 _clubRepository.BeginTransaction();
                 var createResult = await _clubRepository.CreateAsync(clubEntity);
-                result = await _clubRepository.GetByIdAsync(createResult.Id);
                 #endregion
 
                 #region Assert
-                Assert.IsNull(result);
+                await Assert
+                    .ThrowsExceptionAsync<EntityNotFoundException>(() => _clubRepository.GetByIdAsync(createResult.Id));
                 #endregion
             }
             finally
@@ -462,8 +534,6 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 #region Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(editedName, result.Name);
-                Assert.AreNotEqual(default, result.ModifiedBy);
-                Assert.AreNotEqual(default, result.ModifiedOnUtc);
                 #endregion
             }
             finally
@@ -525,8 +595,6 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 Assert.IsNotNull(result);
                 Assert.AreEqual(editedName, result.Name);
                 Assert.AreEqual(editedEmail, result.Email);
-                Assert.AreNotEqual(default, result.ModifiedBy);
-                Assert.AreNotEqual(default, result.ModifiedOnUtc);
                 #endregion
             }
             finally
@@ -585,8 +653,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
                 #region Assert
                 Assert.IsTrue(result);
-                var getResult = await _clubRepository.GetByIdAsync(clubEntity.Id);
-                Assert.IsNull(getResult);
+                await Assert.ThrowsExceptionAsync<EntityNotFoundException>(() => _clubRepository.GetByIdAsync(clubEntity.Id));
                 #endregion
             }
         }

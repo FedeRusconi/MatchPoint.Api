@@ -1,17 +1,31 @@
 ﻿using MatchPoint.Api.Shared.Enums;
 using MatchPoint.Api.Shared.Exceptions;
 using MatchPoint.Api.Shared.Extensions;
+using MatchPoint.Api.Shared.Interfaces;
 using MatchPoint.Api.Shared.Models;
 using MatchPoint.Api.Shared.Repositories;
 using MatchPoint.Api.Shared.Utilities;
 using MatchPoint.ClubService.Entities;
-using MatchPoint.ClubService.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
 {
-    public class ClubRepository(ClubServiceDbContext _context) : RepositoryBase(_context), IClubRepository
+    public class ClubRepository(ClubServiceDbContext _context) : RepositoryBase(_context), IRepository<ClubEntity>
     {
+        /// <inheritdoc />
+        public async Task<int> CountAsync(Dictionary<string, object>? filters = null)
+        {
+            IQueryable<ClubEntity> query = _context.Clubs.AsNoTracking();
+
+            if (filters != null)
+            {
+                query = query.Where(QuerySpecificationFactory<ClubEntity>.CreateFilters(filters));
+            }
+
+            // Return count
+            return await query.CountAsync();
+        }
+
         /// <inheritdoc />
         public async Task<ClubEntity> GetByIdAsync(Guid id, bool trackChanges = true)
         {
@@ -104,7 +118,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         }
 
         /// <inheritdoc />
-        public async Task<ClubEntity?> UpdateAsync(ClubEntity club)
+        public async Task<ClubEntity> UpdateAsync(ClubEntity club)
         {
             ArgumentNullException.ThrowIfNull(club);
             // TODO - move to service

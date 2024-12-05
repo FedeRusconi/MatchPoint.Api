@@ -1,6 +1,7 @@
-﻿using MatchPoint.ClubService.Infrastructure.Data;
+﻿using MatchPoint.Api.Shared.Interfaces;
+using MatchPoint.ClubService.Entities;
+using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
-using MatchPoint.ClubService.Interfaces;
 
 namespace MatchPoint.ClubService.Configuration
 {
@@ -13,7 +14,7 @@ namespace MatchPoint.ClubService.Configuration
             #endregion
 
             #region Repositories
-            builder.Services.AddScoped<IClubRepository, ClubRepository>();
+            builder.Services.AddScoped<IRepository<ClubEntity>, ClubRepository>();
             #endregion
 
             #region Services
