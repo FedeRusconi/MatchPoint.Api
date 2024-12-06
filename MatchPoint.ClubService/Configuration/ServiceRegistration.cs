@@ -1,7 +1,7 @@
-﻿using MatchPoint.Api.Shared.Interfaces;
-using MatchPoint.ClubService.Entities;
-using MatchPoint.ClubService.Infrastructure.Data;
+﻿using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
+using MatchPoint.ClubService.Interfaces;
+using MatchPoint.ClubService.Services;
 
 namespace MatchPoint.ClubService.Configuration
 {
@@ -14,11 +14,11 @@ namespace MatchPoint.ClubService.Configuration
             #endregion
 
             #region Repositories
-            builder.Services.AddScoped<IRepository<ClubEntity>, ClubRepository>();
+            builder.Services.AddScoped<IClubRepository, ClubRepository>();
             #endregion
 
             #region Services
-            //services.AddScoped<IPlayerService, PlayerService>();
+            builder.Services.AddScoped<IClubManagementService, ClubManagementService>();
             #endregion
 
             return builder;

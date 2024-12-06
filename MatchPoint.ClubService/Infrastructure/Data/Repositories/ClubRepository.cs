@@ -1,16 +1,18 @@
 ﻿using MatchPoint.Api.Shared.Enums;
 using MatchPoint.Api.Shared.Exceptions;
 using MatchPoint.Api.Shared.Extensions;
-using MatchPoint.Api.Shared.Interfaces;
 using MatchPoint.Api.Shared.Models;
 using MatchPoint.Api.Shared.Repositories;
 using MatchPoint.Api.Shared.Utilities;
 using MatchPoint.ClubService.Entities;
+using MatchPoint.ClubService.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
 {
-    public class ClubRepository(ClubServiceDbContext _context) : RepositoryBase(_context), IRepository<ClubEntity>
+    public class ClubRepository(ClubServiceDbContext _context) : 
+        TransactionableRepositoryBase(_context), 
+        IClubRepository
     {
         /// <inheritdoc />
         public async Task<int> CountAsync(Dictionary<string, object>? filters = null)
@@ -95,7 +97,12 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             };
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Adds a new <see cref="ClubEntity"/> to the database. 
+        /// Saves the changes immediately if no active transaction exists.
+        /// </summary>
+        /// <param name="entity">The <see cref="ClubEntity"/> to add.</param>
+        /// <returns> The newly created <see cref="ClubEntity"/>. </returns>
         public async Task<ClubEntity> CreateAsync(ClubEntity club)
         {
             ArgumentNullException.ThrowIfNull(club);
@@ -117,7 +124,12 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             return club;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Updates an existing <see cref="ClubEntity"/> in the database. 
+        /// Saves the changes immediately if no active transaction exists.
+        /// </summary>
+        /// <param name="entity">The <see cref="ClubEntity"/> to update.</param>
+        /// <returns> The updated <see cref="ClubEntity"/>. </returns>
         public async Task<ClubEntity> UpdateAsync(ClubEntity club)
         {
             ArgumentNullException.ThrowIfNull(club);
@@ -140,30 +152,17 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             return club;
         }
 
-        /// <inheritdoc />
-        public async Task<ClubEntity> PatchAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
+        /// <summary>
+        /// Deletes a <see cref="ClubEntity"/> by its unique identifier.
+        /// Saves the changes immediately if no active transaction exists.
+        /// </summary>
+        /// <param name="id">The unique identifier of the entity to delete.</param>
+        /// <returns>
+        /// True if successful, false if no <see cref="ClubEntity"/> with matching Id was found.
+        /// </returns>
+        public async Task<bool> DeleteAsync(Guid id)
         {
-            ArgumentNullException.ThrowIfNull(propertyUpdates);
-
-            var clubEntity = await GetByIdAsync(id) 
-                ?? throw new EntityNotFoundException($"Club with id '{id}' was not found.");
-            // Update
-            clubEntity.Patch(propertyUpdates);
-            // TODO - move to service
-            clubEntity.SetTrackingFields(updating: true);
-
-            if (!IsTransactionActive)
-            {
-                await _context.SaveChangesAsync();
-            }
-
-            return clubEntity;
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> DeleteAsync(Guid clubId)
-        {
-            var club = await _context.Clubs.FindAsync(clubId);
+            var club = await _context.Clubs.FindAsync(id);
             if (club == null) return false;
 
             _context.Clubs.Remove(club);

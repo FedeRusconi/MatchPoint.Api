@@ -1,6 +1,6 @@
 ﻿namespace MatchPoint.Api.Shared.Interfaces
 {
-    public interface ITransactionable
+    public interface ITransactionableRepository
     {
         /// <summary>
         /// Get or Set if there is a current active transaction.

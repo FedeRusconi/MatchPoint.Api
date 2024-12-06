@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MatchPoint.Api.Shared.Repositories
 {
-    public abstract class RepositoryBase(DbContext _context) : ITransactionable
+    public abstract class TransactionableRepositoryBase(DbContext _context) : ITransactionableRepository
     {
         /// <inheritdoc />
         public bool IsTransactionActive { get; set; }

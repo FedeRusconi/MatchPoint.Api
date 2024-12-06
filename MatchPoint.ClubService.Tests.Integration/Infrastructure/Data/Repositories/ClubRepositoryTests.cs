@@ -1,6 +1,5 @@
 ﻿using MatchPoint.Api.Shared.Enums;
 using MatchPoint.Api.Shared.Exceptions;
-using MatchPoint.Api.Shared.Models;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
@@ -565,69 +564,6 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             #region Act
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _clubRepository.UpdateAsync(clubEntity));
-            #endregion
-        }
-
-        #endregion
-        #region PatchAsync
-
-        [TestMethod]
-        public async Task PatchAsync_WhenParametersAreValid_ShouldUpdateOnlySelectedPropertiesAndReturn()
-        {
-            #region Arrange
-            var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
-            string editedName = "This is an edited club";
-            string editedEmail = "edited@email.com";
-            List<PropertyUpdate> updates = [
-                new PropertyUpdate(nameof(clubEntity.Name), editedName),
-                new PropertyUpdate(nameof(clubEntity.Email), editedEmail)
-            ];
-            try
-            {
-                clubEntity = await _clubRepository.CreateAsync(clubEntity);
-                #endregion
-
-                #region Act
-                var result = await _clubRepository.PatchAsync(clubEntity.Id, updates);
-                #endregion
-
-                #region Assert
-                Assert.IsNotNull(result);
-                Assert.AreEqual(editedName, result.Name);
-                Assert.AreEqual(editedEmail, result.Email);
-                #endregion
-            }
-            finally
-            {
-                #region Cleanup
-                await _clubRepository.DeleteAsync(clubEntity.Id);
-                #endregion
-            }
-        }
-
-        [TestMethod]
-        public async Task PatchAsync_WhenClubIsNotFound_ShouldThrowEntityNotFoundException()
-        {
-            #region Arrange
-            Guid clubId = Guid.NewGuid();
-            List<PropertyUpdate> updates = [new PropertyUpdate(nameof(ClubEntity.Name), "Integration Testing Club")];
-            #endregion
-
-            #region Act
-            await Assert.ThrowsExceptionAsync<EntityNotFoundException>(() => _clubRepository.PatchAsync(clubId, updates));
-            #endregion
-        }
-
-        [TestMethod]
-        public async Task PatchAsync_WhenListIsNull_ShouldThrowArgumentNullException()
-        {
-            #region Arrange
-            Guid clubId = Guid.NewGuid();
-            List<PropertyUpdate> updates = null!;
-            #endregion
-
-            #region Act
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _clubRepository.PatchAsync(clubId, updates));
             #endregion
         }
 
