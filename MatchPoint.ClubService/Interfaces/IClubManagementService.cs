@@ -63,6 +63,6 @@ namespace MatchPoint.ClubService.Interfaces
         /// <returns>
         /// True if successful, false if no <see cref="ClubEntity"/> with matching Id was found.
         /// </returns>
-        public Task<ClubEntity> DeleteAsync(Guid id);
+        public Task<bool> DeleteAsync(Guid id);
     }
 }

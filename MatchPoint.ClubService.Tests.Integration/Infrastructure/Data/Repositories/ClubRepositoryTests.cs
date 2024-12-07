@@ -134,6 +134,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         #endregion
+
         #region GetByIdAsync
 
         [TestMethod]
@@ -180,6 +181,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         #endregion
+
         #region GetAllWithSpecificationAsync
 
         [TestMethod]
@@ -227,7 +229,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
                 #region Act
                 var result = await _clubRepository.GetAllWithSpecificationAsync(
-                    filters: filters);
+                    1, 10, filters: filters);
                 #endregion
 
                 #region Assert
@@ -270,7 +272,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
                 #region Act
                 var result = await _clubRepository.GetAllWithSpecificationAsync(
-                    orderBy: orderBy);
+                    1, 10, orderBy: orderBy);
                 #endregion
 
                 #region Assert
@@ -312,7 +314,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
                 #region Act
                 var result = await _clubRepository.GetAllWithSpecificationAsync(
-                    orderBy: orderBy);
+                    1, 10, orderBy: orderBy);
                 #endregion
 
                 #region Assert
@@ -376,6 +378,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         #endregion
+
         #region GetAllAsync
 
         [TestMethod]
@@ -432,6 +435,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         #endregion
+
         #region CreateAsync
 
         [TestMethod]
@@ -511,6 +515,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         #endregion
+
         #region UpdateAsync
 
         [TestMethod]
@@ -568,6 +573,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         #endregion
+
         #region DeleteAsync
 
         [TestMethod]

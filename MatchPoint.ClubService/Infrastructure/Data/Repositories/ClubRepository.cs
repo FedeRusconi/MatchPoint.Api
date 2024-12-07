@@ -1,6 +1,5 @@
 ﻿using MatchPoint.Api.Shared.Enums;
 using MatchPoint.Api.Shared.Exceptions;
-using MatchPoint.Api.Shared.Extensions;
 using MatchPoint.Api.Shared.Models;
 using MatchPoint.Api.Shared.Repositories;
 using MatchPoint.Api.Shared.Utilities;
@@ -57,8 +56,8 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
 
         /// <inheritdoc />
         public async Task<PagedResponse<ClubEntity>> GetAllWithSpecificationAsync(
-            int pageNumber = 1, 
-            int pageSize = 500, 
+            int pageNumber, 
+            int pageSize, 
             Dictionary<string, object>? filters = null, 
             KeyValuePair<string, SortDirection>? orderBy = null,
             bool trackChanges = true)
@@ -101,41 +100,32 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         /// Adds a new <see cref="ClubEntity"/> to the database. 
         /// Saves the changes immediately if no active transaction exists.
         /// </summary>
-        /// <param name="entity">The <see cref="ClubEntity"/> to add.</param>
+        /// <param name="clubEntity">The <see cref="ClubEntity"/> to add.</param>
         /// <returns> The newly created <see cref="ClubEntity"/>. </returns>
-        public async Task<ClubEntity> CreateAsync(ClubEntity club)
+        public async Task<ClubEntity> CreateAsync(ClubEntity clubEntity)
         {
-            ArgumentNullException.ThrowIfNull(club);
-
-            // Detect duplicate - TODO: MOVE TO SERVICE LAYER
-            var existingClub = await _context.Clubs.AsNoTracking().FirstOrDefaultAsync(c => c.Email == club.Email);
-            if (existingClub != null)
-            {
-                throw new DuplicateEntityException("A Club with the same email was found. Operation Canceled.");
-            }
-            // TODO - move to service
-            club.SetTrackingFields();
-            _context.Clubs.Add(club);
+            ArgumentNullException.ThrowIfNull(clubEntity);
+            
+            _context.Clubs.Add(clubEntity);
             if (!IsTransactionActive)
             {
                 await _context.SaveChangesAsync();
             }
 
-            return club;
+            return clubEntity;
         }
 
         /// <summary>
         /// Updates an existing <see cref="ClubEntity"/> in the database. 
         /// Saves the changes immediately if no active transaction exists.
         /// </summary>
-        /// <param name="entity">The <see cref="ClubEntity"/> to update.</param>
+        /// <param name="clubEntity">The <see cref="ClubEntity"/> to update.</param>
         /// <returns> The updated <see cref="ClubEntity"/>. </returns>
-        public async Task<ClubEntity> UpdateAsync(ClubEntity club)
+        public async Task<ClubEntity> UpdateAsync(ClubEntity clubEntity)
         {
-            ArgumentNullException.ThrowIfNull(club);
-            // TODO - move to service
-            club.SetTrackingFields(updating: true);
-            _context.Entry(club).State = EntityState.Modified;
+            ArgumentNullException.ThrowIfNull(clubEntity);
+
+            _context.Entry(clubEntity).State = EntityState.Modified;
 
             if (!IsTransactionActive)
             {
@@ -145,11 +135,11 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 }
                 catch (DbUpdateException ex) when (ex.InnerException is NullReferenceException)
                 {
-                    throw new EntityNotFoundException($"Club with id '{club.Id}' was not found.");
+                    throw new EntityNotFoundException($"Club with id '{clubEntity.Id}' was not found.");
                 }
             }
 
-            return club;
+            return clubEntity;
         }
 
         /// <summary>
