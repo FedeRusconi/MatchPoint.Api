@@ -1,4 +1,4 @@
-﻿using MatchPoint.Api.Shared.Enums;
+﻿using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Exceptions;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;

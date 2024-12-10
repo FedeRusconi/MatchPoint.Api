@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Asp.Versioning;
 using MatchPoint.ClubService.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,15 @@ builder.AddServiceDefaults();
 
 // Service custom services
 builder.AddClubServices();
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1);
+    options.ReportApiVersions = true;
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+})
+.AddMvc();
 
 builder.Services
     .AddControllers()

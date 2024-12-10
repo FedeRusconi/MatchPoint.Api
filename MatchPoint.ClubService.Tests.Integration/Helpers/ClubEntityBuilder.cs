@@ -1,6 +1,6 @@
 ﻿using Bogus;
-using MatchPoint.Api.Shared.Enums;
-using MatchPoint.Api.Shared.Models;
+using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.ClubService.Entities;
 
 namespace MatchPoint.ClubService.Tests.Integration.Helpers

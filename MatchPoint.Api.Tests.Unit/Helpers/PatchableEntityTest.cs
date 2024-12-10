@@ -1,5 +1,5 @@
-﻿using MatchPoint.Api.Shared.Enums;
-using MatchPoint.Api.Shared.Interfaces;
+﻿using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.Api.Shared.Common.Interfaces;
 
 namespace MatchPoint.Api.Tests.Unit.Helpers
 {

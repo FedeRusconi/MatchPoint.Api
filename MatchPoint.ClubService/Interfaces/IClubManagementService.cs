@@ -1,5 +1,6 @@
-﻿using MatchPoint.Api.Shared.Enums;
-using MatchPoint.Api.Shared.Models;
+﻿using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.Api.Shared.Common.Models;
+using MatchPoint.Api.Shared.Infrastructure.Interfaces;
 using MatchPoint.ClubService.Entities;
 
 namespace MatchPoint.ClubService.Interfaces
@@ -10,8 +11,11 @@ namespace MatchPoint.ClubService.Interfaces
         /// Retrieve a single <see cref="ClubEntity"/> by its Id.
         /// </summary>
         /// <param name="id"> The <see cref="Guid"/> that belongs to a <see cref="ClubEntity"/>. </param>
-        /// <returns> The <see cref="ClubEntity"/> found. </returns>
-        public Task<ClubEntity> GetByIdAsync(Guid id);
+        /// <returns> 
+        /// A <see cref="IServiceResult{T}"/> class containing the <see cref="ClubEntity"/> found
+        /// or details about the error.
+        /// </returns>
+        public Task<IServiceResult<ClubEntity>> GetByIdAsync(Guid id);
 
         /// <summary>
         /// Retrieves all <see cref="ClubEntity"/> from the database that fit the specification.
@@ -25,8 +29,11 @@ namespace MatchPoint.ClubService.Interfaces
         /// <param name="orderBy"> 
         /// A KeyValuePair with property name and <see cref="SortDirection"/>. Default is null.
         /// </param>
-        /// <returns>An instance of <see cref="PagedResponse{T}"/> containing a collection of all <see cref="ClubEntity"/> instances found.</returns>
-        public Task<PagedResponse<ClubEntity>> GetAllWithSpecificationAsync(
+        /// <returns> 
+        /// A <see cref="IServiceResult{T}"/> class containing the <see cref="PagedResponse{T}"/>
+        /// with a collection of <see cref="ClubEntity"/> found or details about the error.
+        /// </returns>
+        public Task<IServiceResult<PagedResponse<ClubEntity>>> GetAllWithSpecificationAsync(
             int pageNumber = 1,
             int pageSize = 500,
             Dictionary<string, object>? filters = null,
@@ -36,15 +43,21 @@ namespace MatchPoint.ClubService.Interfaces
         /// Adds a new <see cref="ClubEntity"/> to the database.
         /// </summary>
         /// <param name="clubEntity">The <see cref="ClubEntity"/> to add.</param>
-        /// <returns> The newly created <see cref="ClubEntity"/>. </returns>
-        public Task<ClubEntity> CreateAsync(ClubEntity clubEntity);
+        /// <returns> 
+        /// A <see cref="IServiceResult{T}"/> class containing the newly created <see cref="ClubEntity"/>
+        /// or details about the error.
+        /// </returns>
+        public Task<IServiceResult<ClubEntity>> CreateAsync(ClubEntity clubEntity);
 
         /// <summary>
         /// Updates an existing <see cref="ClubEntity"/> in the database.
         /// </summary>
         /// <param name="clubEntity">The <see cref="ClubEntity"/> to update.</param>
-        /// <returns> The updated <see cref="ClubEntity"/>. </returns>
-        public Task<ClubEntity> UpdateAsync(ClubEntity clubEntity);
+        /// <returns> 
+        /// A <see cref="IServiceResult{T}"/> class containing the updated <see cref="ClubEntity"/>
+        /// or details about the error.
+        /// </returns>
+        public Task<IServiceResult<ClubEntity>> UpdateAsync(ClubEntity clubEntity);
 
         /// <summary>
         /// Updates only provided properties of an existing <see cref="ClubEntity"/> in the database.
@@ -53,16 +66,20 @@ namespace MatchPoint.ClubService.Interfaces
         /// <param name="propertyUpdates"> 
         /// An enumerable of <see cref="PropertyUpdate"/> with selected properties to update. 
         /// </param>
-        /// <returns> The updated <see cref="ClubEntity"/>. </returns>
-        Task<ClubEntity> PatchAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates);
+        /// <returns> 
+        /// A <see cref="IServiceResult{T}"/> class containing the updated <see cref="ClubEntity"/>
+        /// or details about the error.
+        /// </returns>
+        Task<IServiceResult<ClubEntity>> PatchAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates);
 
         /// <summary>
         /// Deletes a <see cref="ClubEntity"/> by its unique identifier.
         /// </summary>
         /// <param name="id"> The unique identifier of the entity to delete. </param>
-        /// <returns>
-        /// True if successful, false if no <see cref="ClubEntity"/> with matching Id was found.
+        /// <returns> 
+        /// A <see cref="IServiceResult{T}"/> class containing the <see cref="ClubEntity"/> deleted
+        /// or details about the error.
         /// </returns>
-        public Task<bool> DeleteAsync(Guid id);
+        public Task<IServiceResult<ClubEntity>> DeleteAsync(Guid id);
     }
 }

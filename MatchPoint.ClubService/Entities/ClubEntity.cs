@@ -1,6 +1,6 @@
-﻿using MatchPoint.Api.Shared.Enums;
-using MatchPoint.Api.Shared.Interfaces;
-using MatchPoint.Api.Shared.Models;
+﻿using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.Api.Shared.Common.Interfaces;
+using MatchPoint.Api.Shared.Common.Models;
 
 namespace MatchPoint.ClubService.Entities
 {

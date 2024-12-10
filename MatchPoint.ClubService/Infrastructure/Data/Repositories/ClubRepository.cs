@@ -1,21 +1,22 @@
-﻿using MatchPoint.Api.Shared.Enums;
-using MatchPoint.Api.Shared.Exceptions;
-using MatchPoint.Api.Shared.Models;
-using MatchPoint.Api.Shared.Repositories;
-using MatchPoint.Api.Shared.Utilities;
+﻿using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.Api.Shared.Common.Models;
+using MatchPoint.Api.Shared.Infrastructure.RepositoryBases;
+using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
 {
-    public class ClubRepository(ClubServiceDbContext _context) : 
+    public class ClubRepository(ClubServiceDbContext _context, ILogger _logger) : 
         TransactionableRepositoryBase(_context), 
         IClubRepository
     {
         /// <inheritdoc />
         public async Task<int> CountAsync(Dictionary<string, object>? filters = null)
         {
+            _logger.LogTrace(
+                "Querying database for count of clubs with {Count} filters", filters != null ? filters.Count : "no");
             IQueryable<ClubEntity> query = _context.Clubs.AsNoTracking();
 
             if (filters != null)
@@ -24,12 +25,15 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             }
 
             // Return count
-            return await query.CountAsync();
+            var count =  await query.CountAsync();
+            _logger.LogTrace("Found {Count} Clubs in the database", count);
+            return count;
         }
 
         /// <inheritdoc />
-        public async Task<ClubEntity> GetByIdAsync(Guid id, bool trackChanges = true)
+        public async Task<ClubEntity?> GetByIdAsync(Guid id, bool trackChanges = true)
         {
+            _logger.LogTrace("Querying database for club with ID: '{Id}'", id);
             var query = _context.Clubs.AsQueryable();
 
             if (!trackChanges)
@@ -37,13 +41,24 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 query = query.AsNoTracking();
             }
 
-            return await query.FirstOrDefaultAsync(c => c.Id == id)
-                ?? throw new EntityNotFoundException($"Club with id '{id}' was not found."); ;
+            var club = await query.FirstOrDefaultAsync(c => c.Id == id);
+
+            if (club == null)
+            {
+                _logger.LogWarning("No club found in the database with ID: {Id}", id);
+            }
+            else
+            {
+                _logger.LogTrace("Club with ID '{Id}' retrieved from the database", id);
+            }
+
+            return club;
         }
 
         /// <inheritdoc />
         public async Task<IEnumerable<ClubEntity>> GetAllAsync(bool trackChanges = true)
         {
+            _logger.LogTrace("Querying database for all clubs");
             var query = _context.Clubs.AsQueryable();
 
             if (!trackChanges)
@@ -51,7 +66,9 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 query = query.AsNoTracking();
             }
 
-            return await query.ToListAsync();
+            var clubs = await query.ToListAsync();
+            _logger.LogTrace("Found {Count} Clubs in the database", clubs.Count);
+            return clubs;
         }
 
         /// <inheritdoc />
@@ -62,6 +79,8 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             KeyValuePair<string, SortDirection>? orderBy = null,
             bool trackChanges = true)
         {
+            _logger.LogTrace(
+                "Querying database for clubs with {Count} filters", filters != null ? filters.Count : "no");
             IQueryable<ClubEntity> query = _context.Clubs.AsQueryable();
 
             if (!trackChanges)
@@ -86,7 +105,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             int totalCount = await query.CountAsync();
             int skip = (pageNumber - 1) * pageSize;
             var data = await query.Skip(skip).Take(pageSize).ToListAsync();
-
+            _logger.LogTrace("Returning {PageSize} of {Count} Clubs found in the database", pageSize, totalCount);
             return new PagedResponse<ClubEntity>()
             {
                 CurrentPage = pageNumber,
@@ -105,13 +124,16 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         public async Task<ClubEntity> CreateAsync(ClubEntity clubEntity)
         {
             ArgumentNullException.ThrowIfNull(clubEntity);
-            
+
+            _logger.LogTrace("Creating a new club in the database with email {Email}", clubEntity.Email);
+
             _context.Clubs.Add(clubEntity);
             if (!IsTransactionActive)
             {
                 await _context.SaveChangesAsync();
             }
 
+            _logger.LogTrace("New club '{Email}' added to the database", clubEntity.Email);
             return clubEntity;
         }
 
@@ -121,9 +143,11 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         /// </summary>
         /// <param name="clubEntity">The <see cref="ClubEntity"/> to update.</param>
         /// <returns> The updated <see cref="ClubEntity"/>. </returns>
-        public async Task<ClubEntity> UpdateAsync(ClubEntity clubEntity)
+        public async Task<ClubEntity?> UpdateAsync(ClubEntity clubEntity)
         {
             ArgumentNullException.ThrowIfNull(clubEntity);
+
+            _logger.LogTrace("Updating club in the database with Id {Id} ({Email})", clubEntity.Id, clubEntity.Email);
 
             _context.Entry(clubEntity).State = EntityState.Modified;
 
@@ -135,10 +159,12 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 }
                 catch (DbUpdateException ex) when (ex.InnerException is NullReferenceException)
                 {
-                    throw new EntityNotFoundException($"Club with id '{clubEntity.Id}' was not found.");
+                    _logger.LogWarning("No club found in the database with ID: {Id}", clubEntity.Id);
+                    return null;
                 }
             }
 
+            _logger.LogTrace("Club '{Id}' ({Email}) updated in the database", clubEntity.Id, clubEntity.Email);
             return clubEntity;
         }
 
@@ -150,19 +176,26 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         /// <returns>
         /// True if successful, false if no <see cref="ClubEntity"/> with matching Id was found.
         /// </returns>
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<ClubEntity?> DeleteAsync(Guid id)
         {
-            var club = await _context.Clubs.FindAsync(id);
-            if (club == null) return false;
+            var clubEntity = await _context.Clubs.FindAsync(id);
+            if (clubEntity == null)
+            {
+                _logger.LogWarning("No club found in the database with ID: {Id}", id);
+                return null;
+            }
 
-            _context.Clubs.Remove(club);
+            _logger.LogTrace("Deleting club from the database with Id {Id} ({Email})", id, clubEntity.Email);
+
+            _context.Clubs.Remove(clubEntity);
 
             if (!IsTransactionActive)
             {
                 await _context.SaveChangesAsync();
             }
 
-            return true;
+            _logger.LogTrace("Club '{Id}' ({Email}) deleted from the database", clubEntity.Id, clubEntity.Email);
+            return clubEntity;
         }
     }
 }

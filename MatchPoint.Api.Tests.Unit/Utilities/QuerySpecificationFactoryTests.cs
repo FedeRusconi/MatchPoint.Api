@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using MatchPoint.Api.Shared.Utilities;
+using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.Api.Tests.Unit.Helpers;
 
 namespace MatchPoint.Api.Tests.Unit.Utilities
