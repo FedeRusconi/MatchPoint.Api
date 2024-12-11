@@ -27,17 +27,17 @@ namespace MatchPoint.ClubService.Interfaces
         /// A Dictionary containing property name as the key and the filter value. Default is null.
         /// </param>
         /// <param name="orderBy"> 
-        /// A KeyValuePair with property name and <see cref="SortDirection"/>. Default is null.
+        /// A Dictionary with property names and <see cref="SortDirection"/>. Default is null.
         /// </param>
         /// <returns> 
         /// A <see cref="IServiceResult{T}"/> class containing the <see cref="PagedResponse{T}"/>
         /// with a collection of <see cref="ClubEntity"/> found or details about the error.
         /// </returns>
         public Task<IServiceResult<PagedResponse<ClubEntity>>> GetAllWithSpecificationAsync(
-            int pageNumber = 1,
-            int pageSize = 500,
+            int pageNumber,
+            int pageSize,
             Dictionary<string, object>? filters = null,
-            KeyValuePair<string, SortDirection>? orderBy = null);
+            Dictionary<string, SortDirection>? orderBy = null);
 
         /// <summary>
         /// Adds a new <see cref="ClubEntity"/> to the database.

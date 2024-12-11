@@ -15,7 +15,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Interfaces
         /// A Dictionary containing property name as the key and the filter value. Default is null.
         /// </param>
         /// <param name="orderBy"> 
-        /// A KeyValuePair with property name and <see cref="SortDirection"/>. Default is null.
+        /// A Dictionary with property names and <see cref="SortDirection"/>. Default is null.
         /// </param>
         /// <param name="trackChanges">
         /// A flag indicating whether to track changes to the returned entities. 
@@ -26,7 +26,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Interfaces
             int pageNumber,
             int pageSize,
             Dictionary<string, object>? filters = null,
-            KeyValuePair<string, SortDirection>? orderBy = null,
+            Dictionary<string, SortDirection>? orderBy = null,
             bool trackChanges = true);
     }
 }

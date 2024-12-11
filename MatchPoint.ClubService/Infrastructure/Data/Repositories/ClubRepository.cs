@@ -1,5 +1,6 @@
 ﻿using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
+using MatchPoint.Api.Shared.Infrastructure.Extensions;
 using MatchPoint.Api.Shared.Infrastructure.RepositoryBases;
 using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.ClubService.Entities;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
 {
-    public class ClubRepository(ClubServiceDbContext _context, ILogger _logger) : 
+    public class ClubRepository(ClubServiceDbContext _context, ILogger<ClubRepository> _logger) : 
         TransactionableRepositoryBase(_context), 
         IClubRepository
     {
@@ -76,7 +77,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             int pageNumber, 
             int pageSize, 
             Dictionary<string, object>? filters = null, 
-            KeyValuePair<string, SortDirection>? orderBy = null,
+            Dictionary<string, SortDirection>? orderBy = null,
             bool trackChanges = true)
         {
             _logger.LogTrace(
@@ -89,16 +90,18 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             }
             if (filters != null)
             {
-                query = query.Where(QuerySpecificationFactory<ClubEntity>.CreateFilters(filters));
+                //query = query.Where(QuerySpecificationFactory<ClubEntity>.CreateFilters(filters));
+                query = query.WithFilters(filters);
             }
             if (orderBy != null)
             {
-                var sortDirection = orderBy.Value.Value;
-                var orderByExpression = QuerySpecificationFactory<ClubEntity>.CreateOrderBy(orderBy.Value.Key);
+                query = query.WithOrderBy(orderBy);
+                //var sortDirection = orderBy.Value.Value;
+                //var orderByExpression = QuerySpecificationFactory<ClubEntity>.CreateOrderBy(orderBy.Value.Key);
 
-                query = sortDirection == SortDirection.Descending
-                    ? query.OrderByDescending(orderByExpression)
-                    : query.OrderBy(orderByExpression);
+                //query = sortDirection == SortDirection.Descending
+                //    ? query.OrderByDescending(orderByExpression)
+                //    : query.OrderBy(orderByExpression);
             }
 
             // Get count and Apply pagination

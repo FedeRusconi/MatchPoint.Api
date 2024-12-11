@@ -62,27 +62,27 @@ namespace MatchPoint.Api.Shared.Infrastructure.Utilities
         }
 
         /// <summary>
-        /// Validate order-by specification.
-        /// This checks if key is valid for <typeparamref name="T"/>.
+        /// Validate order by specification.
+        /// This checks if all orde by keys are valid for <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T"> This type must include the property for order-by specification. </typeparam>
-        /// <param name="orderBy"> A KeyValuePair for orderBy specification. </param>
+        /// <param name="orderBy"> A Dictionary for order by specification. </param>
         /// <returns> 
         /// A <see cref="IServiceResult{T}"/> with appropriate message if key is invalid. 
-        /// Null if order-by is valid.
+        /// Null if order by is valid.
         /// </returns>
-        public static IServiceResult<PagedResponse<T>>? ValidateOrderBy<T>(KeyValuePair<string, SortDirection>? orderBy)
+        public static IServiceResult<PagedResponse<T>>? ValidateOrderBy<T>(Dictionary<string, SortDirection>? orderBy)
         {
             if (orderBy == null) return null;
 
             var validProperties = typeof(T).GetProperties()
                 .Select(p => p.Name)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            if (!validProperties.Contains(orderBy.Value.Key))
+            var invalidOrderByKey = orderBy.Keys.FirstOrDefault(k => !validProperties.Contains(k));
+            if (invalidOrderByKey != null)
             {
                 return ServiceResult<PagedResponse<T>>.Failure(
-                    $"Invalid order-by key: {orderBy.Value.Key}.", ServiceResultType.BadRequest);
+                    $"Invalid order by key: {invalidOrderByKey}.", ServiceResultType.BadRequest);
             }
 
             return null;

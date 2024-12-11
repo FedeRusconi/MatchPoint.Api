@@ -23,6 +23,9 @@ namespace Microsoft.Extensions.Hosting
 
             builder.Services.AddServiceDiscovery();
 
+            builder.Logging.AddConsole();
+            builder.Services.AddLogging();
+
             builder.Services.ConfigureHttpClientDefaults(http =>
             {
                 // Turn on resilience by default

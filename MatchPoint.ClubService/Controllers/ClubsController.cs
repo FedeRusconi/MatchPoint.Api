@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
+using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Extensions;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Interfaces;
@@ -18,22 +19,22 @@ namespace MatchPoint.ClubService.Controllers
         [MapToApiVersion(1)]
         [HttpGet]
         public async Task<ActionResult<PagedResponse<ClubEntity>>> GetClubs(
-            [FromQuery] int page,
-            [FromQuery] int pageSize,
-            [FromQuery] Dictionary<string, object>? filters,
-            [FromQuery] KeyValuePair<string, SortDirection>? orderBy)
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = Constants.MaxPageSizeAllowed,
+            [FromQuery] Dictionary<string, object>? filters = null,
+            [FromQuery] Dictionary<string, SortDirection>? orderBy = null)
         {
             var result = await _clubService.GetAllWithSpecificationAsync(
                 pageNumber: page,
                 pageSize: pageSize,
                 filters: filters,
                 orderBy: orderBy);
-            if (result.IsSuccess)
-            {
-                return Ok(result);
+            if (!result.IsSuccess)
+            {                
+                return result.ToFailureActionResult(this);
             }
 
-            return result.ToFailureActionResult(this);
+            return Ok(result.Data);
         }
 
         // GET: api/v1/clubs/5
@@ -46,7 +47,7 @@ namespace MatchPoint.ClubService.Controllers
             {
                 return result.ToFailureActionResult(this);
             }
-            return Ok(result);            
+            return Ok(result.Data);            
         }
 
         // PUT: api/v1/clubs/5
@@ -65,7 +66,7 @@ namespace MatchPoint.ClubService.Controllers
                 return result.ToFailureActionResult(this);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         // POST: api/v1/clubs

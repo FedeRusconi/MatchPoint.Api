@@ -2,6 +2,8 @@
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
 using MatchPoint.ClubService.Tests.Unit.Helpers;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
 {
@@ -10,11 +12,15 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
     {
         private ClubServiceDbContext _dbContext = default!;
         private readonly IConfiguration _configuration = DataContextHelpers.TestingConfiguration;
+        private Mock<ILogger<ClubRepository>> _loggerMock = default!;
+        private ClubRepository _repository = default!;
 
         [TestInitialize]
         public void TestInitialize()
         {
             _dbContext = new(_configuration);
+            _loggerMock = new();
+            _repository = new ClubRepository(_dbContext, _loggerMock.Object);
         }
 
         [TestCleanup]
@@ -26,12 +32,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
         [TestMethod]
         public void IsTransactionActive_WhenNoTransactionIsActive_ShouldReturnFalse()
         {
-            #region Arrange
-            var repository = new ClubRepository(_dbContext);
-            #endregion
-
             #region Act
-            var result = repository.IsTransactionActive;
+            var result = _repository.IsTransactionActive;
             #endregion
 
             #region Assert
@@ -43,13 +45,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
         public void IsTransactionActive_WhenTransactionIsActive_ShouldReturnTrue()
         {
             #region Arrange
-            var repository = new ClubRepository(_dbContext);
             // Start a transaction
-            repository.BeginTransaction();
+            _repository.BeginTransaction();
             #endregion
 
             #region Act
-            var result = repository.IsTransactionActive;
+            var result = _repository.IsTransactionActive;
             #endregion
 
             #region Assert
@@ -61,42 +62,33 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
         public void BeginTransactionAsync_WhenTransactionIsAlreadyActive_ShouldThrowInvalidOperationException()
         {
             #region Arrange
-            var repository = new ClubRepository(_dbContext);
             // Start first transaction
-            repository.BeginTransaction();
+            _repository.BeginTransaction();
             #endregion
 
             #region Act & Assert
-            Assert.ThrowsException<InvalidOperationException>(repository.BeginTransaction);
+            Assert.ThrowsException<InvalidOperationException>(_repository.BeginTransaction);
             #endregion
         }
 
         [TestMethod]
         public void BeginTransactionAsync_WhenNoTransactionIsActive_ShouldStartTransaction()
         {
-            #region Arrange
-            var repository = new ClubRepository(_dbContext);
-            #endregion
-
             #region Act
-            repository.BeginTransaction();
+            _repository.BeginTransaction();
             #endregion
 
             #region Assert
             // Ensure the transaction is active
-            Assert.IsTrue(repository.IsTransactionActive);
+            Assert.IsTrue(_repository.IsTransactionActive);
             #endregion
         }
 
         [TestMethod]
         public async Task CommitTransactionAsync_WhenNoTransactionIsActive_ShouldThrowInvalidOperationException()
         {
-            #region Arrange
-            var repository = new ClubRepository(_dbContext);
-            #endregion
-
             #region Act & Assert
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(repository.CommitTransactionAsync);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(_repository.CommitTransactionAsync);
             #endregion
         }
 
@@ -104,19 +96,17 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
         public async Task CommitTransactionAsync_WhenTransactionIsActive_ShouldCommitTransaction()
         {
             #region Arrange
-            var repository = new ClubRepository(_dbContext);
-
             // Start transaction
-            repository.BeginTransaction();
+            _repository.BeginTransaction();
             #endregion
 
             #region Act
-            await repository.CommitTransactionAsync();
+            await _repository.CommitTransactionAsync();
             #endregion
 
             #region Assert
             // Verify no transaction is active
-            Assert.IsFalse(repository.IsTransactionActive);
+            Assert.IsFalse(_repository.IsTransactionActive);
             #endregion
         }
     }

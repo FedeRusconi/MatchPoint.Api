@@ -11,7 +11,7 @@ namespace MatchPoint.Api.Shared.ClubService.Models
         public required string Email { get; set; }
         public required string Name { get; set; }
         public string? PhoneNumber { get; set; }
-        public Address? Address { get; set; }
+        public required Address Address { get; set; }
         public string? Logo { get; set; }
         public ActiveStatus ActiveStatus { get; set; } = ActiveStatus.Active;
         public string? TaxId { get; set; }

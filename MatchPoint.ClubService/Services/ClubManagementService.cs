@@ -1,7 +1,6 @@
 ﻿using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Extensions;
 using MatchPoint.Api.Shared.Common.Models;
-using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Enums;
 using MatchPoint.Api.Shared.Infrastructure.Interfaces;
 using MatchPoint.Api.Shared.Infrastructure.Utilities;
@@ -10,7 +9,8 @@ using MatchPoint.ClubService.Interfaces;
 
 namespace MatchPoint.ClubService.Services
 {
-    public class ClubManagementService(IClubRepository _clubRepository, ILogger _logger) : IClubManagementService
+    public class ClubManagementService(
+        IClubRepository _clubRepository, ILogger<ClubManagementService> _logger) : IClubManagementService
     {
         /// <inheritdoc />
         public async Task<IServiceResult<ClubEntity>> GetByIdAsync(Guid id)
@@ -30,10 +30,10 @@ namespace MatchPoint.ClubService.Services
 
         /// <inheritdoc />
         public async Task<IServiceResult<PagedResponse<ClubEntity>>> GetAllWithSpecificationAsync(
-            int pageNumber = 1,
-            int pageSize = Constants.MaxPageSizeAllowed,
+            int pageNumber,
+            int pageSize,
             Dictionary<string, object>? filters = null,
-            KeyValuePair<string, SortDirection>? orderBy = null)
+            Dictionary<string, SortDirection>? orderBy = null)
         {
             // Validate params
             var paginationValidation = QuerySpecificationHelpers.ValidatePagination<ClubEntity>(pageNumber, pageSize);
