@@ -2,7 +2,7 @@
 using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.Api.Tests.Unit.Helpers;
 
-namespace MatchPoint.Api.Tests.Unit.Utilities
+namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
 {
     [TestClass]
     public class QuerySpecificationFactoryTests

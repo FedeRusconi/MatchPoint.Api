@@ -9,11 +9,11 @@ namespace MatchPoint.ClubService.Entities
         public Guid Id { get; set; }
         public required string Email { get; set; }
         public required string Name { get; set; }
-        public required string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
         public required Address Address { get; set; }
         public string? Logo { get; set; }
         public ActiveStatus ActiveStatus { get; set; } = ActiveStatus.Active;
-        public required string TaxId { get; set; }
+        public string? TaxId { get; set; }
         public List<TimeSlot> OpeningTimes { get; set; } = [];
         public List<CourtEntity> Courts { get; set; } = [];
         public List<SocialMediaLink> SocialMedia { get; set; } = [];
@@ -23,6 +23,6 @@ namespace MatchPoint.ClubService.Entities
         public DateTime CreatedOnUtc { get; set; }
         public Guid? ModifiedBy { get; set; }
         public DateTime? ModifiedOnUtc { get; set; }
-        public string TimezoneId { get; set; } = "UTC";
+        public string? TimezoneId { get; set; } = "UTC";
     }
 }

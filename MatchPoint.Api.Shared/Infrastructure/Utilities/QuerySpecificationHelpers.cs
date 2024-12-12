@@ -74,6 +74,11 @@ namespace MatchPoint.Api.Shared.Infrastructure.Utilities
         public static IServiceResult<PagedResponse<T>>? ValidateOrderBy<T>(Dictionary<string, SortDirection>? orderBy)
         {
             if (orderBy == null) return null;
+            if (orderBy.Count > 1)
+            {
+                return ServiceResult<PagedResponse<T>>.Failure(
+                    "Only 1 order by clause is allowed.", ServiceResultType.BadRequest);
+            }
 
             var validProperties = typeof(T).GetProperties()
                 .Select(p => p.Name)

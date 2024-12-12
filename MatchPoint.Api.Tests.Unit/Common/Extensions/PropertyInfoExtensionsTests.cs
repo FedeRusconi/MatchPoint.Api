@@ -2,7 +2,7 @@
 using MatchPoint.Api.Shared.Common.Extensions;
 using MatchPoint.Api.Tests.Unit.Helpers;
 
-namespace MatchPoint.Api.Tests.Unit.Extensions
+namespace MatchPoint.Api.Tests.Unit.Common.Extensions
 {
     [TestClass]
     public class PropertyInfoExtensionsTests
