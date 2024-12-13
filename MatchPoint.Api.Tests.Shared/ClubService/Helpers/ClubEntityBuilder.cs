@@ -3,7 +3,7 @@ using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.ClubService.Entities;
 
-namespace MatchPoint.ClubService.Tests.Unit.Helpers
+namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
 {
     public class ClubEntityBuilder
     {

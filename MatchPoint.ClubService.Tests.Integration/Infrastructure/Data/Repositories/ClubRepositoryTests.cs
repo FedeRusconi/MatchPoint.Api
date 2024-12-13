@@ -1,8 +1,9 @@
 ﻿using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
+using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
-using MatchPoint.ClubService.Tests.Integration.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;

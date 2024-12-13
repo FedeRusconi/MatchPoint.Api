@@ -5,6 +5,8 @@ namespace MatchPoint.ClubService.Mappers
 {
     public static class CourtMapper
     {
+        #region To CourtEntity
+
         /// <summary>
         /// Map a <see cref="Court"/> instance to a <see cref="CourtEntity"/>.
         /// </summary>
@@ -29,5 +31,35 @@ namespace MatchPoint.ClubService.Mappers
         {
             return courts.Select(court => court.ToCourtEntity());
         }
+
+        #endregion
+        #region To CourtDto
+
+        /// <summary>
+        /// Map a <see cref="CourtEntity"/> instance to a <see cref="Court"/>.
+        /// </summary>
+        /// <param name="courtEntity"> The instance to convert. </param>
+        /// <returns> An instance of <see cref="Court"/>. </returns>
+        public static Court ToCourtDto(this CourtEntity courtEntity)
+        {
+            return new Court()
+            {
+                Id = courtEntity.Id,
+                Name = courtEntity.Name,
+                ActiveStatus = courtEntity.ActiveStatus
+            };
+        }
+
+        /// <summary>
+        /// Map an Enumerable of <see cref="CourtEntity"/> instances to an Enumerable of <see cref="Court"/>.
+        /// </summary>
+        /// <param name="courtEntities"> The instances to convert. </param>
+        /// <returns> An Enumerable of <see cref="Court"/>. </returns>
+        public static IEnumerable<Court> ToCourtDtoEnumerable(this IEnumerable<CourtEntity> courtEntities)
+        {
+            return courtEntities.Select(courtEntity => courtEntity.ToCourtDto());
+        }
+
+        #endregion
     }
 }

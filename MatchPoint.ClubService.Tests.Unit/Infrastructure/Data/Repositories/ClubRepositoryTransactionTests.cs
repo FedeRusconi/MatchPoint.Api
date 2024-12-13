@@ -1,6 +1,6 @@
-﻿using MatchPoint.ClubService.Infrastructure.Data;
+﻿using MatchPoint.Api.Tests.Shared.Common.Helpers;
+using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
-using MatchPoint.ClubService.Tests.Unit.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;

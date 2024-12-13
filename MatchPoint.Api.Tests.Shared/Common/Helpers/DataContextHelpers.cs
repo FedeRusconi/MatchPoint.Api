@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace MatchPoint.ClubService.Tests.Unit.Helpers
+namespace MatchPoint.Api.Tests.Shared.Common.Helpers
 {
     public class DataContextHelpers
     {

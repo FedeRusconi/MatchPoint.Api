@@ -1,18 +1,18 @@
 ﻿using Bogus;
+using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
-using MatchPoint.ClubService.Entities;
 
-namespace MatchPoint.ClubService.Tests.Integration.Helpers
+namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
 {
-    public class ClubEntityBuilder
+    public class ClubBuilder
     {
-        private readonly ClubEntity _entity;
+        private readonly Club _club;
 
         /// <summary>
-        /// Instantiate a random <see cref="ClubEntity"/>
+        /// Instantiate a random <see cref="Club"/>
         /// </summary>
-        public ClubEntityBuilder()
+        public ClubBuilder()
         {
             // Use Bogus to initialize the entity with random data
             var addressGenerator = new Faker<Address>()
@@ -24,7 +24,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Helpers
                     .RuleFor(c => c.Code, f => f.Address.CountryCode())
                     .RuleFor(c => c.Name, f => f.Address.Country()));
 
-            _entity = new Faker<ClubEntity>()
+            _club = new Faker<Club>()
                 .RuleFor(c => c.Name, f => f.Company.CompanyName())
                 .RuleFor(c => c.TaxId, f => f.Random.AlphaNumeric(10))
                 .RuleFor(c => c.Address, f => addressGenerator.Generate())
@@ -34,67 +34,67 @@ namespace MatchPoint.ClubService.Tests.Integration.Helpers
         }
 
         /// <summary>
-        /// Set a specific Id to the <see cref="ClubEntity"/>.
+        /// Set a specific Id to the <see cref="Club"/>.
         /// </summary>
         /// <param name="id"> The id to use. </param>
-        /// <returns> This <see cref="ClubEntityBuilder"/>. </returns>
-        public ClubEntityBuilder WithId(Guid id)
+        /// <returns> This <see cref="ClubBuilder"/>. </returns>
+        public ClubBuilder WithId(Guid id)
         {
-            _entity.Id = id;
+            _club.Id = id;
             return this;
         }
 
         /// <summary>
-        /// Set a specific Name to the <see cref="ClubEntity"/>.
+        /// Set a specific Name to the <see cref="Club"/>.
         /// </summary>
         /// <param name="name"> The name to use. </param>
-        /// <returns> This <see cref="ClubEntityBuilder"/>. </returns>
-        public ClubEntityBuilder WithName(string name)
+        /// <returns> This <see cref="ClubBuilder"/>. </returns>
+        public ClubBuilder WithName(string name)
         {
-            _entity.Name = name;
+            _club.Name = name;
             return this;
         }
 
         /// <summary>
-        /// Set a specific Email to the <see cref="ClubEntity"/>.
+        /// Set a specific Email to the <see cref="Club"/>.
         /// </summary>
         /// <param name="email"> The email to use. </param>
-        /// <returns> This <see cref="ClubEntityBuilder"/>. </returns>
-        public ClubEntityBuilder WithEmail(string email)
+        /// <returns> This <see cref="ClubBuilder"/>. </returns>
+        public ClubBuilder WithEmail(string email)
         {
-            _entity.Email = email;
+            _club.Email = email;
             return this;
         }
 
         /// <summary>
-        /// Set a specific Address to the <see cref="ClubEntity"/>.
+        /// Set a specific Address to the <see cref="Club"/>.
         /// </summary>
         /// <param name="address"> The <see cref="Address"/> to use. </param>
-        /// <returns> This <see cref="ClubEntityBuilder"/>. </returns>
-        public ClubEntityBuilder WithAddress(Address address)
+        /// <returns> This <see cref="ClubBuilder"/>. </returns>
+        public ClubBuilder WithAddress(Address address)
         {
-            _entity.Address = address;
+            _club.Address = address;
             return this;
         }
 
         /// <summary>
-        /// Set a specific ActiveStatus to the <see cref="ClubEntity"/>.
+        /// Set a specific ActiveStatus to the <see cref="Club"/>.
         /// </summary>
         /// <param name="activeStatus"> The <see cref="ActiveStatus"/> to use. </param>
-        /// <returns> This <see cref="ClubEntityBuilder"/>. </returns>
-        public ClubEntityBuilder WithActiveStatus(ActiveStatus activeStatus)
+        /// <returns> This <see cref="ClubBuilder"/>. </returns>
+        public ClubBuilder WithActiveStatus(ActiveStatus activeStatus)
         {
-            _entity.ActiveStatus = activeStatus;
+            _club.ActiveStatus = activeStatus;
             return this;
         }
 
         /// <summary>
-        /// Complete the build operation for a random <see cref="ClubEntity"/>.
+        /// Complete the build operation for a random <see cref="Club"/>.
         /// </summary>
-        /// <returns> The built <see cref="ClubEntity"/>. </returns>
-        public ClubEntity Build()
+        /// <returns> The built <see cref="Club"/>. </returns>
+        public Club Build()
         {
-            return _entity;
+            return _club;
         }
     }
 }

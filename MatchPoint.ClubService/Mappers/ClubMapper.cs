@@ -5,6 +5,8 @@ namespace MatchPoint.ClubService.Mappers
 {
     public static class ClubMapper
     {
+        #region To ClubEntity
+
         /// <summary>
         /// Map a <see cref="Club"/> instance to a <see cref="ClubEntity"/>.
         /// </summary>
@@ -25,7 +27,7 @@ namespace MatchPoint.ClubService.Mappers
                 OpeningTimes = club.OpeningTimes,
                 Courts = club.Courts.ToCourtEntityEnumerable().ToList(),
                 SocialMedia = club.SocialMedia,
-                Staff = club.Staff.ToClubMemberEntityEnumerable().ToList(),
+                Staff = club.Staff.ToClubStaffEntityEnumerable().ToList(),
                 Members = club.Members.ToClubMemberEntityEnumerable().ToList(),
                 CreatedBy = club.CreatedBy,
                 CreatedOnUtc = club.CreatedOnUtc,
@@ -44,5 +46,50 @@ namespace MatchPoint.ClubService.Mappers
         {
             return clubs.Select(club => club.ToClubEntity());
         }
+
+        #endregion
+        #region To ClubDto
+
+        /// <summary>
+        /// Map a <see cref="ClubEntity"/> instance to a <see cref="Club"/>.
+        /// </summary>
+        /// <param name="clubEntity"> The instance to convert. </param>
+        /// <returns> An instance of <see cref="Club"/>. </returns>
+        public static Club ToClubDto(this ClubEntity clubEntity)
+        {
+            return new Club()
+            {
+                Id = clubEntity.Id,
+                Email = clubEntity.Email,
+                Name = clubEntity.Name,
+                PhoneNumber = clubEntity.PhoneNumber,
+                Address = clubEntity.Address,
+                Logo = clubEntity.Logo,
+                ActiveStatus = clubEntity.ActiveStatus,
+                TaxId = clubEntity.TaxId,
+                OpeningTimes = clubEntity.OpeningTimes,
+                Courts = clubEntity.Courts.ToCourtDtoEnumerable().ToList(),
+                SocialMedia = clubEntity.SocialMedia,
+                Staff = clubEntity.Staff.ToClubStaffDtoEnumerable().ToList(),
+                Members = clubEntity.Members.ToClubMemberDtoEnumerable().ToList(),
+                CreatedBy = clubEntity.CreatedBy,
+                CreatedOnUtc = clubEntity.CreatedOnUtc,
+                ModifiedBy = clubEntity.ModifiedBy,
+                ModifiedOnUtc = clubEntity.ModifiedOnUtc,
+                TimezoneId = clubEntity.TimezoneId
+            };
+        }
+
+        /// <summary>
+        /// Map an Enumerable of <see cref="ClubEntity"/> instances to an Enumerable of <see cref="Club"/>.
+        /// </summary>
+        /// <param name="clubEntities"> The instances to convert. </param>
+        /// <returns> An Enumerable of <see cref="Club"/>. </returns>
+        public static IEnumerable<Club> ToClubDtoEnumerable(this IEnumerable<ClubEntity> clubEntities)
+        {
+            return clubEntities.Select(clubEntity => clubEntity.ToClubDto());
+        }
+
+        #endregion
     }
 }

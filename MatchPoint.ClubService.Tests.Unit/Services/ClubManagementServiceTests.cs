@@ -2,10 +2,10 @@
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Enums;
+using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Services;
-using MatchPoint.ClubService.Tests.Unit.Helpers;
 using Microsoft.Extensions.Logging;
 using Moq;
 

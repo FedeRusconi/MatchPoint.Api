@@ -5,6 +5,8 @@ namespace MatchPoint.ClubService.Mappers
 {
     public static class ClubMemberMapper
     {
+        #region To ClubMemberEntity
+
         /// <summary>
         /// Map a <see cref="ClubMember"/> instance to a <see cref="ClubMemberEntity"/>.
         /// </summary>
@@ -15,7 +17,8 @@ namespace MatchPoint.ClubService.Mappers
             return new ClubMemberEntity()
             {
                 Id = clubMember.Id,
-                FullName = clubMember.FullName,
+                FirstName = clubMember.FirstName,
+                LastName = clubMember.LastName,
                 Photo = clubMember.Photo
             };
         }
@@ -29,5 +32,36 @@ namespace MatchPoint.ClubService.Mappers
         {
             return clubMembers.Select(member => member.ToClubMemberEntity());
         }
+
+        #endregion
+        #region To ClubMemberDto
+
+        /// <summary>
+        /// Map a <see cref="ClubMemberEntity"/> instance to a <see cref="ClubMember"/>.
+        /// </summary>
+        /// <param name="clubMemberEntity"> The instance to convert. </param>
+        /// <returns> An instance of <see cref="ClubMember"/>. </returns>
+        public static ClubMember ToClubMemberDto(this ClubMemberEntity clubMemberEntity)
+        {
+            return new ClubMember()
+            {
+                Id = clubMemberEntity.Id,
+                FirstName = clubMemberEntity.FirstName,
+                LastName = clubMemberEntity.LastName,
+                Photo = clubMemberEntity.Photo
+            };
+        }
+
+        /// <summary>
+        /// Map an Enumerable of <see cref="ClubMemberEntity"/> instances to an Enumerable of <see cref="ClubMember"/>.
+        /// </summary>
+        /// <param name="clubMemberEntities"> The instances to convert. </param>
+        /// <returns> An Enumerable of <see cref="ClubMember"/>. </returns>
+        public static IEnumerable<ClubMember> ToClubMemberDtoEnumerable(this IEnumerable<ClubMemberEntity> clubMemberEntities)
+        {
+            return clubMemberEntities.Select(memberEntity => memberEntity.ToClubMemberDto());
+        }
+
+        #endregion
     }
 }
