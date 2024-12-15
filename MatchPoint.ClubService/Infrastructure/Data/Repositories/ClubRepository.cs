@@ -14,7 +14,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         IClubRepository
     {
         /// <inheritdoc />
-        public async Task<int> CountAsync(Dictionary<string, object>? filters = null)
+        public async Task<int> CountAsync(Dictionary<string, string>? filters = null)
         {
             _logger.LogTrace(
                 "Querying database for count of clubs with {Count} filters", filters != null ? filters.Count : "no");
@@ -76,7 +76,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         public async Task<PagedResponse<ClubEntity>> GetAllWithSpecificationAsync(
             int pageNumber, 
             int pageSize, 
-            Dictionary<string, object>? filters = null, 
+            Dictionary<string, string>? filters = null, 
             Dictionary<string, SortDirection>? orderBy = null,
             bool trackChanges = true)
         {
@@ -90,18 +90,11 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             }
             if (filters != null)
             {
-                //query = query.Where(QuerySpecificationFactory<ClubEntity>.CreateFilters(filters));
                 query = query.WithFilters(filters);
             }
             if (orderBy != null)
             {
                 query = query.WithOrderBy(orderBy);
-                //var sortDirection = orderBy.Value.Value;
-                //var orderByExpression = QuerySpecificationFactory<ClubEntity>.CreateOrderBy(orderBy.Value.Key);
-
-                //query = sortDirection == SortDirection.Descending
-                //    ? query.OrderByDescending(orderByExpression)
-                //    : query.OrderBy(orderByExpression);
             }
 
             // Get count and Apply pagination

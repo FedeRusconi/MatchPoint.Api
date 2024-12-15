@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>9c58d9a4-a76a-4d99-a532-32f258b1beda</UserSecretsId>	
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <InternalsVisibleTo Include="MatchPoint.ClubService.Tests.Integration" />
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />

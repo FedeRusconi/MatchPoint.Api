@@ -25,7 +25,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Interfaces
         public Task<PagedResponse<T>> GetAllWithSpecificationAsync(
             int pageNumber,
             int pageSize,
-            Dictionary<string, object>? filters = null,
+            Dictionary<string, string>? filters = null,
             Dictionary<string, SortDirection>? orderBy = null,
             bool trackChanges = true);
     }

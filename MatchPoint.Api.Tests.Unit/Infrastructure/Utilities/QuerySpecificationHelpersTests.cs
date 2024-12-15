@@ -46,9 +46,9 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
         public void ValidateFilters_WithValidFilters_ShouldReturnNull()
         {
             #region Arrange
-            Dictionary<string, object> filters = new()
+            Dictionary<string, string> filters = new()
             {
-                {nameof(GenericEntityTest.Id), Guid.NewGuid()}
+                {nameof(GenericEntityTest.Id), Guid.NewGuid().ToString()}
             };
             #endregion
 
@@ -65,7 +65,7 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
         public void ValidateFilters_WithNullFilters_ShouldReturnNull()
         {
             #region Arrange
-            Dictionary<string, object>? filters = null;
+            Dictionary<string, string>? filters = null;
             #endregion
 
             #region Act
@@ -78,12 +78,32 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
         }
 
         [TestMethod]
-        public void ValidateFilters_WithInvalidFilters_ShouldReturnFailResult()
+        public void ValidateFilters_WithInvalidPropertyFilters_ShouldReturnFailResult()
         {
             #region Arrange
-            Dictionary<string, object> filters = new()
+            Dictionary<string, string> filters = new()
             {
-                {"Invalid Property", Guid.NewGuid()}
+                {"Invalid Property", Guid.NewGuid().ToString()}
+            };
+            #endregion
+
+            #region Act
+            var result = QuerySpecificationHelpers.ValidateFilters<GenericEntityTest>(filters);
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
+            #endregion
+        }
+
+        [TestMethod]
+        public void ValidateFilters_WithInvalidValueFilters_ShouldReturnFailResult()
+        {
+            #region Arrange
+            Dictionary<string, string> filters = new()
+            {
+                {nameof(GenericEntityTest.Id), "Invalid Guid"}
             };
             #endregion
 

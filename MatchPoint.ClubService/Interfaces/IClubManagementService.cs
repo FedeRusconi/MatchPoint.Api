@@ -36,7 +36,7 @@ namespace MatchPoint.ClubService.Interfaces
         public Task<IServiceResult<PagedResponse<ClubEntity>>> GetAllWithSpecificationAsync(
             int pageNumber,
             int pageSize,
-            Dictionary<string, object>? filters = null,
+            Dictionary<string, string>? filters = null,
             Dictionary<string, SortDirection>? orderBy = null);
 
         /// <summary>

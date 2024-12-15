@@ -4,6 +4,7 @@ using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -103,10 +104,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 .WithActiveStatus(searchStatus)
                 .Build();
 
-            Dictionary<string, object> filters = new()
+            Dictionary<string, string> filters = new()
             {
                 { nameof(ClubEntity.Name), searchName},
-                { nameof(ClubEntity.ActiveStatus), searchStatus }
+                { nameof(ClubEntity.ActiveStatus), searchStatus.ToString() }
             };
 
             try
@@ -220,10 +221,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 .WithActiveStatus(searchStatus)
                 .Build();
 
-            Dictionary<string, object> filters = new()
+            Dictionary<string, string> filters = new()
             {
                 { nameof(ClubEntity.Name), searchName},
-                { nameof(ClubEntity.ActiveStatus), searchStatus }
+                { nameof(ClubEntity.ActiveStatus), searchStatus.ToString() }
             };
 
             try

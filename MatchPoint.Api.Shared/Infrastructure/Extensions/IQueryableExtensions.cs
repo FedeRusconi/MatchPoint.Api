@@ -13,7 +13,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Extensions
         /// A Dictionary of filters to apply to the query.
         /// </param>
         /// <returns> The original query with a Where clause appended. </returns>
-        public static IQueryable<T> WithFilters<T>(this IQueryable<T> query, Dictionary<string, object> filters)
+        public static IQueryable<T> WithFilters<T>(this IQueryable<T> query, Dictionary<string, string> filters)
         {
             return query.Where(QuerySpecificationFactory<T>.CreateFilters(filters));
         }

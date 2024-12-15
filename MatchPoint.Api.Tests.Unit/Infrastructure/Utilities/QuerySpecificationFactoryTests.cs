@@ -14,27 +14,36 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
         {
             #region Arrange
             string idPropName = nameof(GenericEntityTest.Id);
+            Guid idPropValue = Guid.NewGuid();
             string descPropName = nameof(GenericEntityTest.Description);
             string createdPropName = nameof(GenericEntityTest.CreatedOn);
-            Dictionary<string, object> filters = new()
+            DateTime createdPropValue = new(2024, 12, 20);
+            string availablePropName = nameof(GenericEntityTest.Available);
+            int availablePropValue = 123;
+            Dictionary<string, string> filters = new()
             {
-                { idPropName, Guid.NewGuid() },
+                { idPropName, idPropValue.ToString() },
                 { descPropName, "Test Description" },
-                { createdPropName, new DateTime(2024, 12, 20) }
+                { createdPropName, createdPropValue.ToString() },
+                { availablePropName, availablePropValue.ToString() }
             };
             var parameter = Expression.Parameter(typeof(GenericEntityTest), "entity");
             var propertyId = Expression.Property(parameter, idPropName);
-            var constantId = Expression.Constant(filters[idPropName]);
+            var constantId = Expression.Constant(idPropValue);
             var propertyDesc = Expression.Property(parameter, descPropName);
             var constantDesc = Expression.Constant(filters[descPropName]);
             var propertyCreated = Expression.Property(parameter, createdPropName);
-            var constantCreated = Expression.Constant(filters[createdPropName]);
+            var constantCreated = Expression.Constant(createdPropValue);
+            var propertyAvailable = Expression.Property(parameter, availablePropName);
+            var constantAvailable = Expression.Constant(availablePropValue);
             var expectedExp = Expression.Lambda<Func<GenericEntityTest, bool>>(
                 Expression.AndAlso(
                     Expression.AndAlso(
-                        Expression.Equal(propertyId, constantId),
-                        Expression.Equal(propertyDesc, constantDesc)),
-                    Expression.Equal(propertyCreated, constantCreated)),
+                        Expression.AndAlso(
+                            Expression.Equal(propertyId, constantId),
+                            Expression.Equal(propertyDesc, constantDesc)),
+                        Expression.Equal(propertyCreated, constantCreated)),
+                    Expression.Equal(propertyAvailable, constantAvailable)),
                 parameter);
             #endregion
 
@@ -52,7 +61,7 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
         public void CreateFilters_WithEmptyFilters_ShouldThrowArgumentException()
         {
             #region Arrange
-            Dictionary<string, object> filters = [];
+            Dictionary<string, string> filters = [];
             #endregion
 
             #region Act & Assert

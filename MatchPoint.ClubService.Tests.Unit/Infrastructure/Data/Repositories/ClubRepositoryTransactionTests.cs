@@ -1,6 +1,7 @@
 ﻿using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
+using MatchPoint.ClubService.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -13,7 +14,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
         private ClubServiceDbContext _dbContext = default!;
         private readonly IConfiguration _configuration = DataContextHelpers.TestingConfiguration;
         private Mock<ILogger<ClubRepository>> _loggerMock = default!;
-        private ClubRepository _repository = default!;
+        private IClubRepository _repository = default!;
 
         [TestInitialize]
         public void TestInitialize()

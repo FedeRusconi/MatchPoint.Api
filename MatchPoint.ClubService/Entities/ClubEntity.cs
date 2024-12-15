@@ -23,6 +23,6 @@ namespace MatchPoint.ClubService.Entities
         public DateTime CreatedOnUtc { get; set; }
         public Guid? ModifiedBy { get; set; }
         public DateTime? ModifiedOnUtc { get; set; }
-        public string? TimezoneId { get; set; } = "UTC";
+        public string? TimezoneId { get; set; } = TimeZoneInfo.Utc.Id;
     }
 }

@@ -1,7 +1,11 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using MatchPoint.ClubService.Configuration;
+
+// Necessary to run integration tests with mock host
+[assembly: InternalsVisibleTo("MatchPoint.ClubService.Tests.Integration")]
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -25,6 +25,7 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
                     .RuleFor(c => c.Name, f => f.Address.Country()));
 
             _entity = new Faker<ClubEntity>()
+                .RuleFor(c => c.Id, Guid.NewGuid)
                 .RuleFor(c => c.Name, f => f.Company.CompanyName())
                 .RuleFor(c => c.TaxId, f => f.Random.AlphaNumeric(10))
                 .RuleFor(c => c.Address, f => addressGenerator.Generate())

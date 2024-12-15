@@ -8,7 +8,7 @@
         /// </summary>
         /// <param name="filters"> A Dictionary of filters to apply before counting the results. </param>
         /// <returns> The number of <typeparamref name="T"/> that match the filters criteria. </returns>
-        public Task<int> CountAsync(Dictionary<string, object>? filters = null);
+        public Task<int> CountAsync(Dictionary<string, string>? filters = null);
 
         /// <summary>
         /// Retrieves all <typeparamref name="T"/> from the database.

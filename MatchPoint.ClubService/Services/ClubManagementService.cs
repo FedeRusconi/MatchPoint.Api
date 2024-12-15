@@ -32,7 +32,7 @@ namespace MatchPoint.ClubService.Services
         public async Task<IServiceResult<PagedResponse<ClubEntity>>> GetAllWithSpecificationAsync(
             int pageNumber,
             int pageSize,
-            Dictionary<string, object>? filters = null,
+            Dictionary<string, string>? filters = null,
             Dictionary<string, SortDirection>? orderBy = null)
         {
             // Validate params
@@ -51,7 +51,7 @@ namespace MatchPoint.ClubService.Services
             var clubs = await _clubRepository.GetAllWithSpecificationAsync(
                     pageNumber, pageSize, filters, orderBy, trackChanges: false);
 
-            _logger.LogDebug("Receieved {PageSize} of {Count} Clubs found.", pageSize, clubs.TotalCount);
+            _logger.LogDebug("Receieved {PageSize} of {Count} Clubs found.", clubs.Data.Count(), clubs.TotalCount);
 
             return ServiceResult<PagedResponse<ClubEntity>>.Success(clubs);
         }
@@ -64,7 +64,7 @@ namespace MatchPoint.ClubService.Services
             _logger.LogDebug("Attempting to create club with email: {Email}", clubEntity.Email);
 
             // Detect duplicate
-            var filters = new Dictionary<string, object>() { { nameof(ClubEntity.Email), clubEntity.Email } };
+            var filters = new Dictionary<string, string>() { { nameof(ClubEntity.Email), clubEntity.Email } };
             var existingClubs = await _clubRepository.CountAsync(filters);
             if (existingClubs > 0)
             {

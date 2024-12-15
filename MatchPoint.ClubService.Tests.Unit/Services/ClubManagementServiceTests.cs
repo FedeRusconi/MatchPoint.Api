@@ -169,8 +169,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Build();
             Dictionary<string, SortDirection> orderBy = new()
             {
-                { nameof(ClubEntity.Name), SortDirection.Descending },
-                { nameof(ClubEntity.CreatedOnUtc), SortDirection.Ascending }
+                { nameof(ClubEntity.Name), SortDirection.Descending }
             };
             PagedResponse<ClubEntity> expectedResponse = new()
             {

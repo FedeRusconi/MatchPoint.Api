@@ -44,18 +44,30 @@ namespace MatchPoint.Api.Shared.Infrastructure.Utilities
         /// A <see cref="IServiceResult{T}"/> with appropriate message if any key is invalid. 
         /// Null if all filters are valid.
         /// </returns>
-        public static IServiceResult<PagedResponse<T>>? ValidateFilters<T>(Dictionary<string, object>? filters)
+        public static IServiceResult<PagedResponse<T>>? ValidateFilters<T>(Dictionary<string, string>? filters)
         {
             if (filters == null) return null;
 
-            var validProperties = typeof(T).GetProperties()
-                .Select(p => p.Name)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var invalidFilterKey = filters.Keys.FirstOrDefault(k => !validProperties.Contains(k));
-            if (invalidFilterKey != null)
+            var properties = typeof(T)
+                .GetProperties()
+                .ToDictionary(p => p.Name, p => p.PropertyType, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var filter in filters)
             {
-                return ServiceResult<PagedResponse<T>>.Failure(
-                    $"Invalid filter key: {invalidFilterKey}.", ServiceResultType.BadRequest);
+                // Check if the filter key is valid
+                if (!properties.TryGetValue(filter.Key, out var propertyType))
+                {
+                    return ServiceResult<PagedResponse<T>>.Failure(
+                        $"Invalid filter key: {filter.Key}.", ServiceResultType.BadRequest);
+                }
+
+                // Check if the filter value is compatible with the property type
+                if (filter.Value != null && !IsTypeCompatible(filter.Value, propertyType))
+                {
+                    return ServiceResult<PagedResponse<T>>.Failure(
+                        $"Invalid value for filter key: {filter.Key}. Expected type: {propertyType.Name}, but received: {filter.Value.GetType().Name}.",
+                        ServiceResultType.BadRequest);
+                }
             }
 
             return null;
@@ -91,6 +103,27 @@ namespace MatchPoint.Api.Shared.Infrastructure.Utilities
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Check if provided value is compatible with target type.
+        /// </summary>
+        /// <param name="value"> Any value. </param>
+        /// <param name="targetType"> The Type to check for compatibility. </param>
+        /// <returns> True if value is compatible with target type. False otherwise. </returns>
+        private static bool IsTypeCompatible(object value, Type targetType)
+        {
+            var valueType = value.GetType();
+
+            // Handle nullable types
+            if (Nullable.GetUnderlyingType(targetType) is Type underlyingType)
+            {
+                targetType = underlyingType;
+            }
+
+            // Handle type compatibility
+            return targetType.IsAssignableFrom(valueType)
+                || (targetType.IsEnum && Enum.IsDefined(targetType, value));
         }
     }
 }

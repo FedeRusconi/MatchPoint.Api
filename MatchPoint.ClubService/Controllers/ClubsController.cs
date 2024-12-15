@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MatchPoint.ClubService.Controllers
 {
+    [ApiVersion(1)]
     [Route("api/v{v:apiVersion}/[controller]")]
     [ApiController]
-    [ApiVersion(1)]
     public class ClubsController(IClubManagementService _clubService, ILogger<ClubsController> _logger) : ControllerBase
     {
         // GET: api/v1/clubs
@@ -21,7 +21,7 @@ namespace MatchPoint.ClubService.Controllers
         public async Task<ActionResult<PagedResponse<Club>>> GetClubsAsync(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = Constants.MaxPageSizeAllowed,
-            [FromQuery] Dictionary<string, object>? filters = null,
+            [FromQuery] Dictionary<string, string>? filters = null,
             [FromQuery] Dictionary<string, SortDirection>? orderBy = null)
         {
             _logger.LogInformation(
@@ -42,7 +42,7 @@ namespace MatchPoint.ClubService.Controllers
             }
             _logger.LogInformation(
                 "Successfully found {totalCount} clubs with filters: {countFilters}, orderBy: {orderBy}. " +
-                "Returning page {page} with {pageSize} clubs", 
+                "Returning page {page} with up to {pageSize} clubs", 
                 result.Data.TotalCount, filters?.Count, orderBy?.First().Key, page, pageSize);
 
             return new PagedResponse<Club>()
@@ -71,6 +71,29 @@ namespace MatchPoint.ClubService.Controllers
             return result.Data.ToClubDto();            
         }
 
+        // POST: api/v1/clubs
+        [MapToApiVersion(1)]
+        [HttpPost]
+        public async Task<ActionResult<Club>> PostClubAsync(Club club)
+        {
+            _logger.LogInformation(
+                "Received POST request to CREATE club with name: {clubName}, email: {clubEmail}",
+                club.Name, club.Email);
+            var result = await _clubService.CreateAsync(club.ToClubEntity());
+            if (!result.IsSuccess || result.Data == null)
+            {
+                _logger.LogWarning(
+                    "Failed to create club with name: {clubName}, email: {clubEmail}. Error: {Error}",
+                    club.Name, club.Email, result.Error);
+                return result.ToFailureActionResult(this);
+            }
+            _logger.LogInformation(
+                "Successfully created club with ID: {Id}, name: {clubName}, email: {clubEmail}",
+                result.Data.Id, result.Data.Name, result.Data.Email);
+            //return Created($"api/clubs/{result.Data}", result.Data);
+            return CreatedAtAction(nameof(GetClubAsync), new { id = result.Data.Id }, club);
+        }
+
         // PUT: api/v1/clubs/5
         [MapToApiVersion(1)]
         [HttpPut("{id}")]
@@ -95,27 +118,30 @@ namespace MatchPoint.ClubService.Controllers
             return result.Data.ToClubDto();
         }
 
-        // POST: api/v1/clubs
+        // PATCH: api/v1/clubs/5
         [MapToApiVersion(1)]
-        [HttpPost]
-        public async Task<ActionResult<Club>> PostClubAsync(Club club)
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<Club>> PatchClubAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
         {
             _logger.LogInformation(
-                "Received POST request to CREATE club with name: {clubName}, email: {clubEmail}", 
-                club.Name, club.Email);
-            var result = await _clubService.CreateAsync(club.ToClubEntity());
+                "Received PATCH request to UPDATE {count} properties for club with ID: {Id}", 
+                propertyUpdates.Count(), id);
+            if (id == default)
+            {
+                string errorMsg = $"Id '{id}' is not valid.";
+                _logger.LogWarning("Failed to update club with ID: {Id}. Error: {Error}", id, errorMsg);
+                return BadRequest(errorMsg);
+            }
+
+            var result = await _clubService.PatchAsync(id, propertyUpdates);
             if (!result.IsSuccess || result.Data == null)
             {
-                _logger.LogWarning(
-                    "Failed to create club with name: {clubName}, email: {clubEmail}. Error: {Error}", 
-                    club.Name, club.Email, result.Error);
+                _logger.LogWarning("Failed to update club with ID: {Id}. Error: {Error}", id, result.Error);
                 return result.ToFailureActionResult(this);
             }
-            _logger.LogInformation(
-                "Successfully created club with ID: {Id}, name: {clubName}, email: {clubEmail}", 
-                result.Data.Id, result.Data.Name, result.Data.Email);
+            _logger.LogInformation("Successfully updated club with ID: {Id}", id);
 
-            return CreatedAtAction(nameof(GetClubAsync), new { id = club.Id }, club);
+            return result.Data.ToClubDto();
         }
 
         // DELETE: api/v1/clubs/5
@@ -125,7 +151,7 @@ namespace MatchPoint.ClubService.Controllers
         {
             _logger.LogInformation("Received DELETE request to delete club with ID: {Id}", id);
             var result = await _clubService.DeleteAsync(id);
-            if (!result.IsSuccess)
+            if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning("Failed to delete club with ID: {Id}. Error: {Error}", id, result.Error);
                 return result.ToFailureActionResult(this);
