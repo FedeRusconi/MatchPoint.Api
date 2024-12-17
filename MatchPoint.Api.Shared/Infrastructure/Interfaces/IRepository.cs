@@ -37,8 +37,8 @@
         /// Adds a new <typeparamref name="T"/> to the database.
         /// </summary>
         /// <param name="entity">The <typeparamref name="T"/> to add.</param>
-        /// <returns> The newly created <typeparamref name="T"/>. </returns>
-        public Task<T> CreateAsync(T entity);
+        /// <returns> The newly created <typeparamref name="T"/> or null if there was an issue. </returns>
+        public Task<T?> CreateAsync(T entity);
 
         /// <summary>
         /// Updates an existing <typeparamref name="T"/> in the database.

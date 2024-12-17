@@ -77,6 +77,13 @@ namespace MatchPoint.ClubService.Services
             clubEntity.SetTrackingFields();
 
             var createdEntity = await _clubRepository.CreateAsync(clubEntity);
+            if (createdEntity == null)
+            {
+                _logger.LogWarning("Conflict: Club with Id '{Id}' already exists.", clubEntity.Id);
+                return ServiceResult<ClubEntity>.Failure(
+                    $"Club with id '{clubEntity.Id}' already exists.", ServiceResultType.Conflict);
+            }
+
             _logger.LogDebug(
                 "Club with email '{Email}' created successfully. Id: {Id}", createdEntity.Email, createdEntity.Id);
             return ServiceResult<ClubEntity>.Success(createdEntity);
@@ -122,8 +129,16 @@ namespace MatchPoint.ClubService.Services
             }
 
             // Update
-            clubEntity.Patch(propertyUpdates);
-            clubEntity.SetTrackingFields(updating: true);
+            try
+            {
+                clubEntity.Patch(propertyUpdates);
+                clubEntity.SetTrackingFields(updating: true);
+            } 
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning("{msg}", ex.Message);
+                return ServiceResult<ClubEntity>.Failure(ex.Message, ServiceResultType.BadRequest);
+            }
 
             var updatedEntity = await _clubRepository.UpdateAsync(clubEntity);
             if (updatedEntity == null)

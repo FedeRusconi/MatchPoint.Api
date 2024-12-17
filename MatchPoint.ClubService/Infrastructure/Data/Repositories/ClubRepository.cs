@@ -1,10 +1,12 @@
-﻿using MatchPoint.Api.Shared.Common.Enums;
+﻿using System.Net;
+using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Infrastructure.Extensions;
 using MatchPoint.Api.Shared.Infrastructure.RepositoryBases;
 using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Interfaces;
+using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 
 namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
@@ -117,7 +119,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         /// </summary>
         /// <param name="clubEntity">The <see cref="ClubEntity"/> to add.</param>
         /// <returns> The newly created <see cref="ClubEntity"/>. </returns>
-        public async Task<ClubEntity> CreateAsync(ClubEntity clubEntity)
+        public async Task<ClubEntity?> CreateAsync(ClubEntity clubEntity)
         {
             ArgumentNullException.ThrowIfNull(clubEntity);
 
@@ -126,7 +128,15 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             _context.Clubs.Add(clubEntity);
             if (!IsTransactionActive)
             {
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.Conflict)
+                {
+                    _logger.LogWarning("Club with specified id or name already exists.");
+                    return null;
+                }
             }
 
             _logger.LogTrace("New club '{Email}' added to the database", clubEntity.Email);
@@ -144,7 +154,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             ArgumentNullException.ThrowIfNull(clubEntity);
 
             _logger.LogTrace("Updating club in the database with Id {Id} ({Email})", clubEntity.Id, clubEntity.Email);
-
+            _context.Clubs.Attach(clubEntity);
             _context.Entry(clubEntity).State = EntityState.Modified;
 
             if (!IsTransactionActive)

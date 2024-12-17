@@ -47,8 +47,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                     services.AddSingleton(DataContextHelpers.TestingConfiguration);
                 });
             })
-            .CreateClient();
-            _dbContext = new(DataContextHelpers.TestingConfiguration);
+            .CreateClient();            
         }
 
         [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
@@ -62,6 +61,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         [TestInitialize]
         public void TestInitialize()
         {
+            _dbContext = new(DataContextHelpers.TestingConfiguration);
             _entityBuilder = new ClubEntityBuilder();
             _dtoBuilder = new ClubBuilder();
         }
@@ -176,6 +176,24 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             }
         }
 
+        [TestMethod]
+        public async Task GetClubsAsync_WithInvalidQueryParameters_ShouldReturnBadRequest()
+        {
+            #region Arrange
+            string invalidFilters = "Invalid Filters";
+            #endregion
+
+            #region Act
+            var result = await _httpClient.GetAsync(
+                $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs?filters={invalidFilters}");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+            #endregion
+        }
+
         #endregion
 
         #region GetClubAsync
@@ -221,6 +239,24 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             }
         }
 
+        [TestMethod]
+        public async Task GetClubAsync_WithInvalidId_ShouldReturnNotFound()
+        {
+            #region Arrange
+            string clubId = "1";
+            #endregion
+
+            #region Act
+            var result = await _httpClient.GetAsync(
+                $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{clubId}");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.NotFound, result.StatusCode);
+            #endregion
+        }
+
         #endregion
 
         #region PostClubAsync
@@ -264,6 +300,390 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 }                
                 #endregion
             }
+        }
+
+        [TestMethod]
+        public async Task PostClubAsync_WithoutRequiredProperty_ShouldReturnBadRequest()
+        {
+            #region Arrange
+            Club club = _dtoBuilder.Build();
+            club.Email = null!;
+            #endregion
+
+            #region Act
+            var result = await _httpClient.PostAsJsonAsync(
+                $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs", club);
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task PostClubAsync_WithInvalidClub_ShouldReturnBadRequest()
+        {
+            #region Arrange
+            string club = "Invalid Club";
+            #endregion
+
+            #region Act
+            var result = await _httpClient.PostAsJsonAsync(
+                $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs", club);
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+            #endregion
+        }
+
+        #endregion
+
+        #region PutClubAsync
+
+        [TestMethod]
+        public async Task PutClubAsync_WithValidClub_ShouldUpdateAndReturnRecord()
+        {
+            #region Arrange
+            Club club = _dtoBuilder.Build();
+            Club? clubResponse = null;
+            string updatedEmail = "changed@email.com";
+            try
+            {
+                // Create the record to test the update
+                _dbContext.Clubs.Add(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+
+                club.Email = updatedEmail;
+                #endregion
+
+                #region Act
+                var result = await _httpClient.PutAsJsonAsync(
+                    $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{club.Id}", club);
+                clubResponse = await result.Content.ReadFromJsonAsync<Club>();
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(HttpStatusCode.OK, result.StatusCode);
+                Assert.IsNotNull(clubResponse);
+                Assert.AreEqual(club.Id, clubResponse.Id);
+                Assert.AreEqual(updatedEmail, clubResponse.Email);
+                Assert.AreNotEqual(club.ModifiedOnUtc, clubResponse.ModifiedOnUtc);
+
+                // Ensure record is actually updated in DB
+                var getResponse = await _dbContext.Clubs.AsNoTracking().FirstOrDefaultAsync(c => c.Id == clubResponse.Id);
+                Assert.IsNotNull(getResponse);
+                Assert.AreEqual(updatedEmail, getResponse.Email);
+                Assert.AreNotEqual(club.ModifiedOnUtc, getResponse.ModifiedOnUtc);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                if (clubResponse != null)
+                {
+                    _dbContext = new(DataContextHelpers.TestingConfiguration);
+                    _dbContext.Remove(clubResponse.ToClubEntity());
+                    await _dbContext.SaveChangesAsync();
+                }
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task PutClubAsync_WithInvalidId_ShouldReturnBadRequest()
+        {
+            #region Arrange
+            string invalidClubId = "Invalid Club Id";
+            Club club = _dtoBuilder.Build();
+            try
+            {
+                // Create the record to test the update
+                _dbContext.Clubs.Add(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+
+                #region Act
+                var result = await _httpClient.PutAsJsonAsync(
+                    $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{invalidClubId}", club);
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                _dbContext = new(DataContextHelpers.TestingConfiguration);
+                _dbContext.Remove(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task PutClubAsync_WithoutRequiredProperty_ShouldReturnBadRequest()
+        {
+            #region Arrange
+            Club club = _dtoBuilder.Build();
+            try
+            {
+                // Create the record to test the update
+                _dbContext.Clubs.Add(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+
+                club.Email = null!;
+                #endregion
+
+                #region Act
+                var result = await _httpClient.PutAsJsonAsync(
+                    $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{club.Id}", club);
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                _dbContext = new(DataContextHelpers.TestingConfiguration);
+                _dbContext.Remove(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+            }
+        }
+
+        #endregion
+
+        #region PatchClubAsync
+
+        [TestMethod]
+        public async Task PatchClubAsync_WithValidClub_ShouldUpdateAndReturnRecord()
+        {
+            #region Arrange
+            Club club = _dtoBuilder.Build();
+            Club? clubResponse = null;
+            string updatedName = "New Club Name";
+            string updatedEmail = "changed@email.com";
+            List<PropertyUpdate> updates = new()
+            {
+                new() { Property = nameof(Club.Email), Value = updatedEmail },
+                new() { Property = nameof(Club.Name), Value = updatedName },
+            };
+            try
+            {
+                // Create the record to test the update
+                _dbContext.Clubs.Add(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+
+                club.Email = updatedEmail;
+                #endregion
+
+                #region Act
+                var result = await _httpClient.PatchAsJsonAsync(
+                    $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{club.Id}", updates);
+                clubResponse = await result.Content.ReadFromJsonAsync<Club>();
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(HttpStatusCode.OK, result.StatusCode);
+                Assert.IsNotNull(clubResponse);
+                Assert.AreEqual(club.Id, clubResponse.Id);
+                Assert.AreEqual(updatedName, clubResponse.Name);
+                Assert.AreEqual(updatedEmail, clubResponse.Email);
+                Assert.AreNotEqual(club.ModifiedOnUtc, clubResponse.ModifiedOnUtc);
+
+                // Ensure record is actually updated in DB
+                var getResponse = await _dbContext.Clubs.AsNoTracking().FirstOrDefaultAsync(c => c.Id == clubResponse.Id);
+                Assert.IsNotNull(getResponse);
+                Assert.AreEqual(updatedEmail, getResponse.Email);
+                Assert.AreEqual(updatedName, getResponse.Name);
+                Assert.AreNotEqual(club.ModifiedOnUtc, getResponse.ModifiedOnUtc);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                if (clubResponse != null)
+                {
+                    _dbContext = new(DataContextHelpers.TestingConfiguration);
+                    _dbContext.Remove(clubResponse.ToClubEntity());
+                    await _dbContext.SaveChangesAsync();
+                }
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task PatchClubAsync_WithInvalidId_ShouldReturnBadRequest()
+        {
+            #region Arrange
+            string invalidClubId = "Invalid Club Id";
+            Club club = _dtoBuilder.Build();
+            string updatedName = "New Club Name";
+            string updatedEmail = "changed@email.com";
+            List<PropertyUpdate> updates = new()
+            {
+                new() { Property = nameof(Club.Email), Value = updatedEmail },
+                new() { Property = nameof(Club.Name), Value = updatedName },
+            };
+            try
+            {
+                // Create the record to test the update
+                _dbContext.Clubs.Add(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+
+                #region Act
+                var result = await _httpClient.PatchAsJsonAsync(
+                    $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{invalidClubId}", updates);
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                _dbContext = new(DataContextHelpers.TestingConfiguration);
+                _dbContext.Remove(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task PatchClubAsync_WithInvalidUpdates_ShouldReturnBadRequest()
+        {
+            #region Arrange            
+            Club club = _dtoBuilder.Build();
+            string invalidPropertyUpdates = "Invalid Property Updates";
+            try
+            {
+                // Create the record to test the update
+                _dbContext.Clubs.Add(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+
+                #region Act
+                var result = await _httpClient.PatchAsJsonAsync(
+                    $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{club.Id}", invalidPropertyUpdates);
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+                #endregion
+            }
+            finally
+            {
+                #region Cleanup
+                _dbContext = new(DataContextHelpers.TestingConfiguration);
+                _dbContext.Remove(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+            }
+        }
+
+        #endregion
+
+        #region DeleteClubAsync
+
+        [TestMethod]
+        public async Task DeleteClubAsync_WithValidId_ShouldDeleteRecord()
+        {
+            #region Arrange
+            Club club = _dtoBuilder.Build();
+            try
+            {
+                // Create the record to test the update
+                _dbContext.Clubs.Add(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+
+                #region Act
+                var result = await _httpClient.DeleteAsync(
+                    $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{club.Id}");
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(HttpStatusCode.NoContent, result.StatusCode);
+
+                // Ensure record is actually deleted in DB
+                var getResponse = await _dbContext.Clubs.AsNoTracking().FirstOrDefaultAsync(c => c.Id == club.Id);
+                Assert.IsNull(getResponse);
+                #endregion
+            }
+            catch (Exception)
+            {
+                #region Cleanup
+                _dbContext = new(DataContextHelpers.TestingConfiguration);
+                _dbContext.Remove(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task DeleteClubAsync_WithInvalidId_ShouldReturnBadRequest()
+        {
+            #region Arrange
+            string invalidClubId = "Invalid Club Id";
+            Club club = _dtoBuilder.Build();
+            try
+            {
+                // Create the record to test the update
+                _dbContext.Clubs.Add(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+
+                #region Act
+                var result = await _httpClient.DeleteAsync(
+                    $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{invalidClubId}");
+                #endregion
+
+                #region Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+                #endregion
+            }
+            catch (Exception)
+            {
+                #region Cleanup
+                _dbContext = new(DataContextHelpers.TestingConfiguration);
+                _dbContext.Remove(club.ToClubEntity());
+                await _dbContext.SaveChangesAsync();
+                #endregion
+            }
+        }
+
+        [TestMethod]
+        public async Task DeleteClubAsync_WithNonExistentId_ShouldReturnNotFound()
+        {
+            #region Arrange
+            Club club = _dtoBuilder.Build();
+            #endregion
+
+            #region Act
+            var result = await _httpClient.DeleteAsync(
+                $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{club.Id}");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.NotFound, result.StatusCode);
+            #endregion
         }
 
         #endregion

@@ -122,12 +122,11 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             var clubEntity = _clubEntityBuilder
                 .WithName("Integration Testing Club")
                 .Build();
-            Dictionary<string, object> filters = new()
+            Dictionary<string, string> filters = new()
             {
                 { nameof(ClubEntity.Name), "Test" },
-                { nameof(ClubEntity.Email), 0 },
-                { nameof(ClubEntity.ActiveStatus), true },
-                { nameof(ClubEntity.Address), DateTime.UtcNow },
+                { nameof(ClubEntity.Email), "test@test.com" },
+                { nameof(ClubEntity.ActiveStatus), ActiveStatus.Active.ToString() }
             };
             PagedResponse<ClubEntity> expectedResponse = new()
             {
@@ -224,7 +223,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenFiltersAreInvalid_ShouldReturnFailResult()
         {
             #region Arrange
-            Dictionary<string, object> filters = new()
+            Dictionary<string, string> filters = new()
             {
                 { "NonExistentProperty", "Test" }
             };
@@ -273,7 +272,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         {
             #region Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
-            var countFilters = new Dictionary<string, object>()
+            var countFilters = new Dictionary<string, string>()
             {
                 { nameof(ClubEntity.Email), clubEntity.Email }
             };
@@ -303,11 +302,40 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         }
 
         [TestMethod]
+        public async Task CreateAsync_WhenClubIdIsDuplicate_ShouldReturnFailResult()
+        {
+            #region Arrange
+            var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
+            var countFilters = new Dictionary<string, string>()
+            {
+                { nameof(ClubEntity.Email), clubEntity.Email }
+            };
+
+            _clubRepositoryMock.Setup(repo => repo.CreateAsync(clubEntity))
+                .ReturnsAsync((ClubEntity?)null)
+                .Verifiable(Times.Once);
+
+            #endregion
+
+            #region Act
+            var result = await _clubService.CreateAsync(clubEntity);
+            #endregion
+
+            #region Assert
+            _clubRepositoryMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.Conflict, result.ResultType);
+            #endregion
+        }
+
+        [TestMethod]
         public async Task CreateAsync_WhenClubEmailIsDuplicate_ShouldReturnFailResult()
         {
             #region Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
-            var countFilters = new Dictionary<string, object>()
+            var countFilters = new Dictionary<string, string>()
             {
                 { nameof(ClubEntity.Email), clubEntity.Email }
             };
