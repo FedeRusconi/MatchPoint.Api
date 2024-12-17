@@ -13,6 +13,7 @@ using MatchPoint.ClubService.Tests.Integration.Helpers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -207,8 +208,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 Assert.IsNotNull(result);
                 Assert.AreEqual(HttpStatusCode.OK, result.StatusCode);
                 Assert.IsNotNull(clubResponse);
-                Assert.AreEqual(clubId,clubResponse.Id);
-                Assert.AreEqual(clubEntity.Email,clubResponse.Email);
+                Assert.AreEqual(clubId, clubResponse.Id);
+                Assert.AreEqual(clubEntity.Email, clubResponse.Email);
                 #endregion
             }
             finally
@@ -228,7 +229,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task PostClubAsync_WithValidClub_ShouldCreateAndReturnCreatedRecord()
         {
             #region Arrange
-            Club club = _dtoBuilder.WithEmail("club@test.com").Build();
+            Club club = _dtoBuilder
+                .WithDefaultId()
+                .Build();
+            Club? clubResponse = null;
             #endregion
 
             try
@@ -236,27 +240,28 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 #region Act
                 var result = await _httpClient.PostAsJsonAsync(
                     $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs", club);
-                string test = await result.Content.ReadAsStringAsync();
-                var clubResponse = await result.Content.ReadFromJsonAsync<Club>();
+                clubResponse = await result.Content.ReadFromJsonAsync<Club>();
                 #endregion
 
                 #region Assert
                 Assert.IsNotNull(result);
-                Assert.AreEqual(HttpStatusCode.OK, result.StatusCode);
-                Assert.IsNotNull(clubResponse);
-                Assert.AreEqual(club.Id, clubResponse.Id);
+                Assert.AreEqual(HttpStatusCode.Created, result.StatusCode);
+                Assert.IsNotNull(clubResponse);                
                 Assert.AreEqual(club.Email, clubResponse.Email);
 
                 // Ensure record is actually in DB
-                var getResponse = await _dbContext.Clubs.FindAsync(club.Id);
+                var getResponse = await _dbContext.Clubs.AsNoTracking().FirstOrDefaultAsync(c => c.Id == clubResponse.Id);
                 Assert.IsNotNull(getResponse);
                 #endregion
             }
             finally
             {
                 #region Cleanup
-                _dbContext.Remove(club.ToClubEntity());
-                await _dbContext.SaveChangesAsync();
+                if (clubResponse != null)
+                {
+                    _dbContext.Remove(clubResponse.ToClubEntity());
+                    await _dbContext.SaveChangesAsync();
+                }                
                 #endregion
             }
         }

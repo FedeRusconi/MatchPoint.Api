@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MatchPoint.ClubService.Controllers
 {
     [ApiVersion(1)]
-    [Route("api/v{v:apiVersion}/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     public class ClubsController(IClubManagementService _clubService, ILogger<ClubsController> _logger) : ControllerBase
     {
@@ -56,7 +56,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // GET: api/v1/clubs/5
         [MapToApiVersion(1)]
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}", Name = nameof(GetClubAsync))]
         public async Task<ActionResult<Club>> GetClubAsync(Guid id)
         {
             _logger.LogInformation("Received GET request to retrieve club with ID: {Id}", id);
@@ -90,8 +90,12 @@ namespace MatchPoint.ClubService.Controllers
             _logger.LogInformation(
                 "Successfully created club with ID: {Id}, name: {clubName}, email: {clubEmail}",
                 result.Data.Id, result.Data.Name, result.Data.Email);
-            //return Created($"api/clubs/{result.Data}", result.Data);
-            return CreatedAtAction(nameof(GetClubAsync), new { id = result.Data.Id }, club);
+
+            var apiVersion = HttpContext.GetRequestedApiVersion()?.ToString();
+            return CreatedAtRoute(
+                nameof(GetClubAsync),
+                new { version = apiVersion, id = result.Data.Id.ToString() }, 
+                result.Data.ToClubDto());
         }
 
         // PUT: api/v1/clubs/5

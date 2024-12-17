@@ -46,6 +46,16 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         }
 
         /// <summary>
+        /// Set the default Id to the <see cref="Club"/>.
+        /// </summary>
+        /// <returns> This <see cref="ClubBuilder"/>. </returns>
+        public ClubBuilder WithDefaultId()
+        {
+            _club.Id = default;
+            return this;
+        }
+
+        /// <summary>
         /// Set a specific Name to the <see cref="Club"/>.
         /// </summary>
         /// <param name="name"> The name to use. </param>
