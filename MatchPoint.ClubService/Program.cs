@@ -3,6 +3,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using MatchPoint.ClubService.Configuration;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
 
 // Necessary to run integration tests with mock host
 [assembly: InternalsVisibleTo("MatchPoint.ClubService.Tests.Integration")]
@@ -10,6 +12,9 @@ using MatchPoint.ClubService.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration, configSectionName: "AzureAdB2C");
 
 // Service custom services
 builder.AddClubServices();
@@ -44,6 +49,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

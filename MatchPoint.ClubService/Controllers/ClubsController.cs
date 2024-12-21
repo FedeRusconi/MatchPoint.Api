@@ -6,17 +6,21 @@ using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Extensions;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web.Resource;
 
 namespace MatchPoint.ClubService.Controllers
 {
     [ApiVersion(1)]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [Authorize]
     public class ClubsController(IClubManagementService _clubService, ILogger<ClubsController> _logger) : ControllerBase
     {
         // GET: api/v1/clubs
         [MapToApiVersion(1)]
+        [RequiredScope("Clubs.Read")]
         [HttpGet]
         public async Task<ActionResult<PagedResponse<Club>>> GetClubsAsync(
             [FromQuery] int page = 1,
@@ -56,6 +60,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // GET: api/v1/clubs/5
         [MapToApiVersion(1)]
+        [RequiredScope("Clubs.Read")]
         [HttpGet("{id:guid}", Name = nameof(GetClubAsync))]
         public async Task<ActionResult<Club>> GetClubAsync(Guid id)
         {
@@ -73,6 +78,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // POST: api/v1/clubs
         [MapToApiVersion(1)]
+        [RequiredScope("Clubs.Write")]
         [HttpPost]
         public async Task<ActionResult<Club>> PostClubAsync(Club club)
         {
@@ -100,6 +106,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // PUT: api/v1/clubs/5
         [MapToApiVersion(1)]
+        [RequiredScope("Clubs.Write")]
         [HttpPut("{id}")]
         public async Task<ActionResult<Club>> PutClubAsync(Guid id, Club club)
         {
@@ -124,6 +131,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // PATCH: api/v1/clubs/5
         [MapToApiVersion(1)]
+        [RequiredScope("Clubs.Write")]
         [HttpPatch("{id}")]
         public async Task<ActionResult<Club>> PatchClubAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
         {
@@ -150,6 +158,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // DELETE: api/v1/clubs/5
         [MapToApiVersion(1)]
+        [RequiredScope("Clubs.Delete")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClubAsync(Guid id)
         {

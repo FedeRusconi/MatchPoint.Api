@@ -4,7 +4,6 @@ using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -52,9 +51,12 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
-                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
-                clubEntity3 = await _clubRepository.CreateAsync(clubEntity3);
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity3 = await _clubRepository.CreateAsync(clubEntity3)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
 
                 #region Act
@@ -67,7 +69,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             }
             finally
             {
-                #region Cleanup
+                #region 
                 await _clubRepository.DeleteAsync(clubEntity1.Id);
                 await _clubRepository.DeleteAsync(clubEntity2.Id);
                 await _clubRepository.DeleteAsync(clubEntity3.Id);
@@ -112,10 +114,14 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
-                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
-                clubEntity3 = await _clubRepository.CreateAsync(clubEntity3);
-                clubEntity4 = await _clubRepository.CreateAsync(clubEntity4);
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity3 = await _clubRepository.CreateAsync(clubEntity3)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity4 = await _clubRepository.CreateAsync(clubEntity4)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
 
                 #region Act
@@ -151,7 +157,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity = await _clubRepository.CreateAsync(clubEntity);
+                clubEntity = await _clubRepository.CreateAsync(clubEntity)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
 
                 #region Act
@@ -229,10 +236,14 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
-                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
-                clubEntity3 = await _clubRepository.CreateAsync(clubEntity3);
-                clubEntity4 = await _clubRepository.CreateAsync(clubEntity4);
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity3 = await _clubRepository.CreateAsync(clubEntity3)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity4 = await _clubRepository.CreateAsync(clubEntity4)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
 
                 #region Act
@@ -274,8 +285,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
-                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
 
                 #region Act
@@ -316,8 +329,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
-                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
 
                 #region Act
@@ -359,8 +374,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
-                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
 
                 #region Act
@@ -405,8 +422,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1);
-                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2);
+                clubEntity1 = await _clubRepository.CreateAsync(clubEntity1)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+                clubEntity2 = await _clubRepository.CreateAsync(clubEntity2)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
 
                 #region Act
@@ -507,6 +526,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 #endregion
 
                 #region Assert
+                Assert.IsNotNull(createResult);
                 var checkResult = await _clubRepository.GetByIdAsync(createResult.Id);
                 Assert.IsNull(checkResult);
                 #endregion
@@ -534,7 +554,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             string editedName = "This is an edited club";
             try
             {
-                clubEntity = await _clubRepository.CreateAsync(clubEntity);
+                clubEntity = await _clubRepository.CreateAsync(clubEntity)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
 
                 clubEntity.Name = editedName;
                 #endregion
@@ -565,6 +586,9 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             #region Act
             var result = await _clubRepository.UpdateAsync(clubEntity);
+            #endregion
+
+            #region Assert
             Assert.IsNull(result);
             #endregion
         }
@@ -593,7 +617,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity = await _clubRepository.CreateAsync(clubEntity);
+                clubEntity = await _clubRepository.CreateAsync(clubEntity)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
             }
             finally
@@ -635,7 +660,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubEntity = await _clubRepository.CreateAsync(clubEntity);
+                clubEntity = await _clubRepository.CreateAsync(clubEntity)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
                 #endregion
             }
             finally

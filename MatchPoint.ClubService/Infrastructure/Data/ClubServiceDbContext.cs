@@ -7,6 +7,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data
     {
         #region DB Sets
         public DbSet<ClubEntity> Clubs { get; set; } = default!;
+        public DbSet<ClubStaffEntity> ClubStaff { get; set; } = default!;
         #endregion
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -14,7 +15,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data
             var cosmosDbUrl = _config.GetValue<string>("CosmosDb:Url");
             var cosmosDbKey = _config.GetValue<string>("CosmosDb:Key");
             var databaseName = _config.GetValue<string>("CosmosDb:DatabaseName");
-            Console.WriteLine($"Using database: {databaseName}");
+
             if (cosmosDbUrl != null && cosmosDbKey != null && databaseName != null)
             {
                 optionsBuilder.UseCosmos(
@@ -26,7 +27,11 @@ namespace MatchPoint.ClubService.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<ClubEntity>().ToContainer("Clubs");
+            modelBuilder.Entity<ClubEntity>().ToContainer(nameof(Clubs));
+            modelBuilder.Entity<ClubStaffEntity>()
+                .ToContainer(nameof(ClubStaff))
+                .HasPartitionKey(s => s.ClubId)
+                .HasKey(e => e.Id);
         }
     }
 }

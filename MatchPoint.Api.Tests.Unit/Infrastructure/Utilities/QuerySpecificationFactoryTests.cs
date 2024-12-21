@@ -14,7 +14,7 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
         {
             #region Arrange
             string idPropName = nameof(GenericEntityTest.Id);
-            Guid idPropValue = Guid.NewGuid();
+            Guid? idPropValue = Guid.NewGuid();
             string descPropName = nameof(GenericEntityTest.Description);
             string createdPropName = nameof(GenericEntityTest.CreatedOn);
             DateTime createdPropValue = new(2024, 12, 20);
@@ -22,7 +22,7 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
             int availablePropValue = 123;
             Dictionary<string, string> filters = new()
             {
-                { idPropName, idPropValue.ToString() },
+                { idPropName, idPropValue.ToString()! },
                 { descPropName, "Test Description" },
                 { createdPropName, createdPropValue.ToString() },
                 { availablePropName, availablePropValue.ToString() }

@@ -1,12 +1,17 @@
-﻿namespace MatchPoint.ClubService.Entities
+﻿using MatchPoint.Api.Shared.Common.Interfaces;
+
+namespace MatchPoint.ClubService.Entities
 {
-    public class ClubStaffEntity
+    public class ClubStaffEntity : ITrackable, IAuditable, IPatchable
     {
         public Guid Id { get; set; }
-        public required string FirstName { get; set; }
-        public required string LastName { get; set; }
-        public string? Photo {  get; set; }
-        // Add more properties as they are needed
-        // Possible a Role is needed for RBAC in club admin app
+        public Guid ClubId { get; set; }
+        public string? Photo { get; set; }
+        public Guid? RoleId { get; set; }
+        public string? RoleName { get; set; }
+        public Guid CreatedBy { get; set; }
+        public DateTime CreatedOnUtc { get; set; }
+        public Guid? ModifiedBy { get; set; }
+        public DateTime? ModifiedOnUtc { get; set; }
     }
 }

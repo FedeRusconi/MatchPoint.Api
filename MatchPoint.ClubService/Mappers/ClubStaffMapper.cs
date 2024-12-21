@@ -17,9 +17,14 @@ namespace MatchPoint.ClubService.Mappers
             return new ClubStaffEntity()
             {
                 Id = clubStaff.Id,
-                FirstName = clubStaff.FirstName,
-                LastName = clubStaff.LastName,
-                Photo = clubStaff.Photo
+                ClubId = clubStaff.ClubId,
+                Photo = clubStaff.Photo,
+                RoleId = clubStaff.RoleId,
+                RoleName = clubStaff.RoleName,
+                CreatedBy = clubStaff.CreatedBy,
+                CreatedOnUtc = clubStaff.CreatedOnUtc,
+                ModifiedBy = clubStaff.ModifiedBy,
+                ModifiedOnUtc = clubStaff.ModifiedOnUtc,
             };
         }
 
@@ -45,10 +50,16 @@ namespace MatchPoint.ClubService.Mappers
         {
             return new ClubStaff()
             {
+                // TODO: Add properties from Azure AD
                 Id = clubStaffEntity.Id,
-                FirstName = clubStaffEntity.FirstName,
-                LastName = clubStaffEntity.LastName,
-                Photo = clubStaffEntity.Photo
+                ClubId = clubStaffEntity.ClubId,
+                Photo = clubStaffEntity.Photo,
+                RoleId = clubStaffEntity.RoleId,
+                RoleName = clubStaffEntity.RoleName,
+                CreatedBy = clubStaffEntity.CreatedBy,
+                CreatedOnUtc = clubStaffEntity.CreatedOnUtc,
+                ModifiedBy = clubStaffEntity.ModifiedBy,
+                ModifiedOnUtc = clubStaffEntity.ModifiedOnUtc,
             };
         }
 

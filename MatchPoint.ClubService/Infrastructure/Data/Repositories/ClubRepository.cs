@@ -29,7 +29,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
 
             // Return count
             var count =  await query.CountAsync();
-            _logger.LogTrace("Found {Count} Clubs in the database", count);
+            _logger.LogTrace("Found {Count} clubs in the database", count);
             return count;
         }
 
@@ -70,7 +70,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             }
 
             var clubs = await query.ToListAsync();
-            _logger.LogTrace("Found {Count} Clubs in the database", clubs.Count);
+            _logger.LogTrace("Found {Count} clubs in the database", clubs.Count);
             return clubs;
         }
 
@@ -103,7 +103,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             int totalCount = await query.CountAsync();
             int skip = (pageNumber - 1) * pageSize;
             var data = await query.Skip(skip).Take(pageSize).ToListAsync();
-            _logger.LogTrace("Returning {PageSize} of {Count} Clubs found in the database", pageSize, totalCount);
+            _logger.LogTrace("Returning {PageSize} of {Count} clubs found in the database", pageSize, totalCount);
             return new PagedResponse<ClubEntity>()
             {
                 CurrentPage = pageNumber,
@@ -164,6 +164,11 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateException ex) when (ex.InnerException is NullReferenceException)
+                {
+                    _logger.LogWarning("No club found in the database with ID: {Id}", clubEntity.Id);
+                    return null;
+                }
+                catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.NotFound)
                 {
                     _logger.LogWarning("No club found in the database with ID: {Id}", clubEntity.Id);
                     return null;

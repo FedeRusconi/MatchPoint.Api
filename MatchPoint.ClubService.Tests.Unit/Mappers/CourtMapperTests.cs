@@ -11,7 +11,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
     {
         // This is used to ensure no properties are forgotten
         private readonly string[] expectedCourtEntityProperties = [
-            nameof(CourtEntity.Id), nameof(CourtEntity.Name), nameof(CourtEntity.ActiveStatus)];
+            nameof(ClubCourtEntity.Id), nameof(ClubCourtEntity.Name), nameof(ClubCourtEntity.ActiveStatus)];
         private readonly string[] expectedCourtDtoProperties = [
             nameof(Court.Id), nameof(Court.Name), nameof(Court.ActiveStatus)];
 
@@ -30,7 +30,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             #endregion
 
             #region Act
-            CourtEntity result = courtDto.ToCourtEntity();
+            ClubCourtEntity result = courtDto.ToCourtEntity();
             #endregion
 
             #region Assert
@@ -52,7 +52,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             #endregion
 
             #region Act
-            CourtEntity result = courtDto.ToCourtEntity();
+            ClubCourtEntity result = courtDto.ToCourtEntity();
             #endregion
 
             #region Assert
@@ -85,7 +85,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             #endregion
 
             #region  Act
-            IEnumerable<CourtEntity> result = courts.ToCourtEntityEnumerable();
+            IEnumerable<ClubCourtEntity> result = courts.ToCourtEntityEnumerable();
             #endregion
 
             #region Assert
@@ -127,7 +127,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         public void ToCourtDto_FromCourtEntity_AllExpectedPropertiesShouldBeSet()
         {
             #region Arrange
-            CourtEntity courtEntity = new()
+            ClubCourtEntity courtEntity = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 1",
@@ -149,7 +149,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         public void ToCourtDto_FromCourtEntity_ValidParameter_ShouldReturnCourtDto()
         {
             #region Arrange
-            CourtEntity courtEntity = new()
+            ClubCourtEntity courtEntity = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 1",
@@ -172,22 +172,22 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         public void ToCourtDtoEnumerable_ValidParameter_ShouldReturnEnumerableOfCourtDto()
         {
             #region Arrange
-            CourtEntity courtEntity1 = new()
+            ClubCourtEntity courtEntity1 = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 1"
             };
-            CourtEntity courtEntity2 = new()
+            ClubCourtEntity courtEntity2 = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 2"
             };
-            CourtEntity courtEntity3 = new()
+            ClubCourtEntity courtEntity3 = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 3",
             };
-            List<CourtEntity> courtEntities = [courtEntity1, courtEntity2, courtEntity3];
+            List<ClubCourtEntity> courtEntities = [courtEntity1, courtEntity2, courtEntity3];
             #endregion
 
             #region  Act
@@ -206,18 +206,18 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         public void ToCourtDtoEnumerable_NullCourt_ShouldThrowNullReferenceException()
         {
             #region  Arrange
-            CourtEntity courtEntity1 = new()
+            ClubCourtEntity courtEntity1 = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 1"
             };
-            CourtEntity courtEntity2 = null!;
-            CourtEntity courtEntity3 = new()
+            ClubCourtEntity courtEntity2 = null!;
+            ClubCourtEntity courtEntity3 = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 3",
             };
-            List<CourtEntity> courtEntities = [courtEntity1, courtEntity2, courtEntity3];
+            List<ClubCourtEntity> courtEntities = [courtEntity1, courtEntity2, courtEntity3];
             #endregion
 
             #region Act & Assert

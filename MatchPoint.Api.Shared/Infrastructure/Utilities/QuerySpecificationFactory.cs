@@ -74,6 +74,8 @@ namespace MatchPoint.Api.Shared.Infrastructure.Utilities
         {
             if (value == null) return null;
 
+            targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
             if (targetType.IsEnum)
             {
                 return Enum.Parse(targetType, value, true);
