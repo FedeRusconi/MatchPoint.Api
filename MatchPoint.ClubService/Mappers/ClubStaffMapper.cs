@@ -50,12 +50,22 @@ namespace MatchPoint.ClubService.Mappers
         {
             return new ClubStaff()
             {
-                // TODO: Add properties from Azure AD
                 Id = clubStaffEntity.Id,
                 ClubId = clubStaffEntity.ClubId,
+                Email = clubStaffEntity.Email ?? string.Empty,
+                FirstName = clubStaffEntity.FirstName ?? string.Empty,
+                LastName = clubStaffEntity.LastName ?? string.Empty,
+                JobTitle = clubStaffEntity.JobTitle,
+                PhoneNumber = clubStaffEntity.PhoneNumber,
+                BusinessPhoneNumber = clubStaffEntity.BusinessPhoneNumber,
                 Photo = clubStaffEntity.Photo,
                 RoleId = clubStaffEntity.RoleId,
                 RoleName = clubStaffEntity.RoleName,
+                ActiveStatus = clubStaffEntity.ActiveStatus,
+                Address = clubStaffEntity.Address,
+                ManagerId = clubStaffEntity.ManagerId,
+                HiredOnUtc = clubStaffEntity.HiredOnUtc,
+                LeftOn = clubStaffEntity.LeftOn,
                 CreatedBy = clubStaffEntity.CreatedBy,
                 CreatedOnUtc = clubStaffEntity.CreatedOnUtc,
                 ModifiedBy = clubStaffEntity.ModifiedBy,

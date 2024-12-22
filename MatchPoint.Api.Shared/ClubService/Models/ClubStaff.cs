@@ -6,14 +6,22 @@ namespace MatchPoint.Api.Shared.ClubService.Models
 {
     public class ClubStaff : ITrackable, IAuditable, IPatchable, IDeactivable
     {
-        // TODO: Add properties from Azure AD (name, email, phone, etc.)
         public Guid Id { get; set; }
         public Guid ClubId { get; set; }
+        public required string Email { get; set; }
+        public required string FirstName { get; set; }
+        public required string LastName { get; set; }
+        public string? JobTitle { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? BusinessPhoneNumber { get; set; }
         public string? Photo { get; set; }
         public Guid? RoleId { get; set; }
         public string? RoleName { get; set; }
         public ActiveStatus ActiveStatus { get; set; } = ActiveStatus.Active;
         public Address? Address { get; set; }
+        public Guid? ManagerId { get; set; }
+        public DateTime? HiredOnUtc { get; set; }
+        public DateTime? LeftOn { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public Guid? ModifiedBy { get; set; }
