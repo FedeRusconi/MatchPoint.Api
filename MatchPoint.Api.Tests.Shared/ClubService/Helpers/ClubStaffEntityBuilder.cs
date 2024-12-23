@@ -16,6 +16,7 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
                 .RuleFor(c => c.Id, Guid.NewGuid)
                 .RuleFor(c => c.ClubId, Guid.NewGuid)
                 .RuleFor(c => c.RoleId, Guid.NewGuid())
+                .RuleFor(c => c.Email, f => f.Person.Email)
                 .RuleFor(c => c.RoleName, f => f.Internet.UserAgent())
                 .Generate();
         }

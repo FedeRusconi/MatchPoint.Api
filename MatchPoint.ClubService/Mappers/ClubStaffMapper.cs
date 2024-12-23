@@ -18,6 +18,7 @@ namespace MatchPoint.ClubService.Mappers
             {
                 Id = clubStaff.Id,
                 ClubId = clubStaff.ClubId,
+                Email = clubStaff.Email,
                 Photo = clubStaff.Photo,
                 RoleId = clubStaff.RoleId,
                 RoleName = clubStaff.RoleName,
@@ -52,7 +53,7 @@ namespace MatchPoint.ClubService.Mappers
             {
                 Id = clubStaffEntity.Id,
                 ClubId = clubStaffEntity.ClubId,
-                Email = clubStaffEntity.Email ?? string.Empty,
+                Email = clubStaffEntity.Email,
                 FirstName = clubStaffEntity.FirstName ?? string.Empty,
                 LastName = clubStaffEntity.LastName ?? string.Empty,
                 JobTitle = clubStaffEntity.JobTitle,

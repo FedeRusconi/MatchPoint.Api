@@ -15,10 +15,13 @@ namespace MatchPoint.ClubService.Configuration
 
             #region Repositories
             builder.Services.AddScoped<IClubRepository, ClubRepository>();
+            builder.Services.AddScoped<IClubStaffRepository, ClubStaffRepository>();
             #endregion
 
             #region Services
+            builder.Services.AddScoped<IAzureAdService, AzureAdService>();
             builder.Services.AddScoped<IClubManagementService, ClubManagementService>();
+            builder.Services.AddScoped<IClubStaffService, ClubStaffService>();
             #endregion
 
             return builder;

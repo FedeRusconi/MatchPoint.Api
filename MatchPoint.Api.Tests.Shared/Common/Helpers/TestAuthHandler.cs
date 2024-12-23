@@ -13,7 +13,8 @@ namespace MatchPoint.Api.Tests.Shared.Common.Helpers
         ILoggerFactory logger, UrlEncoder encoder) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
     {
         private const string ObjectIdClaim = "http://schemas.microsoft.com/identity/claims/objectidentifier";
-        public static readonly Guid ObjectIdValue = Guid.Parse("00122875-2bd4-4973-b7cb-bbbf3703d6d1");
+        public static readonly Guid ObjectIdValue = Guid.Parse("806d23a6-f382-4a81-a21b-6a761a74331d");
+        public static readonly Guid ManagerObjectIdValue = Guid.Parse("3316286a-af59-430b-b506-fb341239288f");
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {

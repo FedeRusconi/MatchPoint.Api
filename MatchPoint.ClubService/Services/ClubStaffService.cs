@@ -10,20 +10,33 @@ using MatchPoint.ClubService.Interfaces;
 namespace MatchPoint.ClubService.Services
 {
     public class ClubStaffService(
-        IClubStaffRepository _clubStaffRepository, ILogger<ClubStaffService> _logger) : IClubStaffService
+        IClubStaffRepository _clubStaffRepository, IAzureAdService _azureAdService, ILogger<ClubStaffService> _logger) : IClubStaffService
     {
         /// <inheritdoc />
         public async Task<IServiceResult<ClubStaffEntity>> GetByIdAsync(Guid id)
         {
             _logger.LogDebug("Attempting to retrieve club staff with ID: {Id}", id);
 
-            var clubStaffEntity = await _clubStaffRepository.GetByIdAsync(id, trackChanges: false);
-            if (clubStaffEntity == null)
+            // Get Graph client
+            var msGraphClient = _azureAdService.GetGraphClient();
+
+            var azureAdTask = _azureAdService.GetUserByIdAsync(id, msGraphClient);
+            var dbTask = _clubStaffRepository.GetByIdAsync(id, trackChanges: false);
+
+            await Task.WhenAll(azureAdTask, dbTask);
+
+            var clubStaffAzureAd = azureAdTask.Result;
+            var clubStaffEntity = dbTask.Result;
+            if (clubStaffAzureAd == null || clubStaffEntity == null)
             {
                 _logger.LogWarning("Not Found: Club staff with ID: {Id} not found", id);
                 return ServiceResult<ClubStaffEntity>.Failure(
                     $"Club staff with id '{id}' was not found.", ServiceResultType.NotFound);
             }
+
+            // Add Azure AD properties to entity
+            clubStaffEntity.SetAzureAdProperties(clubStaffAzureAd);
+
             _logger.LogDebug("Club staff with ID: {Id} found successfully", id);
             return ServiceResult<ClubStaffEntity>.Success(clubStaffEntity);
         }
@@ -62,6 +75,8 @@ namespace MatchPoint.ClubService.Services
             ArgumentNullException.ThrowIfNull(clubStaffEntity);
 
             _logger.LogDebug("Attempting to create club staff with Email: {Email}", clubStaffEntity.Email);
+
+            // TODO: In addition to props from ClubStaff, set DisplayName and CompanyName (clubName)
 
             // Detect duplicate
             //var filters = new Dictionary<string, string>() { { nameof(ClubEntity.Email), clubStaffEntity.Email } };

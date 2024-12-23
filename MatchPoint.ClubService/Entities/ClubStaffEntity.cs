@@ -12,6 +12,7 @@ namespace MatchPoint.ClubService.Entities
 
         public Guid Id { get; set; }
         public Guid ClubId { get; set; }
+        public required string Email { get; set; }
         public string? Photo { get; set; }
         public Guid? RoleId { get; set; }
         public string? RoleName { get; set; }
@@ -22,9 +23,7 @@ namespace MatchPoint.ClubService.Entities
 
         #endregion
         #region Azure AD Properties
-
-        [NotMapped]
-        public string? Email { get; set; }
+        
         [NotMapped]
         public string? FirstName { get; set; }
         [NotMapped]
@@ -54,7 +53,6 @@ namespace MatchPoint.ClubService.Entities
         /// <param name="adUser"> The Azure AD user. </param>
         public void SetAzureAdProperties(User adUser)
         {
-            Email = adUser.Mail;
             FirstName = adUser.GivenName;
             LastName = adUser.Surname;
             JobTitle = adUser.JobTitle;
@@ -70,7 +68,7 @@ namespace MatchPoint.ClubService.Entities
                 Country = new() { Code = string.Empty, Name = adUser.Country ?? string.Empty },
             };
             ManagerId = Guid.TryParse(adUser.Manager?.Id, out var guid) ? guid : null;
-            HiredOnUtc = adUser.HireDate != null ? ((DateTimeOffset)adUser.HireDate).UtcDateTime : null;
+            HiredOnUtc = adUser.EmployeeHireDate != null ? ((DateTimeOffset)adUser.EmployeeHireDate).UtcDateTime : null;
             LeftOn = adUser.EmployeeLeaveDateTime != null ? ((DateTimeOffset)adUser.EmployeeLeaveDateTime).UtcDateTime : null;
         }
     }
