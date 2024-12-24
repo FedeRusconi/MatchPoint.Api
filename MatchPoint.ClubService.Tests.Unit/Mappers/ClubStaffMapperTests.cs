@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using MatchPoint.Api.Shared.ClubService.Models;
+using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Mappers;
 
@@ -8,13 +9,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
     [TestClass]
     public class ClubStaffMapperTests
     {
+        private ClubStaffEntityBuilder _clubStaffEntityBuilder = default!;
+
         // This is used to ensure no properties are forgotten
         private readonly string[] expectedClubStaffEntityProperties = [
-            nameof(ClubStaffEntity.Id), nameof(ClubStaffEntity.FirstName), nameof(ClubStaffEntity.LastName),
-            nameof(ClubStaffEntity.Photo)];
+            nameof(ClubStaffEntity.Id), nameof(ClubStaffEntity.Email), nameof(ClubStaffEntity.FirstName), 
+            nameof(ClubStaffEntity.LastName), nameof(ClubStaffEntity.Photo)];
         private readonly string[] expectedClubStaffDtoProperties = [
-            nameof(ClubStaff.Id), nameof(ClubStaff.FirstName), nameof(ClubStaff.LastName),
-            nameof(ClubStaff.Photo)];
+            nameof(ClubStaff.Id), nameof(ClubStaff.Email), nameof(ClubStaff.FirstName), 
+            nameof(ClubStaff.LastName), nameof(ClubStaff.Photo)];
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _clubStaffEntityBuilder = new();
+        }
 
         #region To ClubStaffEntity
 
@@ -25,6 +34,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             ClubStaff clubStaffDto = new()
             {
                 Id = Guid.NewGuid(),
+                Email = "test@test.com",
                 FirstName = "First",
                 LastName = "Last",
                 Photo = "PhotoURL"
@@ -37,7 +47,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
 
             #region Assert
             PropertyInfo[] properties = result.GetType().GetProperties();
-            Assert.IsTrue(properties.All(prop => expectedClubStaffEntityProperties.Contains(prop.Name)));
+            Assert.IsTrue(expectedClubStaffEntityProperties.All(prop => properties.Select(p => p.Name).Contains(prop)));
             #endregion
         }
 
@@ -48,9 +58,13 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             ClubStaff clubStaffDto = new()
             {
                 Id = Guid.NewGuid(),
+                Email = "test@test.com",
                 FirstName = "First",
                 LastName = "Last",
-                Photo = "PhotoURL"
+                Photo = "PhotoURL",
+                RoleId = Guid.NewGuid(),
+                RoleName = "Role Test",
+                ClubId = Guid.NewGuid(),
             };
             #endregion
 
@@ -60,9 +74,11 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
 
             #region Assert
             Assert.AreEqual(clubStaffDto.Id, result.Id);
-            Assert.AreEqual(clubStaffDto.FirstName, result.FirstName);
-            Assert.AreEqual(clubStaffDto.LastName, result.LastName);
+            Assert.AreEqual(clubStaffDto.Email, result.Email);
             Assert.AreEqual(clubStaffDto.Photo, result.Photo);
+            Assert.AreEqual(clubStaffDto.RoleId, result.RoleId);
+            Assert.AreEqual(clubStaffDto.RoleName, result.RoleName);
+            Assert.AreEqual(clubStaffDto.ClubId, result.ClubId);
             #endregion
         }
 
@@ -73,18 +89,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             ClubStaff clubStaff1 = new()
             {
                 Id = Guid.NewGuid(),
+                Email = "test1@test.com",
                 FirstName = "First 1",
                 LastName = "Last 1"
             };
             ClubStaff clubStaff2 = new()
             {
                 Id = Guid.NewGuid(),
+                Email = "test2@test.com",
                 FirstName = "First 2",
                 LastName = "Last 2"
             };
             ClubStaff clubStaff3 = new()
             {
                 Id = Guid.NewGuid(),
+                Email = "test3@test.com",
                 FirstName = "First 3",
                 LastName = "Last 3"
             };
@@ -110,6 +129,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             ClubStaff clubStaff1 = new()
             {
                 Id = Guid.NewGuid(),
+                Email = "test1@test.com",
                 FirstName = "First 1",
                 LastName = "Last 1"
             };
@@ -117,6 +137,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             ClubStaff clubStaff3 = new()
             {
                 Id = Guid.NewGuid(),
+                Email = "test3@test.com",
                 FirstName = "First 3",
                 LastName = "Last 3"
             };
@@ -136,13 +157,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         public void ToClubStaffDto_FromClubStaffEntity_AllExpectedPropertiesShouldBeSet()
         {
             #region Arrange
-            ClubStaffEntity clubStaffEntity = new()
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "First",
-                LastName = "Last",
-                Photo = "PhotoURL"
-            };
+            ClubStaffEntity clubStaffEntity = _clubStaffEntityBuilder.Build();
             #endregion
 
             #region Act
@@ -151,7 +166,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
 
             #region Assert
             PropertyInfo[] properties = result.GetType().GetProperties();
-            Assert.IsTrue(properties.All(prop => expectedClubStaffDtoProperties.Contains(prop.Name)));
+            Assert.IsTrue(expectedClubStaffDtoProperties.All(prop => properties.Select(p => p.Name).Contains(prop)));
             #endregion
         }
 
@@ -159,13 +174,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         public void ToClubStaffDto_FromClubStaffEntity_ValidParameter_ShouldReturnClubStaffEntity()
         {
             #region Arrange
-            ClubStaffEntity clubStaffEntity = new()
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "First",
-                LastName = "Last",
-                Photo = "PhotoURL"
-            };
+            ClubStaffEntity clubStaffEntity = _clubStaffEntityBuilder.WithName().Build();
             #endregion
 
             #region Act
@@ -176,7 +185,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             Assert.AreEqual(clubStaffEntity.Id, result.Id);
             Assert.AreEqual(clubStaffEntity.FirstName, result.FirstName);
             Assert.AreEqual(clubStaffEntity.LastName, result.LastName);
-            Assert.AreEqual(clubStaffEntity.Photo, result.Photo);
+            Assert.AreEqual(clubStaffEntity.Email, result.Email);
             #endregion
         }
 
@@ -184,24 +193,11 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         public void ToClubStaffDtoEnumerable_ValidParameter_ShouldReturnEnumerableOfClubStaffDto()
         {
             #region Arrange
-            ClubStaffEntity clubStaffEntity1 = new()
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "First 1",
-                LastName = "Last 1"
-            };
-            ClubStaffEntity clubStaffEntity2 = new()
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "First 2",
-                LastName = "Last 2"
-            };
-            ClubStaffEntity clubStaffEntity3 = new()
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "First 3",
-                LastName = "Last 3"
-            };
+            ClubStaffEntity clubStaffEntity1 = _clubStaffEntityBuilder.Build();
+            _clubStaffEntityBuilder = new ClubStaffEntityBuilder();
+            ClubStaffEntity clubStaffEntity2 = _clubStaffEntityBuilder.Build();
+            _clubStaffEntityBuilder = new ClubStaffEntityBuilder();
+            ClubStaffEntity clubStaffEntity3 = _clubStaffEntityBuilder.Build();
             List<ClubStaffEntity> clubStaffEntities = [clubStaffEntity1, clubStaffEntity2, clubStaffEntity3];
             #endregion
 
@@ -221,19 +217,10 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         public void ToClubStaffDtoEnumerable_NullClubStaff_ShouldThrowNullReferenceException()
         {
             #region  Arrange
-            ClubStaffEntity clubStaffEntity1 = new()
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "First 1",
-                LastName = "Last 1"
-            };
+            ClubStaffEntity clubStaffEntity1 = _clubStaffEntityBuilder.Build();
             ClubStaffEntity clubStaffEntity2 = null!;
-            ClubStaffEntity clubStaffEntity3 = new()
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "First 3",
-                LastName = "Last 3"
-            };
+            _clubStaffEntityBuilder = new ClubStaffEntityBuilder();
+            ClubStaffEntity clubStaffEntity3 = _clubStaffEntityBuilder.Build();
             List<ClubStaffEntity> clubStaffs = [clubStaffEntity1, clubStaffEntity2, clubStaffEntity3];
             #endregion
 

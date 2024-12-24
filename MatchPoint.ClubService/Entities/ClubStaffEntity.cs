@@ -43,7 +43,7 @@ namespace MatchPoint.ClubService.Entities
         [NotMapped]
         public DateTime? HiredOnUtc { get; set; }
         [NotMapped]
-        public DateTime? LeftOn { get; set; }
+        public DateTime? LeftOnUtc { get; set; }
 
         #endregion
 
@@ -53,6 +53,8 @@ namespace MatchPoint.ClubService.Entities
         /// <param name="adUser"> The Azure AD user. </param>
         public void SetAzureAdProperties(User adUser)
         {
+            ArgumentNullException.ThrowIfNull(adUser, nameof(adUser));
+
             FirstName = adUser.GivenName;
             LastName = adUser.Surname;
             JobTitle = adUser.JobTitle;
@@ -69,7 +71,7 @@ namespace MatchPoint.ClubService.Entities
             };
             ManagerId = Guid.TryParse(adUser.Manager?.Id, out var guid) ? guid : null;
             HiredOnUtc = adUser.EmployeeHireDate != null ? ((DateTimeOffset)adUser.EmployeeHireDate).UtcDateTime : null;
-            LeftOn = adUser.EmployeeLeaveDateTime != null ? ((DateTimeOffset)adUser.EmployeeLeaveDateTime).UtcDateTime : null;
+            LeftOnUtc = adUser.EmployeeLeaveDateTime != null ? ((DateTimeOffset)adUser.EmployeeLeaveDateTime).UtcDateTime : null;
         }
     }
 }

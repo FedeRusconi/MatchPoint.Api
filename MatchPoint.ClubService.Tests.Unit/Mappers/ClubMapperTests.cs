@@ -13,7 +13,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         private readonly string[] expectedClubEntityProperties = [
             nameof(ClubEntity.Id), nameof(ClubEntity.Email), nameof(ClubEntity.Name), nameof(ClubEntity.PhoneNumber),
             nameof(ClubEntity.Address), nameof(ClubEntity.Logo), nameof(ClubEntity.ActiveStatus), nameof(ClubEntity.TaxId),
-            nameof(ClubEntity.OpeningTimes), nameof(ClubEntity.Courts), nameof(ClubEntity.SocialMedia), nameof(ClubEntity.Staff),
+            nameof(ClubEntity.OpeningTimes), nameof(ClubEntity.Courts), nameof(ClubEntity.SocialMedia),
             nameof(ClubEntity.Members), nameof(ClubEntity.CreatedBy), nameof(ClubEntity.CreatedOnUtc),
             nameof(ClubEntity.ModifiedBy), nameof(ClubEntity.ModifiedOnUtc), nameof(ClubEntity.TimezoneId)];
         private readonly string[] expectedClubDtoProperties = [

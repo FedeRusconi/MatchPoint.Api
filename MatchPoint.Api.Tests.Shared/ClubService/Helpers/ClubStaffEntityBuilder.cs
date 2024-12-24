@@ -96,6 +96,26 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         }
 
         /// <summary>
+        /// Set a specific Name to the <see cref="ClubStaffEntity"/>.
+        /// </summary>
+        /// <param name="firstName"> 
+        /// The first name to use. If value is null, a random name is used.
+        /// Default is null.
+        /// </param>
+        /// <param name="lastName"> 
+        /// The last name to use. If value is null, a random name is used.
+        /// Default is null.
+        /// </param>
+        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
+        public ClubStaffEntityBuilder WithName(string? firstName = null, string? lastName = null)
+        {
+            var faker = new Faker();
+            _clubStaff.FirstName = firstName ?? faker.Person.FirstName;
+            _clubStaff.LastName = lastName ?? faker.Person.LastName;
+            return this;
+        }
+
+        /// <summary>
         /// Complete the build operation for a random <see cref="ClubStaffEntity"/>.
         /// </summary>
         /// <returns> The built <see cref="ClubStaffEntity"/>. </returns>

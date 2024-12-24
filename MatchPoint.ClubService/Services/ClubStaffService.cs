@@ -17,10 +17,8 @@ namespace MatchPoint.ClubService.Services
         {
             _logger.LogDebug("Attempting to retrieve club staff with ID: {Id}", id);
 
-            // Get Graph client
-            var msGraphClient = _azureAdService.GetGraphClient();
-
-            var azureAdTask = _azureAdService.GetUserByIdAsync(id, msGraphClient);
+            // Run tasks for AzureAD and DB
+            var azureAdTask = _azureAdService.GetUserByIdAsync(id);
             var dbTask = _clubStaffRepository.GetByIdAsync(id, trackChanges: false);
 
             await Task.WhenAll(azureAdTask, dbTask);

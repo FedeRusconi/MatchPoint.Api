@@ -66,7 +66,7 @@ namespace MatchPoint.ClubService.Mappers
                 Address = clubStaffEntity.Address,
                 ManagerId = clubStaffEntity.ManagerId,
                 HiredOnUtc = clubStaffEntity.HiredOnUtc,
-                LeftOn = clubStaffEntity.LeftOn,
+                LeftOn = clubStaffEntity.LeftOnUtc,
                 CreatedBy = clubStaffEntity.CreatedBy,
                 CreatedOnUtc = clubStaffEntity.CreatedOnUtc,
                 ModifiedBy = clubStaffEntity.ModifiedBy,
