@@ -1,4 +1,5 @@
 ﻿using MatchPoint.ClubService.Infrastructure.Data;
+using MatchPoint.ClubService.Infrastructure.Data.Factories;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Services;
@@ -22,6 +23,10 @@ namespace MatchPoint.ClubService.Configuration
             builder.Services.AddScoped<IAzureAdService, AzureAdService>();
             builder.Services.AddScoped<IClubManagementService, ClubManagementService>();
             builder.Services.AddScoped<IClubStaffService, ClubStaffService>();
+            #endregion
+
+            #region Others
+            builder.Services.AddScoped<IAzureAdUserFactory, AzureAdUserFactory>();
             #endregion
 
             return builder;

@@ -46,7 +46,7 @@ namespace MatchPoint.ClubService.Services
             if (filtersValidation != null) return filtersValidation;
 
             _logger.LogDebug(
-                "Attepting to retrieve clubs with {Count} filters", filters != null ? filters.Count : "no");
+                "Attempting to retrieve clubs with {Count} filters", filters != null ? filters.Count : "no");
 
             var clubs = await _clubRepository.GetAllWithSpecificationAsync(
                     pageNumber, pageSize, filters, orderBy, trackChanges: false);

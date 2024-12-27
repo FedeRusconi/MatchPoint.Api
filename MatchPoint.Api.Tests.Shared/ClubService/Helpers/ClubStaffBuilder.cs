@@ -1,18 +1,18 @@
 ﻿using Bogus;
+using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
-using MatchPoint.ClubService.Entities;
 
 namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
 {
-    public class ClubStaffEntityBuilder
+    public class ClubStaffBuilder
     {
-        private readonly ClubStaffEntity _clubStaff;
+        private readonly ClubStaff _clubStaff;
 
         /// <summary>
-        /// Instantiate a random <see cref="ClubStaffEntity"/>
+        /// Instantiate a random <see cref="ClubStaff"/>
         /// </summary>
-        public ClubStaffEntityBuilder()
+        public ClubStaffBuilder()
         {
             var addressGenerator = new Faker<Address>()
                 .RuleFor(a => a.Street, f => f.Address.StreetAddress())
@@ -23,7 +23,7 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
                     .RuleFor(c => c.Code, f => f.Address.CountryCode())
                     .RuleFor(c => c.Name, f => f.Address.Country()));
 
-            _clubStaff = new Faker<ClubStaffEntity>()
+            _clubStaff = new Faker<ClubStaff>()
                 .RuleFor(c => c.Id, Guid.NewGuid)
                 .RuleFor(c => c.ClubId, Guid.NewGuid)
                 .RuleFor(c => c.Email, f => f.Person.Email)
@@ -44,81 +44,81 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         }
 
         /// <summary>
-        /// Set a specific Id to the <see cref="ClubStaffEntity"/>.
+        /// Set a specific Id to the <see cref="ClubStaff"/>.
         /// </summary>
         /// <param name="id"> The id to use. </param>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithId(Guid id)
+        /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
+        public ClubStaffBuilder WithId(Guid id)
         {
             _clubStaff.Id = id;
             return this;
         }
 
         /// <summary>
-        /// Set the default Id to the <see cref="ClubStaffEntity"/>.
+        /// Set the default Id to the <see cref="ClubStaff"/>.
         /// </summary>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithDefaultId()
+        /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
+        public ClubStaffBuilder WithDefaultId()
         {
             _clubStaff.Id = default;
             return this;
         }
 
         /// <summary>
-        /// Set a specific ClubId to the <see cref="ClubStaffEntity"/>.
+        /// Set a specific ClubId to the <see cref="ClubStaff"/>.
         /// </summary>
         /// <param name="id"> The id to use. </param>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithClubId(Guid id)
+        /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
+        public ClubStaffBuilder WithClubId(Guid id)
         {
             _clubStaff.ClubId = id;
             return this;
         }
 
         /// <summary>
-        /// Set the default ClubId to the <see cref="ClubStaffEntity"/>.
+        /// Set the default ClubId to the <see cref="ClubStaff"/>.
         /// </summary>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithDefaultClubId()
+        /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
+        public ClubStaffBuilder WithDefaultClubId()
         {
             _clubStaff.ClubId = default;
             return this;
         }
 
         /// <summary>
-        /// Set a specific RoleId to the <see cref="ClubStaffEntity"/>.
+        /// Set a specific RoleId to the <see cref="ClubStaff"/>.
         /// </summary>
         /// <param name="id"> The id to use. </param>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithRoleId(Guid id)
+        /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
+        public ClubStaffBuilder WithRoleId(Guid id)
         {
             _clubStaff.RoleId = id;
             return this;
         }
 
         /// <summary>
-        /// Set the default RoleId to the <see cref="ClubStaffEntity"/>.
+        /// Set the default RoleId to the <see cref="ClubStaff"/>.
         /// </summary>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithDefaultRoleId()
+        /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
+        public ClubStaffBuilder WithDefaultRoleId()
         {
             _clubStaff.RoleId = default;
             return this;
         }
 
         /// <summary>
-        /// Set a specific RoleName to the <see cref="ClubStaffEntity"/>.
+        /// Set a specific RoleName to the <see cref="ClubStaff"/>.
         /// </summary>
         /// <param name="name"> The name to use. </param>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithRoleName(string name)
+        /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
+        public ClubStaffBuilder WithRoleName(string name)
         {
             _clubStaff.RoleName = name;
             return this;
         }
 
         /// <summary>
-        /// Set a specific Name to the <see cref="ClubStaffEntity"/>.
+        /// Set a specific Name to the <see cref="ClubStaff"/>.
         /// </summary>
         /// <param name="firstName"> 
         /// The first name to use. If value is null, a random name is used.
@@ -128,8 +128,8 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         /// The last name to use. If value is null, a random name is used.
         /// Default is null.
         /// </param>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithName(string? firstName = null, string? lastName = null)
+        /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
+        public ClubStaffBuilder WithName(string? firstName = null, string? lastName = null)
         {
             var faker = new Faker();
             _clubStaff.FirstName = firstName ?? faker.Person.FirstName;
@@ -138,9 +138,9 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         }
 
         /// <summary>
-        /// Set the tracking fields (crated, modified) for the <see cref="ClubStaffEntity"/>.
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithTrackingFields()
+        /// Set the tracking fields (crated, modified) for the <see cref="ClubStaff"/>.
+        /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
+        public ClubStaffBuilder WithTrackingFields()
         {
             var faker = new Faker();
             _clubStaff.CreatedBy = Guid.NewGuid();
@@ -151,10 +151,10 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         }
 
         /// <summary>
-        /// Complete the build operation for a random <see cref="ClubStaffEntity"/>.
+        /// Complete the build operation for a random <see cref="ClubStaff"/>.
         /// </summary>
-        /// <returns> The built <see cref="ClubStaffEntity"/>. </returns>
-        public ClubStaffEntity Build()
+        /// <returns> The built <see cref="ClubStaff"/>. </returns>
+        public ClubStaff Build()
         {
             return _clubStaff;
         }

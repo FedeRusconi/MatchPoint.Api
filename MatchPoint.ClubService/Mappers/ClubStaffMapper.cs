@@ -1,5 +1,7 @@
 ﻿using MatchPoint.Api.Shared.ClubService.Models;
+using MatchPoint.Api.Shared.Common.Extensions;
 using MatchPoint.ClubService.Entities;
+using Microsoft.Graph.Models;
 
 namespace MatchPoint.ClubService.Mappers
 {
@@ -19,9 +21,19 @@ namespace MatchPoint.ClubService.Mappers
                 Id = clubStaff.Id,
                 ClubId = clubStaff.ClubId,
                 Email = clubStaff.Email,
+                FirstName = clubStaff.FirstName,
+                LastName = clubStaff.LastName,
                 Photo = clubStaff.Photo,
                 RoleId = clubStaff.RoleId,
                 RoleName = clubStaff.RoleName,
+                JobTitle = clubStaff.JobTitle,
+                PhoneNumber = clubStaff.PhoneNumber,
+                BusinessPhoneNumber = clubStaff.BusinessPhoneNumber,
+                ActiveStatus = clubStaff.ActiveStatus,
+                Address = clubStaff.Address,
+                ManagerId = clubStaff.ManagerId,
+                HiredOnUtc = clubStaff.HiredOnUtc,
+                LeftOnUtc = clubStaff.LeftOnUtc,
                 CreatedBy = clubStaff.CreatedBy,
                 CreatedOnUtc = clubStaff.CreatedOnUtc,
                 ModifiedBy = clubStaff.ModifiedBy,
@@ -66,7 +78,7 @@ namespace MatchPoint.ClubService.Mappers
                 Address = clubStaffEntity.Address,
                 ManagerId = clubStaffEntity.ManagerId,
                 HiredOnUtc = clubStaffEntity.HiredOnUtc,
-                LeftOn = clubStaffEntity.LeftOnUtc,
+                LeftOnUtc = clubStaffEntity.LeftOnUtc,
                 CreatedBy = clubStaffEntity.CreatedBy,
                 CreatedOnUtc = clubStaffEntity.CreatedOnUtc,
                 ModifiedBy = clubStaffEntity.ModifiedBy,
@@ -82,6 +94,35 @@ namespace MatchPoint.ClubService.Mappers
         public static IEnumerable<ClubStaff> ToClubStaffDtoEnumerable(this IEnumerable<ClubStaffEntity> clubStaffEntities)
         {
             return clubStaffEntities.Select(staffEntity => staffEntity.ToClubStaffDto());
+        }
+
+        #endregion
+        #region To AzureAdUser
+
+        /// <summary>
+        /// Map a <see cref="ClubStaffEntity"/> instance to a AzureAD <see cref="User"/>.
+        /// </summary>
+        /// <param name="clubStaffEntity"> The instance to convert. </param>
+        /// <returns> An instance of <see cref="User"/>. </returns>
+        public static User ToAzureAdUser(this ClubStaffEntity clubStaffEntity)
+        {
+            return new User()
+            {
+                Id = clubStaffEntity.Id.ToString(),
+                GivenName = clubStaffEntity.FirstName,
+                Surname = clubStaffEntity.LastName,
+                JobTitle = clubStaffEntity.JobTitle,
+                MobilePhone = clubStaffEntity.PhoneNumber,
+                BusinessPhones = [clubStaffEntity.BusinessPhoneNumber],
+                AccountEnabled = clubStaffEntity.IsActive(),
+                StreetAddress = clubStaffEntity.Address?.Street,
+                City = clubStaffEntity.Address?.City,
+                State = clubStaffEntity.Address?.State,
+                PostalCode = clubStaffEntity.Address?.PostalCode,
+                Country = clubStaffEntity.Address?.Country.Name,
+                EmployeeHireDate = clubStaffEntity.HiredOnUtc,
+                EmployeeLeaveDateTime = clubStaffEntity.LeftOnUtc,
+            };
         }
 
         #endregion

@@ -57,7 +57,7 @@ namespace MatchPoint.ClubService.Interfaces
         /// A <see cref="IServiceResult{T}"/> class containing the updated <see cref="ClubStaffEntity"/>
         /// or details about the error.
         /// </returns>
-        public Task<IServiceResult<ClubStaffEntity>> UpdateAsync(ClubStaffEntity clubStaffEntity);
+        //public Task<IServiceResult<ClubStaffEntity>> UpdateAsync(ClubStaffEntity clubStaffEntity);
 
         /// <summary>
         /// Updates only provided properties of an existing <see cref="ClubStaffEntity"/> in the database.

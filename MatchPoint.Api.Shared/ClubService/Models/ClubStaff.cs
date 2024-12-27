@@ -21,7 +21,7 @@ namespace MatchPoint.Api.Shared.ClubService.Models
         public Address? Address { get; set; }
         public Guid? ManagerId { get; set; }
         public DateTime? HiredOnUtc { get; set; }
-        public DateTime? LeftOn { get; set; }
+        public DateTime? LeftOnUtc { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public Guid? ModifiedBy { get; set; }

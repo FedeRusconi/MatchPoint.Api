@@ -20,7 +20,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         private ClubManagementService _clubService = default!;
 
         [TestInitialize]
-        public void Setup()
+        public void TestInitialize()
         {
             _clubRepositoryMock = new();
             _loggerMock = new();
@@ -33,46 +33,40 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         [TestMethod]
         public async Task GetByIdAsync_WhenIdIsValid_ShouldReturnSuccessResult()
         {
-            #region Arrange
+            // Arrange
             var clubEntity = _clubEntityBuilder
                 .WithName("Integration Testing Club")
             .Build();
 
             _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, It.IsAny<bool>()))
                 .ReturnsAsync(clubEntity);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _clubService.GetByIdAsync(clubEntity.Id);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubRepositoryMock.Verify(repo => repo.GetByIdAsync(clubEntity.Id, false), Times.Once);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);
-            #endregion
         }
 
         [TestMethod]
         public async Task GetByIdAsync_WhenIdDoesNotExist_ShouldReturnFailResult()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
 
             _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubId, It.IsAny<bool>())).ReturnsAsync((ClubEntity?)null);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _clubService.GetByIdAsync(clubId);
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.NotFound, result.ResultType);
-            #endregion
         }
 
         #endregion
@@ -82,7 +76,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         [TestMethod]
         public async Task GetAllWithSpecificationAsync_WhenPagingIsProvided_ShouldReturnSuccessResult()
         {
-            #region Arrange
+            // Arrange
             int pageNumber = 3;
             int pageSize = 10;
             var clubEntity = _clubEntityBuilder
@@ -100,25 +94,22 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Setup(repo => repo.GetAllWithSpecificationAsync(pageNumber, pageSize, null, null, false))
                 .ReturnsAsync(expectedResponse)
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _clubService.GetAllWithSpecificationAsync(pageNumber, pageSize);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubRepositoryMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.AreNotEqual(0, result.Data.Data.Count());
             Assert.IsTrue(result.IsSuccess);
-            #endregion
         }
 
         [TestMethod]
         public async Task GetAllWithSpecificationAsync_WhenFiltersAreProvided_ShouldCallRepoMethodWithFiltersAndReturnSuccessResult()
         {
-            #region Arrange
+            // Arrange
             var clubEntity = _clubEntityBuilder
                 .WithName("Integration Testing Club")
                 .Build();
@@ -144,25 +135,22 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                     false))
                 .ReturnsAsync(expectedResponse)
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _clubService.GetAllWithSpecificationAsync(1, 500, filters: filters);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubRepositoryMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.AreNotEqual(0, result.Data.Data.Count());
             Assert.IsTrue(result.IsSuccess);
-            #endregion
         }
 
         [TestMethod]
         public async Task GetAllWithSpecificationAsync_WhenSortingIsProvided_ShouldCallRepoMethodWithSortingAndReturnSuccessResult()
         {
-            #region Arrange
+            // Arrange
             var clubEntity = _clubEntityBuilder
                 .WithName("Integration Testing Club")
                 .Build();
@@ -186,19 +174,16 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                     false))
                 .ReturnsAsync(expectedResponse)
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _clubService.GetAllWithSpecificationAsync(1, 500, orderBy: orderBy);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubRepositoryMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.AreNotEqual(0, result.Data.Data.Count());
             Assert.IsTrue(result.IsSuccess);
-            #endregion
         }
 
         [TestMethod]
@@ -207,60 +192,52 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         [DataRow(1, Constants.MaxPageSizeAllowed + 1)]
         public async Task GetAllWithSpecificationAsync_WhenPagingIsInvalid_ShouldReturnFailResult(int pageNumber, int pageSize)
         {
-            #region Act
+            // Act
             var result = await _clubService.GetAllWithSpecificationAsync(pageNumber, pageSize);
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
-            #endregion
         }
 
         [TestMethod]
         public async Task GetAllWithSpecificationAsync_WhenFiltersAreInvalid_ShouldReturnFailResult()
         {
-            #region Arrange
+            // Arrange
             Dictionary<string, string> filters = new()
             {
                 { "NonExistentProperty", "Test" }
             };
-            #endregion
 
-            #region Act
+            // Act
             var result = await _clubService.GetAllWithSpecificationAsync(1, 500, filters: filters);
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
-            #endregion
         }
 
         [TestMethod]
         public async Task GetAllWithSpecificationAsync_WhenSortingIsInvalid_ShouldReturnFailResult()
         {
-            #region Arrange=
+            // Arrange=
             Dictionary<string, SortDirection> orderBy = new()
             {
                 { "NonExistentProperty", SortDirection.Descending }
             };
-            #endregion
 
-            #region Act
+            // Act
             var result = await _clubService.GetAllWithSpecificationAsync(1, 500, orderBy: orderBy);
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
-            #endregion
         }
 
         #endregion
@@ -270,7 +247,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         [TestMethod]
         public async Task CreateAsync_WhenClubIsValid_ShouldSetTrackingCreateAndReturnSuccessResult()
         {
-            #region Arrange
+            // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
             var countFilters = new Dictionary<string, string>()
             {
@@ -284,13 +261,10 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
 
-            #endregion
-
-            #region Act
+            // Act
             var result = await _clubService.CreateAsync(clubEntity);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubRepositoryMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
@@ -298,13 +272,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             Assert.AreEqual(clubEntity.Email, result.Data.Email);
             Assert.AreNotEqual(default, result.Data.CreatedBy);
             Assert.AreNotEqual(default, result.Data.CreatedOnUtc);
-            #endregion
         }
 
         [TestMethod]
         public async Task CreateAsync_WhenClubIdIsDuplicate_ShouldReturnFailResult()
         {
-            #region Arrange
+            // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
             var countFilters = new Dictionary<string, string>()
             {
@@ -315,25 +288,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .ReturnsAsync((ClubEntity?)null)
                 .Verifiable(Times.Once);
 
-            #endregion
-
-            #region Act
+            // Act
             var result = await _clubService.CreateAsync(clubEntity);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubRepositoryMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.Conflict, result.ResultType);
-            #endregion
         }
 
         [TestMethod]
         public async Task CreateAsync_WhenClubEmailIsDuplicate_ShouldReturnFailResult()
         {
-            #region Arrange
+            // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
             var countFilters = new Dictionary<string, string>()
             {
@@ -344,31 +313,25 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .ReturnsAsync(1)
                 .Verifiable(Times.Once);
 
-            #endregion
-
-            #region Act
+            // Act
             var result = await _clubService.CreateAsync(clubEntity);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubRepositoryMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.Conflict, result.ResultType);
-            #endregion
         }
 
         [TestMethod]
         public async Task CreateAsync_WhenClubIsNull_ShouldThrowArgumentNullException()
         {
-            #region Arrange
+            // Arrange
             ClubEntity clubEntity = null!;
-            #endregion
 
-            #region Act & Assert
+            // Act & Assert
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _clubService.CreateAsync(clubEntity));
-            #endregion
         }
 
         #endregion

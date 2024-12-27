@@ -16,7 +16,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
         private AzureAdUserBuilder _azureAdUserBuilder = default!;
 
         [TestInitialize]
-        public void Setup()
+        public void TestInitialize()
         {
             _azureAdService = new AzureAdService(_configuration);
             _azureAdUserBuilder = new();
