@@ -100,12 +100,22 @@ namespace MatchPoint.ClubService.Services
             {
                 Password = PasswordGenerator.GenerateNumeric(6, prefix: "MatchPoint_")
             };
-            var azureResult = await _azureAdService.CreateUserAsync(azureAdUser);
-            _logger.LogDebug(
-                "User with email '{Email}' created successfully in Azure AD. Id: {Id}", clubStaffEntity.Email, azureResult?.Id);
+            try
+            {
+                var azureResult = await _azureAdService.CreateUserAsync(azureAdUser);
+                azureAdUser.Id = azureResult?.Id;
+                _logger.LogDebug(
+                    "User with email '{Email}' created successfully in Azure AD. Id: {Id}", clubStaffEntity.Email, azureResult?.Id);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogWarning("Error while creating user '{Email}' in Azure AD. Error: {Error}", clubStaffEntity.Email, ex.Message);
+                return ServiceResult<ClubStaffEntity>.Failure(
+                    $"Error while crearing user '{clubStaffEntity.Email}' in Azure AD. Error: {ex.Message}", (ServiceResultType)(int)ex.StatusCode!);
+            }
 
             // Set Id and "Created" tracking fields
-            clubStaffEntity.Id = Guid.Parse(azureResult?.Id!);
+            clubStaffEntity.Id = Guid.Parse(azureAdUser.Id!);
             clubStaffEntity.SetTrackingFields();
 
             // Create in db
@@ -154,9 +164,18 @@ namespace MatchPoint.ClubService.Services
                 return ServiceResult<ClubStaffEntity>.Failure(ex.Message, ServiceResultType.BadRequest);
             }
 
-            // Update user is Azure AD
-            await _azureAdService.UpdateUserAsync(
-                _azureAdUserFactory.PatchedUser(propertyUpdates, id.ToString()));
+            try
+            {
+                // Update user is Azure AD
+                await _azureAdService.UpdateUserAsync(
+                    _azureAdUserFactory.PatchedUser(propertyUpdates, id.ToString()));
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogWarning("Error while updating user '{Id}' from Azure AD. Error: {Error}", id, ex.Message);
+                return ServiceResult<ClubStaffEntity>.Failure(
+                    $"Error while updating user '{id}' from Azure AD. Error: {ex.Message}", (ServiceResultType)(int)ex.StatusCode!);
+            }
             // Update club staff in DB
             var updatedEntity = await _clubStaffRepository.UpdateAsync(clubStaffEntity);
             if (updatedEntity == null)

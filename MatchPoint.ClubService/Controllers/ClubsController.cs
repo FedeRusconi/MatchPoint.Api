@@ -58,7 +58,7 @@ namespace MatchPoint.ClubService.Controllers
             };
         }
 
-        // GET: api/v1/clubs/5
+        // GET: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Read")]
         [HttpGet("{id:guid}", Name = nameof(GetClubAsync))]
@@ -104,7 +104,7 @@ namespace MatchPoint.ClubService.Controllers
                 result.Data.ToClubDto());
         }
 
-        // PUT: api/v1/clubs/5
+        // PUT: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Write")]
         [HttpPut("{id}")]
@@ -129,7 +129,7 @@ namespace MatchPoint.ClubService.Controllers
             return result.Data.ToClubDto();
         }
 
-        // PATCH: api/v1/clubs/5
+        // PATCH: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Write")]
         [HttpPatch("{id}")]
@@ -156,7 +156,7 @@ namespace MatchPoint.ClubService.Controllers
             return result.Data.ToClubDto();
         }
 
-        // DELETE: api/v1/clubs/5
+        // DELETE: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Delete")]
         [HttpDelete("{id}")]
