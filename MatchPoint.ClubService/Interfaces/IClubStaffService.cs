@@ -10,17 +10,19 @@ namespace MatchPoint.ClubService.Interfaces
         /// <summary>
         /// Retrieve a single <see cref="ClubStaffEntity"/> by its Id.
         /// </summary>
+        /// <param name="clubId"> The <see cref="Guid"/> that belongs to the parent <see cref="ClubEntity"/>. </param>
         /// <param name="id"> The <see cref="Guid"/> that belongs to a <see cref="ClubStaffEntity"/>. </param>
         /// <returns> 
         /// A <see cref="IServiceResult{T}"/> class containing the <see cref="ClubStaffEntity"/> found
         /// or details about the error.
         /// </returns>
-        public Task<IServiceResult<ClubStaffEntity>> GetByIdAsync(Guid id);
+        public Task<IServiceResult<ClubStaffEntity>> GetByIdAsync(Guid clubId, Guid id);
 
         /// <summary>
         /// Retrieves all <see cref="ClubStaffEntity"/> from the database that fit the specification.
         /// This method allows for filtering, ordering and paging.
         /// </summary>
+        /// <param name="clubId"> The <see cref="Guid"/> that belongs to the parent <see cref="ClubEntity"/>. </param>
         /// <param name="pageNumber"> The number of the page to retrieve, based on page size. Default is 1. </param>
         /// <param name="pageSize"> The number of elements to return. Default is 500. </param>
         /// <param name="filters"> 
@@ -34,6 +36,7 @@ namespace MatchPoint.ClubService.Interfaces
         /// with a collection of <see cref="ClubStaffEntity"/> found or details about the error.
         /// </returns>
         public Task<IServiceResult<PagedResponse<ClubStaffEntity>>> GetAllWithSpecificationAsync(
+            Guid clubId,
             int pageNumber,
             int pageSize,
             Dictionary<string, string>? filters = null,

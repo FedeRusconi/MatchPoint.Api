@@ -22,6 +22,7 @@ namespace MatchPoint.ClubService.Controllers
         [RequiredScope("Clubs.Read")]
         [HttpGet]
         public async Task<ActionResult<PagedResponse<ClubStaff>>> GetClubStaffAsync(
+            Guid clubId,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = Constants.MaxPageSizeAllowed,
             [FromQuery] Dictionary<string, string>? filters = null,
@@ -31,6 +32,7 @@ namespace MatchPoint.ClubService.Controllers
                 "Received GET request to retrieve club staff for page: {page}, page size: {pageSize}, filters: {countFilters}, orderBy: {orderBy}",
                 page, pageSize, filters?.Count, orderBy?.First().Key);
             var result = await _clubStaffService.GetAllWithSpecificationAsync(
+                clubId,
                 pageNumber: page,
                 pageSize: pageSize,
                 filters: filters,
@@ -60,11 +62,11 @@ namespace MatchPoint.ClubService.Controllers
         // GET: api/v1/clubs/[guid]/staff/[guid]
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Read")]
-        [HttpGet("{id:guid}", Name = nameof(GetClubStaffAsync))]
-        public async Task<ActionResult<ClubStaff>> GetClubStaffAsync(Guid id)
+        [HttpGet("{id:guid}", Name = nameof(GetSingleClubStaffAsync))]
+        public async Task<ActionResult<ClubStaff>> GetSingleClubStaffAsync(Guid clubId, Guid id)
         {
             _logger.LogInformation("Received GET request to retrieve club staff with ID: {Id}", id);
-            var result = await _clubStaffService.GetByIdAsync(id);
+            var result = await _clubStaffService.GetByIdAsync(clubId, id);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning("Failed to retrieve club staff with ID: {Id}. Error: {Error}", id, result.Error);
@@ -79,11 +81,16 @@ namespace MatchPoint.ClubService.Controllers
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Write")]
         [HttpPost]
-        public async Task<ActionResult<Club>> PostClubStaffAsync(ClubStaff clubStaff)
+        public async Task<ActionResult<Club>> PostClubStaffAsync(Guid clubId, ClubStaff clubStaff)
         {
             _logger.LogInformation(
-                "Received POST request to CREATE club staff with name: {clubStaffName}, email: {clubStaffEmail}",
-                clubStaff.FullName, clubStaff.Email);
+                "Received POST request to CREATE club staff for club '{clubId}' with name: {clubStaffName}, email: {clubStaffEmail}",
+                clubId, clubStaff.FullName, clubStaff.Email);
+
+            // TODO - MOVE TO SERVICE
+            // Assign club id
+            clubStaff.ClubId = clubId;
+
             var result = await _clubStaffService.CreateAsync(clubStaff.ToClubStaffEntity());
             if (!result.IsSuccess || result.Data == null)
             {
@@ -98,8 +105,8 @@ namespace MatchPoint.ClubService.Controllers
 
             var apiVersion = HttpContext.GetRequestedApiVersion()?.ToString();
             return CreatedAtRoute(
-                nameof(GetClubStaffAsync),
-                new { version = apiVersion, id = result.Data.Id.ToString() },
+                nameof(GetSingleClubStaffAsync),
+                new { version = apiVersion, clubId, id = result.Data.Id.ToString() },
                 result.Data.ToClubStaffDto());
         }
 

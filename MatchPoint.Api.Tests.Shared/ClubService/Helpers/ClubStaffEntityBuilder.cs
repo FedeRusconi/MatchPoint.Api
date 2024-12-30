@@ -65,6 +65,28 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         }
 
         /// <summary>
+        /// Set a specific Email to the <see cref="ClubStaffEntity"/>.
+        /// </summary>
+        /// <param name="email"> The email to use. </param>
+        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
+        public ClubStaffEntityBuilder WithEmail(string email)
+        {
+            _clubStaff.Email = email;
+            return this;
+        }
+
+        /// <summary>
+        /// Set a specific ActiveStatus to the <see cref="ClubStaffEntity"/>.
+        /// </summary>
+        /// <param name="activeStatus"> The <see cref="ActiveStatus"/> to use. </param>
+        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
+        public ClubStaffEntityBuilder WithActiveStatus(ActiveStatus activeStatus)
+        {
+            _clubStaff.ActiveStatus = activeStatus;
+            return this;
+        }
+
+        /// <summary>
         /// Set a specific ClubId to the <see cref="ClubStaffEntity"/>.
         /// </summary>
         /// <param name="id"> The id to use. </param>

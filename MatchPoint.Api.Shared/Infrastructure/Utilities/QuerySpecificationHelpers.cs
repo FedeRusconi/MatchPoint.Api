@@ -123,6 +123,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Utilities
 
             // Handle type compatibility
             return targetType.IsAssignableFrom(valueType)
+                || (targetType == typeof(Guid) && Guid.TryParse(value.ToString(), out _))
                 || (targetType.IsEnum && Enum.IsDefined(targetType, value));
         }
     }

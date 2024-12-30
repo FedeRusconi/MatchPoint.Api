@@ -1,4 +1,5 @@
-﻿using MatchPoint.Api.Shared.ClubService.Models;
+﻿using Asp.Versioning;
+using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Enums;
@@ -9,6 +10,8 @@ using MatchPoint.ClubService.Controllers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
+using MatchPoint.ClubService.Tests.Unit.Helpers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -32,7 +35,17 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             _controller = new ClubsController(_clubServiceMock.Object, _loggerMock.Object)
             {
                 ControllerContext = new()
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
             };
+            // Set up API version in HttpContext
+            var apiVersionFeature = new Mock<IApiVersioningFeature>();
+            apiVersionFeature
+                .Setup(f => f.RequestedApiVersion)
+                .Returns(new ApiVersion(ClubServiceEndpoints.CurrentVersion));
+            _controller.ControllerContext.HttpContext.Features.Set(apiVersionFeature.Object);
+
             _entityBuilder = new ClubEntityBuilder();
             _dtoBuilder = new ClubBuilder();
         }
@@ -42,7 +55,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
         [TestMethod]
         public async Task GetClubsAsync_SuccessScenario_ShouldReturnConvertedPagedResponse()
         {
-            #region Arrange
+            // Arrange
             PagedResponse<ClubEntity> serviceResponse = new()
             {
                 CurrentPage = 1,
@@ -54,13 +67,11 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
                 .Setup(s => s.GetAllWithSpecificationAsync(1, Constants.MaxPageSizeAllowed, null, null))
                 .ReturnsAsync(ServiceResult<PagedResponse<ClubEntity>>.Success(serviceResponse))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.GetClubsAsync();
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             var pagedResponse = result.Value;
@@ -69,55 +80,48 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             Assert.AreEqual(serviceResponse.PageSize, pagedResponse.PageSize);
             Assert.AreEqual(serviceResponse.TotalCount, pagedResponse.TotalCount);
             Assert.IsInstanceOfType<IEnumerable<Club>>(pagedResponse.Data);
-            #endregion
         }
 
         [TestMethod]
         public async Task GetClubsAsync_FailScenario_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             string errorMsg = "This is a test error";
             ServiceResultType resultType = ServiceResultType.BadRequest;
             _clubServiceMock
                 .Setup(s => s.GetAllWithSpecificationAsync(1, Constants.MaxPageSizeAllowed, null, null))
                 .ReturnsAsync(ServiceResult<PagedResponse<ClubEntity>>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.GetClubsAsync();
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(400, statusCode);
-            #endregion
         }
 
         [TestMethod]
         public async Task GetClubsAsync_NullResultData_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             _clubServiceMock
                 .Setup(s => s.GetAllWithSpecificationAsync(1, Constants.MaxPageSizeAllowed, null, null))
                 .ReturnsAsync(ServiceResult<PagedResponse<ClubEntity>>.Success(null!))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.GetClubsAsync();
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(500, statusCode);
-            #endregion
         }
 
         #endregion
@@ -127,32 +131,29 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
         [TestMethod]
         public async Task GetClubAsync_SuccessScenario_ShouldReturnClubDto()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
             _clubServiceMock
                 .Setup(s => s.GetByIdAsync(clubId))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(_entityBuilder.WithId(clubId).Build()))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.GetClubAsync(clubId);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             var club = result.Value;
             Assert.IsNotNull(club);
             Assert.AreEqual(clubId, club.Id);
             Assert.IsInstanceOfType<Club>(club);
-            #endregion
         }
 
         [TestMethod]
         public async Task GetClubAsync_FailScenario_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
             string errorMsg = "This is a test error";
             ServiceResultType resultType = ServiceResultType.BadRequest;
@@ -160,43 +161,37 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
                 .Setup(s => s.GetByIdAsync(clubId))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.GetClubAsync(clubId);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(400, statusCode);
-            #endregion
         }
 
         [TestMethod]
         public async Task GetClubAsync_NullResultData_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
             _clubServiceMock
                 .Setup(s => s.GetByIdAsync(clubId))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(null!))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.GetClubAsync(clubId);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(500, statusCode);
-            #endregion
         }
 
         #endregion
@@ -206,33 +201,30 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
         [TestMethod]
         public async Task PostClubAsync_SuccessScenario_ShouldReturnClubDto()
         {
-            #region Arrange
+            // Arrange
             Club club = _dtoBuilder.Build();
             _clubServiceMock
                 .Setup(s => s.CreateAsync(It.Is<ClubEntity>(e => e.Id == club.Id)))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(club.ToClubEntity()))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.PostClubAsync(club);
             var x = result.GetType();
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
-            var clubResponse = ((CreatedAtActionResult)result.Result!).Value as Club;
+            var clubResponse = ((ObjectResult)result.Result!).Value as Club;
             Assert.IsNotNull(clubResponse);
             Assert.AreEqual(club.Id, clubResponse.Id);
             Assert.IsInstanceOfType<Club>(clubResponse);
-            #endregion
         }
 
         [TestMethod]
         public async Task PostClubAsync_FailScenario_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Club club = _dtoBuilder.Build();
             string errorMsg = "This is a test error";
             ServiceResultType resultType = ServiceResultType.BadRequest;
@@ -240,43 +232,37 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
                 .Setup(s => s.CreateAsync(It.Is<ClubEntity>(e => e.Id == club.Id)))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.PostClubAsync(club);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(400, statusCode);
-            #endregion
         }
 
         [TestMethod]
         public async Task PostClubAsync_NullResultData_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Club club = _dtoBuilder.Build();
             _clubServiceMock
                 .Setup(s => s.CreateAsync(It.Is<ClubEntity>(e => e.Id == club.Id)))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(null!))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.PostClubAsync(club);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(500, statusCode);
-            #endregion
         }
 
         #endregion
@@ -286,33 +272,30 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
         [TestMethod]
         public async Task PutClubAsync_SuccessScenario_ShouldReturnClubDto()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
             Club club = _dtoBuilder.WithId(clubId).Build();
             _clubServiceMock
                 .Setup(s => s.UpdateAsync(It.Is<ClubEntity>(e => e.Id == clubId)))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(club.ToClubEntity()))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.PutClubAsync(clubId, club);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             var clubResponse = result.Value;
             Assert.IsNotNull(clubResponse);
             Assert.AreEqual(clubId, clubResponse.Id);
             Assert.IsInstanceOfType<Club>(clubResponse);
-            #endregion
         }
 
         [TestMethod]
         public async Task PutClubAsync_FailScenario_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
             Club club = _dtoBuilder.WithId(clubId).Build();
             string errorMsg = "This is a test error";
@@ -321,44 +304,38 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
                 .Setup(s => s.UpdateAsync(It.Is<ClubEntity>(e => e.Id == clubId)))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.PutClubAsync(clubId, club);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(400, statusCode);
-            #endregion
         }
 
         [TestMethod]
         public async Task PutClubAsync_NullResultData_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
             Club club = _dtoBuilder.WithId(clubId).Build();
             _clubServiceMock
                 .Setup(s => s.UpdateAsync(It.Is<ClubEntity>(e => e.Id == clubId)))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(null!))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.PutClubAsync(clubId, club);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(500, statusCode);
-            #endregion
         }
 
         #endregion
@@ -368,7 +345,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
         [TestMethod]
         public async Task PatchClubAsync_SuccessScenario_ShouldReturnClubDto()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
             Club club = _dtoBuilder.WithId(clubId).Build();
             string updatedName = "Updated Club Name";
@@ -381,17 +358,16 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             ClubEntity updatedEntity = club.ToClubEntity();
             updatedEntity.Name = updatedName;
             updatedEntity.Email = updatedEmail;
+
             _clubServiceMock
                 .Setup(s => s.PatchAsync(clubId, It.IsAny<IEnumerable<PropertyUpdate>>()))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(updatedEntity))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.PatchClubAsync(clubId, propertyUpdates);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             var clubResponse = result.Value;
@@ -400,57 +376,52 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             Assert.AreEqual(updatedName, clubResponse.Name);
             Assert.AreEqual(updatedEmail, clubResponse.Email);
             Assert.IsInstanceOfType<Club>(clubResponse);
-            #endregion
         }
 
         [TestMethod]
         public async Task PatchClubAsync_FailScenario_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
             string errorMsg = "This is a test error";
             ServiceResultType resultType = ServiceResultType.BadRequest;
+
             _clubServiceMock
                 .Setup(s => s.PatchAsync(clubId, It.IsAny<IEnumerable<PropertyUpdate>>()))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.PatchClubAsync(clubId, []);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(400, statusCode);
-            #endregion
         }
 
         [TestMethod]
         public async Task PatchClubAsync_NullResultData_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
+
             _clubServiceMock
                 .Setup(s => s.PatchAsync(clubId, It.IsAny<IEnumerable<PropertyUpdate>>()))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(null!))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.PatchClubAsync(clubId, []);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNull(result.Value);
             Assert.AreEqual(500, statusCode);
-            #endregion
         }
 
         #endregion
@@ -458,74 +429,68 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
         #region DeleteClubAsync
 
         [TestMethod]
-        public async Task DeleteClubAsync_SuccessScenario_ShouldReturnClubDto()
+        public async Task DeleteClubAsync_SuccessScenario_ShouldReturnNoContent()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
+
             _clubServiceMock
                 .Setup(s => s.DeleteAsync(clubId))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(_entityBuilder.WithId(clubId).Build()))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.DeleteClubAsync(clubId);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsInstanceOfType<NoContentResult>(result);
             Assert.AreEqual(204, ((NoContentResult)result).StatusCode);
-            #endregion
         }
 
         [TestMethod]
         public async Task DeleteClubAsync_FailScenario_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
             string errorMsg = "This is a test error";
             ServiceResultType resultType = ServiceResultType.BadRequest;
+
             _clubServiceMock
                 .Setup(s => s.DeleteAsync(clubId))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.DeleteClubAsync(clubId);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsInstanceOfType<BadRequestObjectResult>(result);
             Assert.AreEqual(400, ((BadRequestObjectResult)result).StatusCode);
-            #endregion
         }
 
         [TestMethod]
         public async Task DeleteClubAsync_NullResultData_ShouldReturnAppropriateResponseCode()
         {
-            #region Arrange
+            // Arrange
             Guid clubId = Guid.NewGuid();
+
             _clubServiceMock
                 .Setup(s => s.DeleteAsync(clubId))
                 .ReturnsAsync(ServiceResult<ClubEntity>.Success(null!))
                 .Verifiable(Times.Once);
-            #endregion
 
-            #region Act
+            // Act
             var result = await _controller.DeleteClubAsync(clubId);
-            #endregion
 
-            #region Assert
+            // Assert
             _clubServiceMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsInstanceOfType<ObjectResult>(result);
             Assert.AreEqual(500, ((ObjectResult)result).StatusCode);
-            #endregion
         }
 
         #endregion

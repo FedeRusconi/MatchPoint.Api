@@ -20,7 +20,7 @@ namespace MatchPoint.ClubService.Services
         ILogger<ClubStaffService> _logger) : IClubStaffService
     {
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubStaffEntity>> GetByIdAsync(Guid id)
+        public async Task<IServiceResult<ClubStaffEntity>> GetByIdAsync(Guid clubId, Guid id)
         {
             _logger.LogDebug("Attempting to retrieve club staff with ID: {Id}", id);
 
@@ -31,6 +31,16 @@ namespace MatchPoint.ClubService.Services
                 return ServiceResult<ClubStaffEntity>.Failure(
                     $"Club staff with id '{id}' was not found.", ServiceResultType.NotFound);
             }
+            if (clubStaffEntity.ClubId != clubId)
+            {
+                _logger.LogWarning(
+                    "Bad Request: ClubId of club staff with ID: {Id} does not match provided '{clubId}'", 
+                    id,
+                    clubId);
+                return ServiceResult<ClubStaffEntity>.Failure(
+                    $"ClubID of club staff with id '{id}' does not match provided '{clubId}'.", 
+                    ServiceResultType.BadRequest);
+            }
 
             _logger.LogDebug("Club staff with ID: {Id} found successfully", id);
             return ServiceResult<ClubStaffEntity>.Success(clubStaffEntity);
@@ -38,6 +48,7 @@ namespace MatchPoint.ClubService.Services
 
         /// <inheritdoc />
         public async Task<IServiceResult<PagedResponse<ClubStaffEntity>>> GetAllWithSpecificationAsync(
+            Guid clubId,
             int pageNumber,
             int pageSize,
             Dictionary<string, string>? filters = null,
@@ -56,6 +67,9 @@ namespace MatchPoint.ClubService.Services
             _logger.LogDebug(
                 "Attempting to retrieve club staff with {Count} filters", filters != null ? filters.Count : "no");
 
+            // Filter for club id is added automatically
+            filters ??= [];
+            filters.Add(nameof(ClubStaffEntity.ClubId), clubId.ToString());
             var clubStaff = await _clubStaffRepository.GetAllWithSpecificationAsync(
                     pageNumber, pageSize, filters, orderBy, trackChanges: false);
 

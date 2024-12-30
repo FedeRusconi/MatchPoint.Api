@@ -27,6 +27,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         private readonly IConfiguration _configuration = DataContextHelpers.TestingConfiguration;
         private ClubStaffEntityBuilder _clubStaffEntityBuilder = default!;
         private ClubStaffService _clubStaffService = default!;
+        private readonly Guid _clubId = Guid.NewGuid();
 
         [TestInitialize]
         public void TestInitialize()
@@ -50,14 +51,14 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task GetByIdAsync_WhenIdIsValid_ShouldReturnSuccessResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
 
             _clubStaffRepositoryMock
                 .Setup(repo => repo.GetByIdAsync(clubStaffEntity.Id, It.IsAny<bool>()))
                 .ReturnsAsync(clubStaffEntity);
 
             // Act
-            var result = await _clubStaffService.GetByIdAsync(clubStaffEntity.Id);
+            var result = await _clubStaffService.GetByIdAsync(_clubId, clubStaffEntity.Id);
 
             // Assert
             _clubStaffRepositoryMock.Verify(repo => repo.GetByIdAsync(clubStaffEntity.Id, false), Times.Once);
@@ -70,20 +71,42 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task GetByIdAsync_WhenIdDoesNotExist_ShouldReturnFailResult()
         {
             // Arrange
-            Guid clubId = Guid.NewGuid();
+            Guid clubStaffId = Guid.NewGuid();
 
             _clubStaffRepositoryMock
-                .Setup(repo => repo.GetByIdAsync(clubId, It.IsAny<bool>()))
+                .Setup(repo => repo.GetByIdAsync(clubStaffId, It.IsAny<bool>()))
                 .ReturnsAsync((ClubStaffEntity?)null);
 
             // Act
-            var result = await _clubStaffService.GetByIdAsync(clubId);
+            var result = await _clubStaffService.GetByIdAsync(_clubId, clubStaffId);
 
             // Assert
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.NotFound, result.ResultType);
+        }
+
+        [TestMethod]
+        public async Task GetByIdAsync_WithClubIdMismatch_ShouldReturnFailResult()
+        {
+            // Arrange
+            // Assign a different club id for the test
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(Guid.NewGuid()).Build();
+
+            _clubStaffRepositoryMock
+                .Setup(repo => repo.GetByIdAsync(clubStaffEntity.Id, It.IsAny<bool>()))
+                .ReturnsAsync(clubStaffEntity);
+
+            // Act
+            var result = await _clubStaffService.GetByIdAsync(_clubId, clubStaffEntity.Id);
+
+            // Assert
+            _clubStaffRepositoryMock.Verify(repo => repo.GetByIdAsync(clubStaffEntity.Id, false), Times.Once);
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
         }
 
         #endregion
@@ -111,7 +134,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.GetAllWithSpecificationAsync(pageNumber, pageSize);
+            var result = await _clubStaffService.GetAllWithSpecificationAsync(_clubId, pageNumber, pageSize);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -150,7 +173,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.GetAllWithSpecificationAsync(1, 500, filters: filters);
+            var result = await _clubStaffService.GetAllWithSpecificationAsync(_clubId, 1, 500, filters: filters);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -187,7 +210,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.GetAllWithSpecificationAsync(1, 500, orderBy: orderBy);
+            var result = await _clubStaffService.GetAllWithSpecificationAsync(_clubId, 1, 500, orderBy: orderBy);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -204,7 +227,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenPagingIsInvalid_ShouldReturnFailResult(int pageNumber, int pageSize)
         {
             // Act
-            var result = await _clubStaffService.GetAllWithSpecificationAsync(pageNumber, pageSize);
+            var result = await _clubStaffService.GetAllWithSpecificationAsync(_clubId, pageNumber, pageSize);
 
             // Assert
             Assert.IsNotNull(result);
@@ -223,7 +246,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             };
 
             // Act
-            var result = await _clubStaffService.GetAllWithSpecificationAsync(1, 500, filters: filters);
+            var result = await _clubStaffService.GetAllWithSpecificationAsync(_clubId, 1, 500, filters: filters);
 
             // Assert
             Assert.IsNotNull(result);
@@ -242,7 +265,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             };
 
             // Act
-            var result = await _clubStaffService.GetAllWithSpecificationAsync(1, 500, orderBy: orderBy);
+            var result = await _clubStaffService.GetAllWithSpecificationAsync(_clubId, 1, 500, orderBy: orderBy);
 
             // Assert
             Assert.IsNotNull(result);
