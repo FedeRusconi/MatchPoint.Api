@@ -72,9 +72,10 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Factories
                     adUser.BusinessPhones = [patchProperty.Value?.ToString()];
                     continue;
                 }
+                // Skip properties not found or mapped
                 if (!_propertiesMapping.TryGetValue(patchProperty.Property, out var userProperty))
                 {
-                    throw new InvalidOperationException($"Could not find a mapping for property '{patchProperty.Property}'");
+                    continue;
                 }
                 // For all others, add new entry into list of properties to update for User
                 userUpdates.Add(new() { Property = userProperty, Value = patchProperty.Value });

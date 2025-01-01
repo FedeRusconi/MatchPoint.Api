@@ -4,6 +4,7 @@ using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
+using MatchPoint.ClubService.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -70,9 +71,9 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region 
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity3.Id);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity3);
                 #endregion
             }
         }
@@ -135,10 +136,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity3.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity4.Id);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity3);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity4);
                 #endregion
             }
         }
@@ -172,7 +173,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity.Id);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity);
                 #endregion
             }
         }
@@ -259,10 +260,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity3.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity4.Id);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity3);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity4);
                 #endregion
             }
         }
@@ -308,8 +309,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2.Id);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
                 #endregion
             }
         }
@@ -355,8 +356,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2.Id);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
                 #endregion
             }
         }
@@ -396,8 +397,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2.Id);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
                 #endregion
             }
         }
@@ -436,8 +437,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1.Id);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2.Id);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
                 #endregion
             }
         }
@@ -484,7 +485,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 #region Cleanup
                 if (result != null)
                 {
-                    await _clubStaffRepository.DeleteAsync(result.Id);
+                    await _clubStaffRepository.DeleteAsync(result);
                 }
                 #endregion
             }
@@ -532,7 +533,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity.Id);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity);
                 #endregion
             }
         }
@@ -584,7 +585,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 #region Act
-                var result = await _clubStaffRepository.DeleteAsync(clubStaffEntity.Id);
+                var result = await _clubStaffRepository.DeleteAsync(clubStaffEntity);
                 #endregion
 
                 #region Assert
@@ -600,16 +601,27 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         public async Task DeleteAsync_WhenClubStaffDoesNotExist_ShouldReturnNull()
         {
             #region
-            var clubStaffId = Guid.NewGuid();
+            var clubStaff = _clubStaffEntityBuilder.Build();
             #endregion
 
             #region Act
-            var result = await _clubStaffRepository.DeleteAsync(clubStaffId);
+            var result = await _clubStaffRepository.DeleteAsync(clubStaff);
             #endregion
 
             #region Assert
             Assert.IsNull(result);
             #endregion
+        }
+
+        [TestMethod]
+        public async Task DeleteAsync_WhenClubStaffIsNull_ShouldThrowArgumentNullException()
+        {
+            // Arrange
+            ClubStaffEntity clubStaffEntity = null!;
+
+            // Act & Assert
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+                () => _clubStaffRepository.DeleteAsync(clubStaffEntity));
         }
 
         #endregion

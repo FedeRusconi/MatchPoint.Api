@@ -525,7 +525,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
 
-            _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity.Id))
+            _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
 
@@ -547,7 +547,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
 
-            _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity.Id))
+            _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity))
                 .ReturnsAsync((ClubEntity?)null)
                 .Verifiable(Times.Once);
 

@@ -183,26 +183,27 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         /// Deletes a <see cref="ClubEntity"/> by its unique identifier.
         /// Saves the changes immediately if no active transaction exists.
         /// </summary>
-        /// <param name="id">The unique identifier of the entity to delete.</param>
+        /// <param name="clubEntity">The <see cref="ClubEntity"/> to delete.</param>
         /// <returns>
         /// True if successful, false if no <see cref="ClubEntity"/> with matching Id was found.
         /// </returns>
-        public async Task<ClubEntity?> DeleteAsync(Guid id)
+        public async Task<ClubEntity?> DeleteAsync(ClubEntity clubEntity)
         {
-            var clubEntity = await _context.Clubs.FindAsync(id);
-            if (clubEntity == null)
+            ArgumentNullException.ThrowIfNull(clubEntity);
+            _logger.LogTrace("Deleting club from the database with Id {Id} ({Email})", clubEntity.Id, clubEntity.Email);
+
+            try
             {
-                _logger.LogWarning("No club found in the database with ID: {Id}", id);
-                return null;
+                _context.Clubs.Remove(clubEntity);
+                if (!IsTransactionActive)
+                {
+                    await _context.SaveChangesAsync();
+                }
             }
-
-            _logger.LogTrace("Deleting club from the database with Id {Id} ({Email})", id, clubEntity.Email);
-
-            _context.Clubs.Remove(clubEntity);
-
-            if (!IsTransactionActive)
+            catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.NotFound)
             {
-                await _context.SaveChangesAsync();
+                _logger.LogWarning("No club found in the database with ID: {Id}", clubEntity.Id);
+                return null;
             }
 
             _logger.LogTrace("Club '{Id}' ({Email}) deleted from the database", clubEntity.Id, clubEntity.Email);

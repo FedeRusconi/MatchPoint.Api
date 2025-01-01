@@ -45,26 +45,18 @@ namespace MatchPoint.ClubService.Interfaces
         /// <summary>
         /// Adds a new <see cref="ClubStaffEntity"/> to the database.
         /// </summary>
+        /// <param name="clubId"> The <see cref="Guid"/> that belongs to the parent <see cref="ClubEntity"/>. </param>
         /// <param name="clubStaffEntity">The <see cref="ClubStaffEntity"/> to add.</param>
         /// <returns> 
         /// A <see cref="IServiceResult{T}"/> class containing the newly created <see cref="ClubStaffEntity"/>
         /// or details about the error.
         /// </returns>
-        public Task<IServiceResult<ClubStaffEntity>> CreateAsync(ClubStaffEntity clubStaffEntity);
-
-        /// <summary>
-        /// Updates an existing <see cref="ClubStaffEntity"/> in the database.
-        /// </summary>
-        /// <param name="clubStaffEntity">The <see cref="ClubStaffEntity"/> to update.</param>
-        /// <returns> 
-        /// A <see cref="IServiceResult{T}"/> class containing the updated <see cref="ClubStaffEntity"/>
-        /// or details about the error.
-        /// </returns>
-        //public Task<IServiceResult<ClubStaffEntity>> UpdateAsync(ClubStaffEntity clubStaffEntity);
+        public Task<IServiceResult<ClubStaffEntity>> CreateAsync(Guid clubId, ClubStaffEntity clubStaffEntity);
 
         /// <summary>
         /// Updates only provided properties of an existing <see cref="ClubStaffEntity"/> in the database.
         /// </summary>
+        /// <param name="clubId"> The <see cref="Guid"/> that belongs to the parent <see cref="ClubEntity"/>. </param>
         /// <param name="id"> The <see cref="Guid"/> of the club staff to modify. </param>
         /// <param name="propertyUpdates"> 
         /// An enumerable of <see cref="PropertyUpdate"/> with selected properties to update. 
@@ -73,16 +65,17 @@ namespace MatchPoint.ClubService.Interfaces
         /// A <see cref="IServiceResult{T}"/> class containing the updated <see cref="ClubStaffEntity"/>
         /// or details about the error.
         /// </returns>
-        Task<IServiceResult<ClubStaffEntity>> PatchAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates);
+        Task<IServiceResult<ClubStaffEntity>> PatchAsync(Guid clubId, Guid id, IEnumerable<PropertyUpdate> propertyUpdates);
 
         /// <summary>
         /// Deletes a <see cref="ClubStaffEntity"/> by its unique identifier.
         /// </summary>
+        /// <param name="clubId"> The <see cref="Guid"/> that belongs to the parent <see cref="ClubEntity"/>. </param>
         /// <param name="id"> The unique identifier of the entity to delete. </param>
         /// <returns> 
         /// A <see cref="IServiceResult{T}"/> class containing the <see cref="ClubStaffEntity"/> deleted
         /// or details about the error.
         /// </returns>
-        public Task<IServiceResult<ClubStaffEntity>> DeleteAsync(Guid id);
+        public Task<IServiceResult<ClubStaffEntity>> DeleteAsync(Guid clubId, Guid id);
     }
 }

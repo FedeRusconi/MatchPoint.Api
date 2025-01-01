@@ -302,7 +302,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.CreateAsync(clubStaffEntity);
+            var result = await _clubStaffService.CreateAsync(_clubId, clubStaffEntity);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -334,7 +334,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.CreateAsync(clubStaffEntity);
+            var result = await _clubStaffService.CreateAsync(_clubId, clubStaffEntity);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -359,7 +359,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.CreateAsync(clubStaffEntity);
+            var result = await _clubStaffService.CreateAsync(_clubId, clubStaffEntity);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -398,7 +398,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.CreateAsync(clubStaffEntity);
+            var result = await _clubStaffService.CreateAsync(_clubId, clubStaffEntity);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -417,7 +417,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
 
             // Act & Assert
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
-                () => _clubStaffService.CreateAsync(clubStaffEntity));
+                () => _clubStaffService.CreateAsync(_clubId, clubStaffEntity));
         }
 
         #endregion
@@ -453,7 +453,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once); ;
 
             // Act
-            var result = await _clubStaffService.PatchAsync(clubStaffEntity.Id, updates);
+            var result = await _clubStaffService.PatchAsync(_clubId, clubStaffEntity.Id, updates);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -482,7 +482,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.PatchAsync(clubStaffId, updates);
+            var result = await _clubStaffService.PatchAsync(_clubId, clubStaffId, updates);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -509,7 +509,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.PatchAsync(clubStaffId, updates);
+            var result = await _clubStaffService.PatchAsync(_clubId, clubStaffId, updates);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -538,7 +538,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.PatchAsync(clubStaffEntity.Id, updates);
+            var result = await _clubStaffService.PatchAsync(_clubId, clubStaffEntity.Id, updates);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -579,7 +579,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once); ;
 
             // Act
-            var result = await _clubStaffService.PatchAsync(clubStaffEntity.Id, updates);
+            var result = await _clubStaffService.PatchAsync(_clubId, clubStaffEntity.Id, updates);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -617,7 +617,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once());
 
             // Act
-            var result = await _clubStaffService.PatchAsync(clubStaffEntity.Id, updates);
+            var result = await _clubStaffService.PatchAsync(_clubId, clubStaffEntity.Id, updates);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -629,6 +629,38 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         }
 
         [TestMethod]
+        public async Task PatchAsync_WhenClubIdMismatch_ShouldReturnFailResult()
+        {
+            // Arrange
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(Guid.NewGuid()).Build();
+            var azureAdUser = clubStaffEntity.ToAzureAdUser();
+            string editedFirstName = "First Edited";
+            string editedPhone = "Updated Phone";
+            List<PropertyUpdate> updates = [
+                new PropertyUpdate(nameof(clubStaffEntity.FirstName), editedFirstName),
+                new PropertyUpdate(nameof(clubStaffEntity.PhoneNumber), editedPhone)
+            ];
+
+            _clubStaffRepositoryMock.Setup(repo => repo.GetByIdAsync(clubStaffEntity.Id, It.IsAny<bool>()))
+                .ReturnsAsync(clubStaffEntity)
+                .Verifiable(Times.Once);
+            _azureAdServiceMock.Setup(repo => repo.GetUserByIdAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()))
+                .ReturnsAsync(azureAdUser)
+                .Verifiable(Times.Once);
+
+            // Act
+            var result = await _clubStaffService.PatchAsync(_clubId, clubStaffEntity.Id, updates);
+
+            // Assert
+            _clubStaffRepositoryMock.VerifyAll();
+            _azureAdServiceMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
+        }
+
+        [TestMethod]
         public async Task PatchAsync_WhenListIsNull_ShouldThrowArgumentNullException()
         {
             // Arrange
@@ -637,7 +669,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
 
             // Act & Assert
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
-                () => _clubStaffService.PatchAsync(clubStaffId, updates));
+                () => _clubStaffService.PatchAsync(_clubId, clubStaffId, updates));
         }
 
         #endregion
@@ -648,10 +680,13 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task DeleteAsync_WhenIdIsValid_ShouldReturnSuccessResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             var azureAdUser = clubStaffEntity.ToAzureAdUser();
 
-            _clubStaffRepositoryMock.Setup(repo => repo.DeleteAsync(clubStaffEntity.Id))
+            _clubStaffRepositoryMock.Setup(repo => repo.GetByIdAsync(clubStaffEntity.Id, It.IsAny<bool>()))
+                .ReturnsAsync(clubStaffEntity)
+                .Verifiable(Times.Once);
+            _clubStaffRepositoryMock.Setup(repo => repo.DeleteAsync(clubStaffEntity))
                 .ReturnsAsync(clubStaffEntity)
                 .Verifiable(Times.Once);
             _azureAdServiceMock.Setup(repo => repo.DeleteUserAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()))
@@ -659,7 +694,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.DeleteAsync(clubStaffEntity.Id);
+            var result = await _clubStaffService.DeleteAsync(_clubId, clubStaffEntity.Id);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -675,14 +710,39 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task DeleteAsync_WhenClubStaffIsNotFound_ShouldReturnFailResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
 
-            _clubStaffRepositoryMock.Setup(repo => repo.DeleteAsync(clubStaffEntity.Id))
+            _clubStaffRepositoryMock.Setup(repo => repo.GetByIdAsync(clubStaffEntity.Id, It.IsAny<bool>()))
                 .ReturnsAsync((ClubStaffEntity?)null)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.DeleteAsync(clubStaffEntity.Id);
+            var result = await _clubStaffService.DeleteAsync(_clubId, clubStaffEntity.Id);
+
+            // Assert
+            _clubStaffRepositoryMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.NotFound, result.ResultType);
+        }
+
+        [TestMethod]
+        public async Task DeleteAsync_WhenRepositoryOperationFails_ShouldReturnFailResult()
+        {
+            // Arrange
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
+            var exception = new HttpRequestException("This is a test error", null, HttpStatusCode.Conflict);
+
+            _clubStaffRepositoryMock.Setup(repo => repo.GetByIdAsync(clubStaffEntity.Id, It.IsAny<bool>()))
+                .ReturnsAsync(clubStaffEntity)
+                .Verifiable(Times.Once);
+            _clubStaffRepositoryMock.Setup(repo => repo.DeleteAsync(clubStaffEntity))
+                .ReturnsAsync((ClubStaffEntity)null!)
+                .Verifiable(Times.Once);
+
+            // Act
+            var result = await _clubStaffService.DeleteAsync(_clubId, clubStaffEntity.Id);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -696,10 +756,13 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task DeleteAsync_WhenAzureAdOperationFails_ShouldReturnFailResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             var exception = new HttpRequestException("This is a test error", null, HttpStatusCode.Conflict);
 
-            _clubStaffRepositoryMock.Setup(repo => repo.DeleteAsync(clubStaffEntity.Id))
+            _clubStaffRepositoryMock.Setup(repo => repo.GetByIdAsync(clubStaffEntity.Id, It.IsAny<bool>()))
+                .ReturnsAsync(clubStaffEntity)
+                .Verifiable(Times.Once);
+            _clubStaffRepositoryMock.Setup(repo => repo.DeleteAsync(clubStaffEntity))
                 .ReturnsAsync(clubStaffEntity)
                 .Verifiable(Times.Once);
             _azureAdServiceMock.Setup(repo => repo.DeleteUserAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()))
@@ -711,7 +774,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubStaffService.DeleteAsync(clubStaffEntity.Id);
+            var result = await _clubStaffService.DeleteAsync(_clubId, clubStaffEntity.Id);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
@@ -720,6 +783,27 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.Conflict, result.ResultType);
+        }
+
+        [TestMethod]
+        public async Task DeleteAsync_WhenClubIdMismatch_ShouldReturnFailResult()
+        {
+            // Arrange
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(Guid.NewGuid()).Build();
+
+            _clubStaffRepositoryMock.Setup(repo => repo.GetByIdAsync(clubStaffEntity.Id, It.IsAny<bool>()))
+                .ReturnsAsync(clubStaffEntity)
+                .Verifiable(Times.Once);
+
+            // Act
+            var result = await _clubStaffService.DeleteAsync(_clubId, clubStaffEntity.Id);
+
+            // Assert
+            _clubStaffRepositoryMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
         }
 
         #endregion

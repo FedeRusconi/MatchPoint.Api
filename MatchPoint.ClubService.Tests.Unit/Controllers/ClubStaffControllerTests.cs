@@ -205,7 +205,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             // Arrange
             ClubStaff clubStaff = _dtoBuilder.Build();
             _clubStaffServiceMock
-                .Setup(s => s.CreateAsync(It.Is<ClubStaffEntity>(e => e.Id == clubStaff.Id)))
+                .Setup(s => s.CreateAsync(_clubId, It.Is<ClubStaffEntity>(e => e.Id == clubStaff.Id)))
                 .ReturnsAsync(ServiceResult<ClubStaffEntity>.Success(clubStaff.ToClubStaffEntity()))
                 .Verifiable(Times.Once);
 
@@ -230,7 +230,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             string errorMsg = "This is a test error";
             ServiceResultType resultType = ServiceResultType.BadRequest;
             _clubStaffServiceMock
-                .Setup(s => s.CreateAsync(It.Is<ClubStaffEntity>(e => e.Id == clubStaff.Id)))
+                .Setup(s => s.CreateAsync(_clubId, It.Is<ClubStaffEntity>(e => e.Id == clubStaff.Id)))
                 .ReturnsAsync(ServiceResult<ClubStaffEntity>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
 
@@ -251,7 +251,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             // Arrange
             ClubStaff clubStaff = _dtoBuilder.Build();
             _clubStaffServiceMock
-                .Setup(s => s.CreateAsync(It.Is<ClubStaffEntity>(e => e.Id == clubStaff.Id)))
+                .Setup(s => s.CreateAsync(_clubId, It.Is<ClubStaffEntity>(e => e.Id == clubStaff.Id)))
                 .ReturnsAsync(ServiceResult<ClubStaffEntity>.Success(null!))
                 .Verifiable(Times.Once);
 
@@ -288,12 +288,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             updatedEntity.PhoneNumber = updatedPhone;
 
             _clubStaffServiceMock
-                .Setup(s => s.PatchAsync(clubStaffId, It.IsAny<IEnumerable<PropertyUpdate>>()))
+                .Setup(s => s.PatchAsync(_clubId, clubStaffId, It.IsAny<IEnumerable<PropertyUpdate>>()))
                 .ReturnsAsync(ServiceResult<ClubStaffEntity>.Success(updatedEntity))
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _controller.PatchClubStaffAsync(clubStaffId, propertyUpdates);
+            var result = await _controller.PatchClubStaffAsync(_clubId, clubStaffId, propertyUpdates);
 
             // Assert
             _clubStaffServiceMock.VerifyAll();
@@ -315,12 +315,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             ServiceResultType resultType = ServiceResultType.BadRequest;
 
             _clubStaffServiceMock
-                .Setup(s => s.PatchAsync(clubStaffId, It.IsAny<IEnumerable<PropertyUpdate>>()))
+                .Setup(s => s.PatchAsync(_clubId, clubStaffId, It.IsAny<IEnumerable<PropertyUpdate>>()))
                 .ReturnsAsync(ServiceResult<ClubStaffEntity>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _controller.PatchClubStaffAsync(clubStaffId, []);
+            var result = await _controller.PatchClubStaffAsync(_clubId, clubStaffId, []);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
 
             // Assert
@@ -337,12 +337,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             Guid clubStaffId = Guid.NewGuid();
 
             _clubStaffServiceMock
-                .Setup(s => s.PatchAsync(clubStaffId, It.IsAny<IEnumerable<PropertyUpdate>>()))
+                .Setup(s => s.PatchAsync(_clubId, clubStaffId, It.IsAny<IEnumerable<PropertyUpdate>>()))
                 .ReturnsAsync(ServiceResult<ClubStaffEntity>.Success(null!))
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _controller.PatchClubStaffAsync(clubStaffId, []);
+            var result = await _controller.PatchClubStaffAsync(_clubId, clubStaffId, []);
             var statusCode = ActionResultHelpers.ExtractStatusCode(result);
 
             // Assert
@@ -363,12 +363,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             Guid clubStaffId = Guid.NewGuid();
 
             _clubStaffServiceMock
-                .Setup(s => s.DeleteAsync(clubStaffId))
+                .Setup(s => s.DeleteAsync(_clubId, clubStaffId))
                 .ReturnsAsync(ServiceResult<ClubStaffEntity>.Success(_entityBuilder.WithId(clubStaffId).Build()))
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _controller.DeleteClubStaffAsync(clubStaffId);
+            var result = await _controller.DeleteClubStaffAsync(_clubId, clubStaffId);
 
             // Assert
             _clubStaffServiceMock.VerifyAll();
@@ -386,12 +386,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             ServiceResultType resultType = ServiceResultType.BadRequest;
 
             _clubStaffServiceMock
-                .Setup(s => s.DeleteAsync(clubStaffId))
+                .Setup(s => s.DeleteAsync(_clubId, clubStaffId))
                 .ReturnsAsync(ServiceResult<ClubStaffEntity>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _controller.DeleteClubStaffAsync(clubStaffId);
+            var result = await _controller.DeleteClubStaffAsync(_clubId, clubStaffId);
 
             // Assert
             _clubStaffServiceMock.VerifyAll();
@@ -407,12 +407,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Controllers
             Guid clubStaffId = Guid.NewGuid();
 
             _clubStaffServiceMock
-                .Setup(s => s.DeleteAsync(clubStaffId))
+                .Setup(s => s.DeleteAsync(_clubId, clubStaffId))
                 .ReturnsAsync(ServiceResult<ClubStaffEntity>.Success(null!))
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _controller.DeleteClubStaffAsync(clubStaffId);
+            var result = await _controller.DeleteClubStaffAsync(_clubId, clubStaffId);
 
             // Assert
             _clubStaffServiceMock.VerifyAll();

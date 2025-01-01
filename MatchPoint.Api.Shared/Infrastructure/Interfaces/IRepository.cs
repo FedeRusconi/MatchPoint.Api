@@ -50,8 +50,8 @@
         /// <summary>
         /// Deletes a <typeparamref name="T"/> by its unique identifier.
         /// </summary>
-        /// <param name="id">The unique identifier of the entity to delete.</param>
+        /// <param name="entity">The <typeparamref name="T"/> to delete.</param>
         /// <returns> The deleted <typeparamref name="T"/> or null if not found. </returns>
-        public Task<T?> DeleteAsync(Guid id);
+        public Task<T?> DeleteAsync(T entity);
     }
 }

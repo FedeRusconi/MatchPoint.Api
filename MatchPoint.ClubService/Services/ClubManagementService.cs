@@ -156,9 +156,16 @@ namespace MatchPoint.ClubService.Services
         /// <inheritdoc />
         public async Task<IServiceResult<ClubEntity>> DeleteAsync(Guid id)
         {
-            _logger.LogDebug("Attempting to delete club with Id: {Id}", id);
-            var deletedEntity = await _clubRepository.DeleteAsync(id);
+            var clubEntity = await _clubRepository.GetByIdAsync(id);
+            if (clubEntity == null)
+            {
+                _logger.LogWarning("Not Found: Club with Id '{Id}' not found.", id);
+                return ServiceResult<ClubEntity>.Failure(
+                    $"Club with id '{id}' was not found.", ServiceResultType.NotFound);
+            }
 
+            _logger.LogDebug("Attempting to delete club with Id: {Id}", id);
+            var deletedEntity = await _clubRepository.DeleteAsync(clubEntity);
             if (deletedEntity == null)
             {
                 _logger.LogWarning("Not Found: Club with Id '{Id}' not found.", id);

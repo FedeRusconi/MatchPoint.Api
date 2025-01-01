@@ -79,7 +79,7 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubStaffEntity>> CreateAsync(ClubStaffEntity clubStaffEntity)
+        public async Task<IServiceResult<ClubStaffEntity>> CreateAsync(Guid clubId, ClubStaffEntity clubStaffEntity)
         {
             ArgumentNullException.ThrowIfNull(clubStaffEntity);
 
@@ -131,6 +131,7 @@ namespace MatchPoint.ClubService.Services
             // Set Id and "Created" tracking fields
             clubStaffEntity.Id = Guid.Parse(azureAdUser.Id!);
             clubStaffEntity.SetTrackingFields();
+            clubStaffEntity.ClubId = clubId;
 
             // Create in db
             var createdEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity);
@@ -150,14 +151,15 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubStaffEntity>> PatchAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
+        public async Task<IServiceResult<ClubStaffEntity>> PatchAsync(
+            Guid clubId, Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
         {
             ArgumentNullException.ThrowIfNull(propertyUpdates);
 
             _logger.LogDebug("Attempting to patch club staff with Id: {Id}", id);
 
             // Find club
-            var clubStaffEntity = await _clubStaffRepository.GetByIdAsync(id, trackChanges: false);
+            var clubStaffEntity = await _clubStaffRepository.GetByIdAsync(id, trackChanges: false);            
             // Keep this as a backup in case of rollback
             var azureAdUser = await _azureAdService.GetUserByIdAsync(id);
             if (clubStaffEntity == null || azureAdUser == null)
@@ -165,7 +167,17 @@ namespace MatchPoint.ClubService.Services
                 _logger.LogWarning("Not Found: Club staff with Id '{Id}' not found.", id);
                 return ServiceResult<ClubStaffEntity>.Failure(
                     $"Club staff with id '{id}' was not found.", ServiceResultType.NotFound);
-            }            
+            }
+            if (clubStaffEntity.ClubId != clubId)
+            {
+                _logger.LogWarning(
+                    "Bad Request: ClubId of club staff with ID: {Id} does not match provided '{ClubId}'",
+                    id,
+                    clubId);
+                return ServiceResult<ClubStaffEntity>.Failure(
+                    $"ClubID of club staff with id '{id}' does not match provided '{clubId}'.",
+                    ServiceResultType.BadRequest);
+            }
 
             try
             {
@@ -208,10 +220,29 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubStaffEntity>> DeleteAsync(Guid id)
+        public async Task<IServiceResult<ClubStaffEntity>> DeleteAsync(Guid clubId, Guid id)
         {
             _logger.LogDebug("Attempting to delete club staff with Id: {Id}", id);
-            var deletedEntity = await _clubStaffRepository.DeleteAsync(id);
+            var clubStaff = await _clubStaffRepository.GetByIdAsync(id, trackChanges: false);
+            // Check staff exists and its ClubId matches the provided one
+            if (clubStaff == null)
+            {
+                _logger.LogWarning("Not Found: Club staff with Id '{Id}' not found.", id);
+                return ServiceResult<ClubStaffEntity>.Failure(
+                    $"Club staff with id '{id}' was not found.", ServiceResultType.NotFound);
+            }
+            if (clubStaff.ClubId != clubId)
+            {
+                _logger.LogWarning(
+                    "Bad Request: ClubId of club staff with ID: {Id} does not match provided '{ClubId}'",
+                    id,
+                    clubId);
+                return ServiceResult<ClubStaffEntity>.Failure(
+                    $"ClubID of club staff with id '{id}' does not match provided '{clubId}'.",
+                    ServiceResultType.BadRequest);
+            }
+
+            var deletedEntity = await _clubStaffRepository.DeleteAsync(clubStaff);
             if (deletedEntity == null)
             {
                 _logger.LogWarning("Not Found: Club staff with Id '{Id}' not found.", id);

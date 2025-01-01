@@ -72,6 +72,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task GetClubsAsync_WithNoQueryParameters_ShouldReturnAllRecordsWithDefaultPaging()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Read";
             ClubEntity clubEntity1 = _entityBuilder.WithEmail("club1@test.com").Build();
             _entityBuilder = new();
             ClubEntity clubEntity2 = _entityBuilder.WithEmail("club2@test.com").Build();
@@ -113,6 +114,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task GetClubsAsync_WithValidQueryParameters_ShouldReturnFilteredSortedRecordsWithPaging()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Read";
             int page = 2;
             int pageSize = 1;
             ActiveStatus filterStatus = ActiveStatus.Active;
@@ -170,6 +172,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task GetClubsAsync_WithInvalidQueryParameters_ShouldReturnBadRequest()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Read";
             string invalidFilters = "Invalid Filters";
 
             // Act
@@ -189,6 +192,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task GetClubAsync_WithValidId_ShouldReturnSingleRecord()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Read";
             Guid clubId = Guid.NewGuid();
             ClubEntity clubEntity = _entityBuilder
                 .WithId(clubId)
@@ -225,7 +229,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task GetClubAsync_WithInvalidId_ShouldReturnNotFound()
         {
             // Arrange
-            string clubId = "1";
+            TestAuthHandler.Scopes = "Clubs.Read";
+            string clubId = "Invalid Id";
 
             // Act
             var result = await _httpClient.GetAsync(
@@ -244,6 +249,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task PostClubAsync_WithValidClub_ShouldCreateAndReturnCreatedRecord()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             Club club = _dtoBuilder
                 .WithDefaultId()
                 .Build();
@@ -281,6 +287,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task PostClubAsync_WithoutRequiredProperty_ShouldReturnBadRequest()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             Club club = _dtoBuilder.Build();
             club.Email = null!;
 
@@ -297,6 +304,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task PostClubAsync_WithInvalidClub_ShouldReturnBadRequest()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             string club = "Invalid Club";
 
             // Act
@@ -316,6 +324,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task PutClubAsync_WithValidClub_ShouldUpdateAndReturnRecord()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             Club club = _dtoBuilder.Build();
             Club? clubResponse = null;
             string updatedEmail = "changed@email.com";
@@ -362,6 +371,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task PutClubAsync_WithInvalidId_ShouldReturnBadRequest()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             string invalidClubId = "Invalid Club Id";
             Club club = _dtoBuilder.Build();
             try
@@ -391,6 +401,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task PutClubAsync_WithoutRequiredProperty_ShouldReturnBadRequest()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             Club club = _dtoBuilder.Build();
             try
             {
@@ -425,6 +436,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task PatchClubAsync_WithValidClub_ShouldUpdateAndReturnRecord()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             Club club = _dtoBuilder.Build();
             Club? clubResponse = null;
             string updatedName = "New Club Name";
@@ -439,8 +451,6 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 // Create the record to test the update
                 _dbContext.Clubs.Add(club.ToClubEntity());
                 await _dbContext.SaveChangesAsync();
-
-                club.Email = updatedEmail;
 
                 // Act
                 var result = await _httpClient.PatchAsJsonAsync(
@@ -479,6 +489,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task PatchClubAsync_WithInvalidId_ShouldReturnBadRequest()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             string invalidClubId = "Invalid Club Id";
             Club club = _dtoBuilder.Build();
             string updatedName = "New Club Name";
@@ -514,7 +525,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         [TestMethod]
         public async Task PatchClubAsync_WithInvalidUpdates_ShouldReturnBadRequest()
         {
-            // Arrange            
+            // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             Club club = _dtoBuilder.Build();
             string invalidPropertyUpdates = "Invalid Property Updates";
             try
@@ -547,43 +559,41 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         [TestMethod]
         public async Task DeleteClubAsync_WithValidId_ShouldDeleteRecord()
         {
-            #region Arrange
+            // Arrange
+            TestAuthHandler.Scopes = "Clubs.Delete";
             Club club = _dtoBuilder.Build();
             try
             {
                 // Create the record to test the update
                 _dbContext.Clubs.Add(club.ToClubEntity());
                 await _dbContext.SaveChangesAsync();
-                #endregion
 
-                #region Act
+                // Act
                 var result = await _httpClient.DeleteAsync(
                     $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{club.Id}");
-                #endregion
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(HttpStatusCode.NoContent, result.StatusCode);
 
                 // Ensure record is actually deleted in DB
                 var getResponse = await _dbContext.Clubs.AsNoTracking().FirstOrDefaultAsync(c => c.Id == club.Id);
                 Assert.IsNull(getResponse);
-                #endregion
             }
             catch (Exception)
             {
-                #region Cleanup
+                // Cleanup
                 _dbContext = new(DataContextHelpers.TestingConfiguration);
                 _dbContext.Remove(club.ToClubEntity());
                 await _dbContext.SaveChangesAsync();
-                #endregion
             }
         }
 
         [TestMethod]
         public async Task DeleteClubAsync_WithInvalidId_ShouldReturnBadRequest()
         {
-            #region Arrange
+            // Arrange
+            TestAuthHandler.Scopes = "Clubs.Delete";
             string invalidClubId = "Invalid Club Id";
             Club club = _dtoBuilder.Build();
             try
@@ -591,44 +601,37 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 // Create the record to test the update
                 _dbContext.Clubs.Add(club.ToClubEntity());
                 await _dbContext.SaveChangesAsync();
-                #endregion
 
-                #region Act
+                // Act
                 var result = await _httpClient.DeleteAsync(
                     $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{invalidClubId}");
-                #endregion
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
-                #endregion
             }
-            catch (Exception)
+            finally
             {
-                #region Cleanup
+                // Cleanup
                 _dbContext = new(DataContextHelpers.TestingConfiguration);
                 _dbContext.Remove(club.ToClubEntity());
                 await _dbContext.SaveChangesAsync();
-                #endregion
             }
         }
 
         [TestMethod]
         public async Task DeleteClubAsync_WithNonExistentId_ShouldReturnNotFound()
         {
-            #region Arrange
+            // Arrange
             Club club = _dtoBuilder.Build();
-            #endregion
 
-            #region Act
+            // Act
             var result = await _httpClient.DeleteAsync(
                 $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{club.Id}");
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(HttpStatusCode.NotFound, result.StatusCode);
-            #endregion
         }
 
         #endregion

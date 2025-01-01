@@ -6,6 +6,7 @@ using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Extensions;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web.Resource;
 
@@ -14,6 +15,7 @@ namespace MatchPoint.ClubService.Controllers
     [ApiVersion(1)]
     [Route("api/v{version:apiVersion}/clubs/{clubId:guid}/staff")]
     [ApiController]
+    [Authorize]
     public class ClubStaffController(IClubStaffService _clubStaffService, ILogger<ClubStaffController> _logger) 
         : ControllerBase
     {
@@ -87,11 +89,7 @@ namespace MatchPoint.ClubService.Controllers
                 "Received POST request to CREATE club staff for club '{clubId}' with name: {clubStaffName}, email: {clubStaffEmail}",
                 clubId, clubStaff.FullName, clubStaff.Email);
 
-            // TODO - MOVE TO SERVICE
-            // Assign club id
-            clubStaff.ClubId = clubId;
-
-            var result = await _clubStaffService.CreateAsync(clubStaff.ToClubStaffEntity());
+            var result = await _clubStaffService.CreateAsync(clubId, clubStaff.ToClubStaffEntity());
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning(
@@ -114,7 +112,8 @@ namespace MatchPoint.ClubService.Controllers
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Write")]
         [HttpPatch("{id}")]
-        public async Task<ActionResult<ClubStaff>> PatchClubStaffAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
+        public async Task<ActionResult<ClubStaff>> PatchClubStaffAsync(
+            Guid clubId, Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
         {
             _logger.LogInformation(
                 "Received PATCH request to UPDATE {count} properties for club staff with ID: {Id}",
@@ -126,7 +125,7 @@ namespace MatchPoint.ClubService.Controllers
                 return BadRequest(errorMsg);
             }
 
-            var result = await _clubStaffService.PatchAsync(id, propertyUpdates);
+            var result = await _clubStaffService.PatchAsync(clubId, id, propertyUpdates);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning("Failed to update club staff with ID: {Id}. Error: {Error}", id, result.Error);
@@ -139,12 +138,12 @@ namespace MatchPoint.ClubService.Controllers
 
         // DELETE: api/v1/clubs/[guid]/staff/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Delete")]
+        [RequiredScope("Clubs.Write")]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteClubStaffAsync(Guid id)
+        public async Task<IActionResult> DeleteClubStaffAsync(Guid clubId, Guid id)
         {
             _logger.LogInformation("Received DELETE request to delete club staff with ID: {Id}", id);
-            var result = await _clubStaffService.DeleteAsync(id);
+            var result = await _clubStaffService.DeleteAsync(clubId, id);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning("Failed to delete club staff with ID: {Id}. Error: {Error}", id, result.Error);

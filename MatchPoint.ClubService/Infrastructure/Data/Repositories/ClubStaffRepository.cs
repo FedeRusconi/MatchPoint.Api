@@ -163,20 +163,21 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         }
 
         /// <inheritdoc />
-        public async Task<ClubStaffEntity?> DeleteAsync(Guid id)
+        public async Task<ClubStaffEntity?> DeleteAsync(ClubStaffEntity clubStaffEntity)
         {
-            var clubStaffEntity = await _context.ClubStaff.FindAsync(id);
-            if (clubStaffEntity == null)
+            ArgumentNullException.ThrowIfNull(clubStaffEntity);
+            _logger.LogTrace("Deleting club staff from the database with Id {Id}", clubStaffEntity.Id);
+
+            try
             {
-                _logger.LogWarning("No club staff found in the database with ID: {Id}", id);
+                _context.ClubStaff.Remove(clubStaffEntity);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("No club staff found in the database with ID: {Id}", clubStaffEntity.Id);
                 return null;
             }
-
-            _logger.LogTrace("Deleting club staff from the database with Id {Id}", id);
-
-            _context.ClubStaff.Remove(clubStaffEntity);
-
-            await _context.SaveChangesAsync();
 
             _logger.LogTrace("Club staff '{Id}' deleted from the database", clubStaffEntity.Id);
             return clubStaffEntity;
