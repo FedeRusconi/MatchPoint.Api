@@ -16,7 +16,7 @@ namespace MatchPoint.ClubService.Services
         IClubStaffRepository _clubStaffRepository,
         IAzureAdService _azureAdService,
         IAzureAdUserFactory _azureAdUserFactory,
-        IConfiguration _configuration,
+        IConfiguration _configuration,        
         ILogger<ClubStaffService> _logger) : IClubStaffService
     {
         /// <inheritdoc />
@@ -114,6 +114,7 @@ namespace MatchPoint.ClubService.Services
             {
                 Password = PasswordGenerator.GenerateNumeric(6, prefix: "MatchPoint_")
             };
+            // TODO - Send email to staff email with temp password
             try
             {
                 var azureResult = await _azureAdService.CreateUserAsync(azureAdUser);
@@ -130,7 +131,7 @@ namespace MatchPoint.ClubService.Services
 
             // Set Id and "Created" tracking fields
             clubStaffEntity.Id = Guid.Parse(azureAdUser.Id!);
-            clubStaffEntity.SetTrackingFields();
+            clubStaffEntity.SetTrackingFields(_azureAdService.CurrentUserId);
             clubStaffEntity.ClubId = clubId;
 
             // Create in db
@@ -182,7 +183,7 @@ namespace MatchPoint.ClubService.Services
             try
             {
                 clubStaffEntity.Patch(propertyUpdates);
-                clubStaffEntity.SetTrackingFields(updating: true);
+                clubStaffEntity.SetTrackingFields(_azureAdService.CurrentUserId, updating: true);
             }
             catch (ArgumentException ex)
             {
@@ -193,8 +194,13 @@ namespace MatchPoint.ClubService.Services
             try
             {
                 // Update user is Azure AD
-                await _azureAdService.UpdateUserAsync(
-                    _azureAdUserFactory.PatchedUser(propertyUpdates, id.ToString()));
+                var updatedAdUser = _azureAdUserFactory.PatchedUser(propertyUpdates, id.ToString());
+                // Reset display name and mail nickname in case first or last name have changed
+                var givenName = updatedAdUser.GivenName ?? azureAdUser.GivenName;
+                var surname = updatedAdUser.Surname ?? azureAdUser.Surname;
+                updatedAdUser.DisplayName = $"{givenName} {surname}";
+                updatedAdUser.MailNickname = $"{givenName}.{surname}";
+                await _azureAdService.UpdateUserAsync(updatedAdUser);
             }
             catch (HttpRequestException ex)
             {

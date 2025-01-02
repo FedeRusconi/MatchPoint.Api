@@ -27,7 +27,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<ClubEntity>().ToContainer(nameof(Clubs));
+            modelBuilder.Entity<ClubEntity>().ToContainer(nameof(Clubs)).HasPartitionKey(c => c.Id);
             modelBuilder.Entity<ClubStaffEntity>()
                 .ToContainer(nameof(ClubStaff))
                 .HasPartitionKey(s => s.ClubId)

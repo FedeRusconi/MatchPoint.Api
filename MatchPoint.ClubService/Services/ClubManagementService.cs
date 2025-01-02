@@ -10,7 +10,9 @@ using MatchPoint.ClubService.Interfaces;
 namespace MatchPoint.ClubService.Services
 {
     public class ClubManagementService(
-        IClubRepository _clubRepository, ILogger<ClubManagementService> _logger) : IClubManagementService
+        IClubRepository _clubRepository, 
+        IAzureAdService _azureAdService,
+        ILogger<ClubManagementService> _logger) : IClubManagementService
     {
         /// <inheritdoc />
         public async Task<IServiceResult<ClubEntity>> GetByIdAsync(Guid id)
@@ -74,7 +76,7 @@ namespace MatchPoint.ClubService.Services
             }
 
             // Set "Created" tracking fields
-            clubEntity.SetTrackingFields();
+            clubEntity.SetTrackingFields(_azureAdService.CurrentUserId);
 
             var createdEntity = await _clubRepository.CreateAsync(clubEntity);
             if (createdEntity == null)
@@ -97,7 +99,7 @@ namespace MatchPoint.ClubService.Services
             _logger.LogDebug("Attempting to update club with Id: {Id}", clubEntity.Id);
 
             // Set "Modifed" tracking fields
-            clubEntity.SetTrackingFields(updating: true);
+            clubEntity.SetTrackingFields(_azureAdService.CurrentUserId, updating: true);
 
             var updatedEntity = await _clubRepository.UpdateAsync(clubEntity);
             if (updatedEntity == null)
@@ -132,7 +134,7 @@ namespace MatchPoint.ClubService.Services
             try
             {
                 clubEntity.Patch(propertyUpdates);
-                clubEntity.SetTrackingFields(updating: true);
+                clubEntity.SetTrackingFields(_azureAdService.CurrentUserId, updating: true);
             } 
             catch (ArgumentException ex)
             {

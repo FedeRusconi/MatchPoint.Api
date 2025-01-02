@@ -43,6 +43,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 _azureAdUserFactory,
                 _configuration,
                 _loggerMock.Object);
+
+            _azureAdServiceMock.SetupGet(s => s.CurrentUserId).Returns(Guid.NewGuid());
         }
 
         #region GetByIdAsync

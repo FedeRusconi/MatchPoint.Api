@@ -15,6 +15,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
     public class ClubManagementServiceTests
     {
         private Mock<IClubRepository> _clubRepositoryMock = default!;
+        private Mock<IAzureAdService> _azureAdServiceMock = default!;
         private Mock<ILogger<ClubManagementService>> _loggerMock = default!;
         private ClubEntityBuilder _clubEntityBuilder = default!;
         private ClubManagementService _clubService = default!;
@@ -23,9 +24,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public void TestInitialize()
         {
             _clubRepositoryMock = new();
+            _azureAdServiceMock = new();
             _loggerMock = new();
             _clubEntityBuilder = new();
-            _clubService = new(_clubRepositoryMock.Object, _loggerMock.Object);
+            _clubService = new(_clubRepositoryMock.Object, _azureAdServiceMock.Object, _loggerMock.Object);
+
+            _azureAdServiceMock.SetupGet(s => s.CurrentUserId).Returns(Guid.NewGuid());
         }
 
         #region GetByIdAsync

@@ -4,21 +4,23 @@ using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Common.Utilities;
+using MatchPoint.Api.Shared.Infrastructure.Services;
 using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
-using MatchPoint.ClubService.Services;
 using MatchPoint.ClubService.Tests.Integration.Helpers;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 
 namespace MatchPoint.ClubService.Tests.Integration.Controllers
 {
@@ -28,6 +30,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         private static WebApplicationFactory<Program> _factory = default!;
         private static HttpClient _httpClient = default!;
         private static ClubServiceDbContext _dbContext = null!;
+        private static Mock<IHttpContextAccessor> _httpContextMock = default!;
         private IAzureAdService _azureAdService = default!;
         private ClubStaffEntityBuilder _entityBuilder = default!;
         private ClubStaffBuilder _dtoBuilder = default!;
@@ -52,6 +55,14 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 });
             })
             .CreateClient();
+
+            // Set up IHttpContextAccessor to return the mock HttpContext
+            _httpContextMock = new Mock<IHttpContextAccessor>();
+            var httpContext = new DefaultHttpContext
+            {
+                User = TestAuthHandler.Principal
+            };
+            _httpContextMock.Setup(x => x.HttpContext).Returns(httpContext);
         }
 
         [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
@@ -66,7 +77,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public void TestInitialize()
         {
             _dbContext = new(DataContextHelpers.TestingConfiguration);
-            _azureAdService = new AzureAdService(DataContextHelpers.TestingConfiguration);
+            _azureAdService = new AzureAdService(_httpContextMock.Object, DataContextHelpers.TestingConfiguration);
             _entityBuilder = new ClubStaffEntityBuilder();
             _dtoBuilder = new ClubStaffBuilder();
         }

@@ -9,20 +9,19 @@ namespace MatchPoint.Api.Shared.Common.Extensions
         /// Namely CreatedBy, CreatedOnUtc, ModifiedBy, ModifiedOnUtc
         /// </summary>
         /// <param name="trackableItem"> The item of item <see cref="ITrackable"/> to add the fields to.</param>
+        /// <param name="userId"> The <see cref="Guid"/> of the user sending the request. </param>
         /// <param name="updating"> Pass true to update the "Modified" fields. Default is false. </param>
         /// <returns> The updated <see cref="ITrackable"/> item. </returns>
-        public static ITrackable SetTrackingFields(this ITrackable trackableItem, bool updating = false)
+        public static ITrackable SetTrackingFields(this ITrackable trackableItem, Guid userId, bool updating = false)
         {
             if (updating)
             {
-                // Add code to get current user
-                trackableItem.ModifiedBy = Guid.NewGuid();
+                trackableItem.ModifiedBy = userId;
                 trackableItem.ModifiedOnUtc = DateTime.UtcNow;
             }
             else
             {
-                // Add code to get current user
-                trackableItem.CreatedBy = Guid.NewGuid();
+                trackableItem.CreatedBy = userId;
                 trackableItem.CreatedOnUtc = DateTime.UtcNow;
             }
 
