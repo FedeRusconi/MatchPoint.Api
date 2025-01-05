@@ -36,22 +36,37 @@ jobs:
 
       - name: Run tests for changed projects
         run: |
-          # Get a list of changed files and determine which projects need testing
+          # Fetch full history to avoid shallow clone issues
+          git fetch --prune --unshallow
+
+          # Get the list of changed files between the current and previous commits
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
 
-          # Set up test projects based on changed files
-          TEST_PROJECTS=""
+          # Filter the changed test projects (those that end with .Tests.Unit and .Tests.Integration)
+          UNIT_TEST_PROJECTS=$(echo "$CHANGED_FILES" | grep "\.Tests\.Unit")
+          INTEGRATION_TEST_PROJECTS=$(echo "$CHANGED_FILES" | grep "\.Tests\.Integration")
+
+          # If no changed test projects, skip testing
+          if [ -z "$UNIT_TEST_PROJECTS" ] && [ -z "$INTEGRATION_TEST_PROJECTS" ]; then
+            echo "No test projects changed. Skipping tests."
+            exit 0
+          fi
+
+          # Output for debugging purposes
+          echo "Changed Unit Test Projects: $UNIT_TEST_PROJECTS"
+          echo "Changed Integration Test Projects: $INTEGRATION_TEST_PROJECTS"
           
-          if echo "$CHANGED_FILES" | grep -q "\.Tests\.Unit"; then
-            TEST_PROJECTS="$TEST_PROJECTS $(find . -type f -name '*.Tests.Unit.csproj')"
+          # Run tests for the changed projects
+          if [ ! -z "$UNIT_TEST_PROJECTS" ]; then
+            for test_project in $UNIT_TEST_PROJECTS; do
+              echo "Running unit tests for $test_project"
+              dotnet test $test_project --no-build --configuration Release --filter Category=Unit
+            done
           fi
 
-          if echo "$CHANGED_FILES" | grep -q "\.Tests\.Integration"; then
-            TEST_PROJECTS="$TEST_PROJECTS $(find . -type f -name '*.Tests.Integration.csproj')"
+          if [ ! -z "$INTEGRATION_TEST_PROJECTS" ]; then
+            for test_project in $INTEGRATION_TEST_PROJECTS; do
+              echo "Running integration tests for $test_project"
+              dotnet test $test_project --no-build --configuration Release --filter Category=Integration
+            done
           fi
-
-          # Run tests for the identified projects
-          for project in $TEST_PROJECTS; do
-            echo "Running tests for $project..."
-            dotnet test $project --configuration Release --no-build --verbosity normal
-          done
