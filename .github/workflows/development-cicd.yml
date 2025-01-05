@@ -15,7 +15,7 @@ jobs:
     # Define the Cosmos DB Emulator service
     services:
       cosmosdb:
-        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-db-emulator
+        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
         options: --publish 8081:8081
         env:
           AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 4
