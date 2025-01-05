@@ -42,11 +42,11 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
-
-      - name: Wait for Cosmos DB Emulator to be ready
+      
+      - name: Wait for Cosmos DB Emulator to be Ready
         run: |
           echo "Waiting for Cosmos DB Emulator to be ready..."
-          until curl -s -f -o /dev/null "https://localhost:8081/_explorer" --insecure; do
+          until curl -s -f -o /dev/null "https://localhost:8081/_explorer/emulator.pem" --insecure; do
             echo "Cosmos DB Emulator is not ready, retrying..."
             sleep 5
           done
