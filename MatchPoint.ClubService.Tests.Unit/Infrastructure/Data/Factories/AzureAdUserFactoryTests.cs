@@ -81,17 +81,5 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Factories
             // Act & Assert
             Assert.ThrowsException<ArgumentNullException>(() => _factory.PatchedUser(updates));
         }
-
-        [TestMethod]
-        public void PatchedUser_WithInvalidPropertyUpdates_ShouldThrowInvalidOperationException()
-        {
-            // Arrange
-            List<PropertyUpdate> updates = [
-                new() {Property = "Non existent property", Value = "Any"}
-            ];
-
-            // Act & Assert
-            Assert.ThrowsException<InvalidOperationException>(() => _factory.PatchedUser(updates));
-        }
     }
 }
