@@ -1,0 +1,86 @@
+name: Development CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+      - development
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: Development
+    # Define the Cosmos DB Emulator service
+    services:
+      cosmosdb:
+        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-db-emulator
+        options: --publish 8081:8081
+        env:
+          AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 4
+
+    env:
+      # Map GitHub Secrets and environment variables
+      CosmosDb:Url: ${{ vars.COSMOSDB_URL }}
+      CosmosDb:Key: ${{ secrets.COSMOSDB_KEY }}
+      CosmosDb:DatabaseName:  ${{ vars.COSMOSDB_DATABASE_NAME }}
+      AzureAdB2C:TenantId: ${{ vars.AZUREADB2C_TENANT_ID }}
+      AzureAdB2C:Domain: ${{ vars.AZUREADB2C_DOMAIN }}
+      AzureAdB2C:ClientId: ${{ vars.AZUREADB2C_CLIENT_ID }}
+      AzureAdB2C:ClientSecret: ${{ secrets.AZUREADB2C_CLIENT_SECRET }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Wait for Cosmos DB Emulator to be ready
+        run: |
+          echo "Waiting for Cosmos DB Emulator to be ready..."
+          until curl -s -f -o /dev/null "https://localhost:8081/_explorer" --insecure; do
+            echo "Cosmos DB Emulator is not ready, retrying..."
+            sleep 5
+          done
+          echo "Cosmos DB Emulator is ready!"
+
+      - name: Set up Cosmos DB (Create databases/containers)
+        run: |
+          echo "Setting up Cosmos DB with database name: $CosmosDb:DatabaseName"
+          curl -s -X POST "https://localhost:8081/dbs" --insecure -H "Authorization: $CosmosDb:Key" \
+            -d '{"id": "'$CosmosDb:DatabaseName'"}'
+
+          # Create the container inside the database
+          curl -s -X POST "https://localhost:8081/dbs/$CosmosDb:DatabaseName/colls" --insecure -H "Authorization: $CosmosDb:Key" \
+            -d '{"id": "Clubs", "partitionKey": { "paths": ["/id"] }}'
+          curl -s -X POST "https://localhost:8081/dbs/$CosmosDb:DatabaseName/colls" --insecure -H "Authorization: $CosmosDb:Key" \
+            -d '{"id": "ClubStaff", "partitionKey": { "paths": ["/ClubId"] }}'
+
+      - name: Run tests for changed projects
+        run: |
+          # Get a list of changed files and determine which projects need testing
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+
+          # Set up test projects based on changed files
+          TEST_PROJECTS=""
+          
+          if echo "$CHANGED_FILES" | grep -q "\.Tests\.Unit"; then
+            TEST_PROJECTS="$TEST_PROJECTS $(find . -type f -name '*.Tests.Unit.csproj')"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "\.Tests\.Integration"; then
+            TEST_PROJECTS="$TEST_PROJECTS $(find . -type f -name '*.Tests.Integration.csproj')"
+          fi
+
+          # Run tests for the identified projects
+          for project in $TEST_PROJECTS; do
+            echo "Running tests for $project..."
+            dotnet test $project --configuration Release --no-build --verbosity normal
+          done
