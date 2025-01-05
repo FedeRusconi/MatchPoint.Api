@@ -12,15 +12,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     environment: Development
-    # Define the Cosmos DB Emulator service
-    services:
-      cosmosdb:
-        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
-        options: --memory=6g --cpu-shares=2048 --publish 8081:8081
-        env:
-          AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE: "localhost"
-          AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 10
-
     env:
       # Map GitHub Secrets and environment variables
       CosmosDb:Url: ${{ vars.COSMOSDB_URL }}
@@ -32,7 +23,7 @@ jobs:
       AzureAdB2C:ClientSecret: ${{ secrets.AZUREADB2C_CLIENT_SECRET }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up .NET SDK
@@ -42,27 +33,6 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
-      
-      - name: Wait for Cosmos DB Emulator to be Ready
-        run: |
-          echo "Waiting for Cosmos DB Emulator to be ready..."
-          until curl -s -f -o /dev/null "https://localhost:8081/_explorer/emulator.pem" --insecure; do
-            echo "Cosmos DB Emulator is not ready, retrying..."
-            sleep 5
-          done
-          echo "Cosmos DB Emulator is ready!"
-
-      - name: Set up Cosmos DB (Create databases/containers)
-        run: |
-          echo "Setting up Cosmos DB with database name: $CosmosDb:DatabaseName"
-          curl -s -X POST "https://localhost:8081/dbs" --insecure -H "Authorization: $CosmosDb:Key" \
-            -d '{"id": "'$CosmosDb:DatabaseName'"}'
-
-          # Create the container inside the database
-          curl -s -X POST "https://localhost:8081/dbs/$CosmosDb:DatabaseName/colls" --insecure -H "Authorization: $CosmosDb:Key" \
-            -d '{"id": "Clubs", "partitionKey": { "paths": ["/id"] }}'
-          curl -s -X POST "https://localhost:8081/dbs/$CosmosDb:DatabaseName/colls" --insecure -H "Authorization: $CosmosDb:Key" \
-            -d '{"id": "ClubStaff", "partitionKey": { "paths": ["/ClubId"] }}'
 
       - name: Run tests for changed projects
         run: |
