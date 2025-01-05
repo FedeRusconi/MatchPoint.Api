@@ -529,6 +529,9 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
 
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, true))
+                .ReturnsAsync(clubEntity)
+                .Verifiable(Times.Once);
             _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
@@ -551,6 +554,30 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
 
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, true))
+                .ReturnsAsync((ClubEntity?)null)
+                .Verifiable(Times.Once);
+
+            // Act
+            var result = await _clubService.DeleteAsync(clubEntity.Id);
+
+            // Assert
+            _clubRepositoryMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.NotFound, result.ResultType);
+        }
+
+        [TestMethod]
+        public async Task DeleteAsync_WhenDeleteReturnsNull_ShouldReturnFailResult()
+        {
+            // Arrange
+            var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
+
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, true))
+                .ReturnsAsync(clubEntity)
+                .Verifiable(Times.Once);
             _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity))
                 .ReturnsAsync((ClubEntity?)null)
                 .Verifiable(Times.Once);
