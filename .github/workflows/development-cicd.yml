@@ -36,8 +36,6 @@ jobs:
 
       - name: Run tests for changed projects
         run: |
-          # Fetch full history to avoid shallow clone issues
-          git fetch --prune --unshallow
 
           # Get the list of changed files between the current and previous commits
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
