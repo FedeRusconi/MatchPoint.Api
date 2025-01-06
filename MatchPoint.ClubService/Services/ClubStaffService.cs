@@ -102,7 +102,7 @@ namespace MatchPoint.ClubService.Services
             // First create Azure AD user
             var azureAdUser = clubStaffEntity.ToAzureAdUser();
             azureAdUser.DisplayName = $"{azureAdUser.GivenName} {azureAdUser.Surname}";
-            azureAdUser.MailNickname = $"{azureAdUser.GivenName}.{azureAdUser.Surname}";
+            azureAdUser.MailNickname = $"{azureAdUser.GivenName?.Replace(" ", string.Empty)}.{azureAdUser.Surname?.Replace(" ", string.Empty)}";
             azureAdUser.UserPrincipalName = $"{clubStaffEntity.Email.Replace("@", "_")}@{azureDomain}";
             azureAdUser.Identities = [new ObjectIdentity()
             {
@@ -199,7 +199,7 @@ namespace MatchPoint.ClubService.Services
                 var givenName = updatedAdUser.GivenName ?? azureAdUser.GivenName;
                 var surname = updatedAdUser.Surname ?? azureAdUser.Surname;
                 updatedAdUser.DisplayName = $"{givenName} {surname}";
-                updatedAdUser.MailNickname = $"{givenName}.{surname}";
+                updatedAdUser.MailNickname = $"{givenName?.Replace(" ", string.Empty)}.{surname?.Replace(" ", string.Empty)}";
                 await _azureAdService.UpdateUserAsync(updatedAdUser);
             }
             catch (HttpRequestException ex)

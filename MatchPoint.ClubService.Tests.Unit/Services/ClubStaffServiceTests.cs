@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Infrastructure.Enums;
@@ -131,7 +132,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             };
 
             _clubStaffRepositoryMock
-                .Setup(repo => repo.GetAllWithSpecificationAsync(pageNumber, pageSize, null, null, false))
+                .Setup(repo => repo.GetAllWithSpecificationAsync(
+                    pageNumber, pageSize, It.IsAny<Dictionary<string, string>>(), null, false))
                 .ReturnsAsync(expectedResponse)
                 .Verifiable(Times.Once);
 
@@ -205,7 +207,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             _clubStaffRepositoryMock.Setup(repo => repo.GetAllWithSpecificationAsync(
                     It.IsAny<int>(),
                     It.IsAny<int>(),
-                    null,
+                    It.IsAny<Dictionary<string, string>>(),
                     orderBy,
                     false))
                 .ReturnsAsync(expectedResponse)
@@ -430,7 +432,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task PatchAsync_WhenParametersAreValid_ShouldUpdateOnlySelectedAndTrackingPropertiesAndReturnSuccessResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             var azureAdUser = clubStaffEntity.ToAzureAdUser();
             string editedFirstName = "First Edited";
             string editedPhone = "Updated Phone";
@@ -442,10 +444,10 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             _clubStaffRepositoryMock.Setup(repo => repo.GetByIdAsync(clubStaffEntity.Id, It.IsAny<bool>()))
                 .ReturnsAsync(clubStaffEntity)
                 .Verifiable(Times.Once);
-            _azureAdServiceMock.Setup(repo => repo.GetUserByIdAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()))
+            _azureAdServiceMock.Setup(s => s.GetUserByIdAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()))
                 .ReturnsAsync(azureAdUser)
                 .Verifiable(Times.Once);
-            _azureAdServiceMock.Setup(repo => repo.UpdateUserAsync(
+            _azureAdServiceMock.Setup(s => s.UpdateUserAsync(
                     It.Is<User>(u => u.Id == azureAdUser.Id && u.GivenName == editedFirstName && u.MobilePhone == editedPhone), 
                     It.IsAny<GraphServiceClient>()))
                 .ReturnsAsync(azureAdUser)
@@ -479,7 +481,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             _clubStaffRepositoryMock.Setup(repo => repo.GetByIdAsync(clubStaffId, It.IsAny<bool>()))
                 .ReturnsAsync((ClubStaffEntity?)null)
                 .Verifiable(Times.Once);
-            _azureAdServiceMock.Setup(repo => repo.GetUserByIdAsync(clubStaffId, It.IsAny<GraphServiceClient>()))
+            _azureAdServiceMock.Setup(s => s.GetUserByIdAsync(clubStaffId, It.IsAny<GraphServiceClient>()))
                 .ReturnsAsync(new User())
                 .Verifiable(Times.Once);
 
@@ -488,7 +490,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
-            _azureAdServiceMock.VerifyAll();
+            _azureAdServiceMock.Verify(s => s.GetUserByIdAsync(clubStaffId, It.IsAny<GraphServiceClient>()), Times.Once);
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
@@ -515,7 +517,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
-            _azureAdServiceMock.VerifyAll();
+            _azureAdServiceMock.Verify(s => s.GetUserByIdAsync(clubStaffId, It.IsAny<GraphServiceClient>()), Times.Once);
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
@@ -544,7 +546,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
-            _azureAdServiceMock.VerifyAll();
+            _azureAdServiceMock.Verify(s => s.GetUserByIdAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()), Times.Once);
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
@@ -555,7 +557,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task PatchAsync_WhenRepoReturnsNull_ShouldReturnFailResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             var azureAdUser = clubStaffEntity.ToAzureAdUser();
             string editedFirstName = "First Edited";
             string editedPhone = "Updated Phone";
@@ -596,7 +598,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task PatchAsync_WhenAzureAdOperationFails_ShouldReturnFailResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             var azureAdUser = clubStaffEntity.ToAzureAdUser();
             var exception = new HttpRequestException("This is a test error", null, HttpStatusCode.Conflict);
             string editedFirstName = "First Edited";
@@ -655,7 +657,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
-            _azureAdServiceMock.VerifyAll();
+            _azureAdServiceMock.Verify(s => s.GetUserByIdAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()), Times.Once);
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
@@ -692,15 +694,14 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .ReturnsAsync(clubStaffEntity)
                 .Verifiable(Times.Once);
             _azureAdServiceMock.Setup(repo => repo.DeleteUserAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()))
-                .ReturnsAsync(true)
-                .Verifiable(Times.Once);
+                .ReturnsAsync(true);
 
             // Act
             var result = await _clubStaffService.DeleteAsync(_clubId, clubStaffEntity.Id);
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
-            _azureAdServiceMock.VerifyAll();
+            _azureAdServiceMock.Verify(repo => repo.DeleteUserAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()), Times.Once);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);
@@ -768,8 +769,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .ReturnsAsync(clubStaffEntity)
                 .Verifiable(Times.Once);
             _azureAdServiceMock.Setup(repo => repo.DeleteUserAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()))
-                .Throws(exception)
-                .Verifiable(Times.Once);
+                .Throws(exception);
             // This is the rollback operation
             _clubStaffRepositoryMock.Setup(repo => repo.CreateAsync(It.IsAny<ClubStaffEntity>()))
                 .ReturnsAsync(clubStaffEntity)
@@ -780,7 +780,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
 
             // Assert
             _clubStaffRepositoryMock.VerifyAll();
-            _azureAdServiceMock.VerifyAll();
+            _azureAdServiceMock.Verify(repo => repo.DeleteUserAsync(clubStaffEntity.Id, It.IsAny<GraphServiceClient>()), Times.Once);
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);

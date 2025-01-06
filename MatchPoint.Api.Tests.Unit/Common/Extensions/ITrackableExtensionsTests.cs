@@ -9,39 +9,35 @@ namespace MatchPoint.Api.Tests.Unit.Common.Extensions
         [TestMethod]
         public void SetTrackingFields_WhenUpdatingIsFalse_ShouldSetCreatedFields()
         {
-            #region Arrange
+            // Arrange
             TrackableEntityTest trackableEntity = new();
-            #endregion
+            Guid userId = Guid.NewGuid();
 
-            #region Act
-            trackableEntity.SetTrackingFields(updating: false);
-            #endregion
+            // Act
+            trackableEntity.SetTrackingFields(userId, updating: false);
 
-            #region Assert
-            Assert.AreNotEqual(default, trackableEntity.CreatedBy);
+            // Assert
+            Assert.AreEqual(userId, trackableEntity.CreatedBy);
             Assert.AreNotEqual(default, trackableEntity.CreatedOnUtc);
             Assert.IsNull(trackableEntity.ModifiedBy);
             Assert.IsNull(trackableEntity.ModifiedOnUtc);
-            #endregion
         }
 
         [TestMethod]
         public void SetTrackingFields_WhenUpdatingIsTrue_ShouldSetUpdatedFields()
         {
-            #region Arrange
+            // Arrange
             TrackableEntityTest trackableEntity = new();
-            #endregion
+            Guid userId = Guid.NewGuid();
 
-            #region Act
-            trackableEntity.SetTrackingFields(updating: true);
-            #endregion
+            // Act
+            trackableEntity.SetTrackingFields(userId, updating: true);
 
-            #region Assert
-            Assert.AreNotEqual(default, trackableEntity.ModifiedBy);
+            // Assert
+            Assert.AreEqual(userId, trackableEntity.ModifiedBy);
             Assert.AreNotEqual(default, trackableEntity.ModifiedOnUtc);
             Assert.AreEqual(default, trackableEntity.CreatedBy);
             Assert.AreEqual(default, trackableEntity.CreatedOnUtc);
-            #endregion
         }
     }
 }

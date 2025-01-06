@@ -1,0 +1,56 @@
+name: Production CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: Production
+    env:
+      # Map GitHub Secrets and environment variables
+      CosmosDb:Url: ${{ vars.TESTS_COSMOSDB_URL }}
+      CosmosDb:Key: ${{ secrets.TESTS_COSMOSDB_KEY }}
+      CosmosDb:DatabaseName:  ${{ vars.TESTS_COSMOSDB_DATABASE_NAME }}
+      AzureAdB2C:TenantId: ${{ vars.TESTS_AZUREADB2C_TENANT_ID }}
+      AzureAdB2C:Domain: ${{ vars.TESTS_AZUREADB2C_DOMAIN }}
+      AzureAdB2C:ClientId: ${{ vars.TESTS_AZUREADB2C_CLIENT_ID }}
+      AzureAdB2C:ClientSecret: ${{ secrets.TESTS_AZUREADB2C_CLIENT_SECRET }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build all projects
+        run: dotnet build --configuration Release
+
+      - name: Run all test projects
+        run: |
+          # Find all unit test projects
+          UNIT_TEST_PROJECTS=$(find . -type f -name "*.Tests.Unit.csproj")
+      
+          # Find all integration test projects
+          INTEGRATION_TEST_PROJECTS=$(find . -type f -name "*.Tests.Integration.csproj")
+      
+          # Run unit tests for all unit test projects
+          for test_project in $UNIT_TEST_PROJECTS; do
+            echo "Running unit tests for $test_project"
+            dotnet test $test_project --no-build --configuration Release
+          done
+      
+          # Run integration tests for all integration test projects
+          for test_project in $INTEGRATION_TEST_PROJECTS; do
+            echo "Running integration tests for $test_project"
+            dotnet test $test_project --no-build --configuration Release
+          done
+      

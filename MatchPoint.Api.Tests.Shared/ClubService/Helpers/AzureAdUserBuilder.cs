@@ -33,7 +33,7 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
                 .RuleFor(c => c.AccountEnabled, true)
                 .Generate();
             _user.DisplayName = $"{_user.GivenName} {_user.Surname}";
-            _user.MailNickname = $"{_user.GivenName}.{_user.Surname}";
+            _user.MailNickname = $"{_user.GivenName?.Replace(" ", string.Empty)}.{_user.Surname?.Replace(" ", string.Empty)}";
             _user.UserPrincipalName = $"{objectIdentity.IssuerAssignedId!.Replace("@", "_")}@matchpointdev.onmicrosoft.com";
         }
 
