@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
 
 jobs:
   test:
@@ -14,13 +11,13 @@ jobs:
     environment: Production
     env:
       # Map GitHub Secrets and environment variables
-      CosmosDb:Url: ${{ vars.COSMOSDB_URL }}
-      CosmosDb:Key: ${{ secrets.COSMOSDB_KEY }}
-      CosmosDb:DatabaseName:  ${{ vars.COSMOSDB_DATABASE_NAME }}
-      AzureAdB2C:TenantId: ${{ vars.AZUREADB2C_TENANT_ID }}
-      AzureAdB2C:Domain: ${{ vars.AZUREADB2C_DOMAIN }}
-      AzureAdB2C:ClientId: ${{ vars.AZUREADB2C_CLIENT_ID }}
-      AzureAdB2C:ClientSecret: ${{ secrets.AZUREADB2C_CLIENT_SECRET }}
+      CosmosDb:Url: ${{ vars.TESTS_COSMOSDB_URL }}
+      CosmosDb:Key: ${{ secrets.TESTS_COSMOSDB_KEY }}
+      CosmosDb:DatabaseName:  ${{ vars.TESTS_COSMOSDB_DATABASE_NAME }}
+      AzureAdB2C:TenantId: ${{ vars.TESTS_AZUREADB2C_TENANT_ID }}
+      AzureAdB2C:Domain: ${{ vars.TESTS_AZUREADB2C_DOMAIN }}
+      AzureAdB2C:ClientId: ${{ vars.TESTS_AZUREADB2C_CLIENT_ID }}
+      AzureAdB2C:ClientSecret: ${{ secrets.TESTS_AZUREADB2C_CLIENT_SECRET }}
 
     steps:
       - name: Checkout repository
