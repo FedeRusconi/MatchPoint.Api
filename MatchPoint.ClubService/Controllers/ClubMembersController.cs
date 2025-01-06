@@ -8,6 +8,6 @@ namespace MatchPoint.ClubService.Controllers
     [ApiController]
     public class ClubMembersController : ControllerBase
     {
-
+         
     }
 }
