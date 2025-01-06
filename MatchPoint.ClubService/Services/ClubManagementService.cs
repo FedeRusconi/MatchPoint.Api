@@ -53,7 +53,7 @@ namespace MatchPoint.ClubService.Services
             var clubs = await _clubRepository.GetAllWithSpecificationAsync(
                     pageNumber, pageSize, filters, orderBy, trackChanges: false);
 
-            _logger.LogDebug("Receieved {PageSize} of {Count} Clubs found.", clubs.Data.Count(), clubs.TotalCount);
+            _logger.LogDebug("Received {PageSize} of {Count} Clubs found.", clubs.Data.Count(), clubs.TotalCount);
 
             return ServiceResult<PagedResponse<ClubEntity>>.Success(clubs);
         }

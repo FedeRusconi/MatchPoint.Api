@@ -623,6 +623,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task DeleteClubAsync_WithNonExistentId_ShouldReturnNotFound()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Delete";
             Club club = _dtoBuilder.Build();
 
             // Act

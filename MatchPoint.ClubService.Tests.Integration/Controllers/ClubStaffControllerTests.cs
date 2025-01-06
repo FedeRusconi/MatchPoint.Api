@@ -439,7 +439,6 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 // Act
                 var result = await _httpClient.PatchAsJsonAsync(
                     $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{_clubId}/staff/{clubStaff.Id}", updates);
-                var test = await result.Content.ReadAsStringAsync();
                 clubStaffResponse = await result.Content.ReadFromJsonAsync<ClubStaff>();
 
                 // Assert
@@ -649,7 +648,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task DeleteClubStaffAsync_WithInvalidClubId_ShouldReturnNotFound()
         {
             // Arrange
-            TestAuthHandler.Scopes = "Clubs.Delete";
+            TestAuthHandler.Scopes = "Clubs.Write";
             string invalidClubId = "Invalid Club Id";
             ClubStaff clubStaff = _dtoBuilder.WithClubId(_clubId).Build();
             try
@@ -679,6 +678,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public async Task DeleteClubStaffAsync_WithNonExistentId_ShouldReturnNotFound()
         {
             // Arrange
+            TestAuthHandler.Scopes = "Clubs.Write";
             ClubStaff clubStaff = _dtoBuilder.WithClubId(_clubId).Build();
 
             // Act
