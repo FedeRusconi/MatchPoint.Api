@@ -134,7 +134,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             {
                 try
                 {
-                    await CommitTransactionAsync(cancellationToken);
+                    await _context.SaveChangesAsync(cancellationToken);
                 }
                 catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.Conflict)
                 {
@@ -168,7 +168,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             {
                 try
                 {
-                    await CommitTransactionAsync(cancellationToken);
+                    await _context.SaveChangesAsync(cancellationToken);
                 }
                 catch (DbUpdateException ex) when (ex.InnerException is NullReferenceException)
                 {
@@ -207,7 +207,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 _context.Clubs.Remove(clubEntity);
                 if (!IsTransactionActive)
                 {
-                    await CommitTransactionAsync(cancellationToken);
+                    await _context.SaveChangesAsync(cancellationToken);
                 }
             }
             catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.NotFound)
