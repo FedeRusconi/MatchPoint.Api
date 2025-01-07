@@ -15,11 +15,11 @@ namespace MatchPoint.ClubService.Services
         ILogger<ClubManagementService> _logger) : IClubManagementService
     {
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubEntity>> GetByIdAsync(Guid id)
+        public async Task<IServiceResult<ClubEntity>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             _logger.LogDebug("Attempting to retrieve club with ID: {Id}", id);
 
-            var clubEntity = await _clubRepository.GetByIdAsync(id, trackChanges: false);
+            var clubEntity = await _clubRepository.GetByIdAsync(id, cancellationToken, trackChanges: false);
             if (clubEntity == null)
             {
                 _logger.LogWarning("Not Found: Club with ID: {Id} not found", id);
@@ -34,6 +34,7 @@ namespace MatchPoint.ClubService.Services
         public async Task<IServiceResult<PagedResponse<ClubEntity>>> GetAllWithSpecificationAsync(
             int pageNumber,
             int pageSize,
+            CancellationToken cancellationToken,
             Dictionary<string, string>? filters = null,
             Dictionary<string, SortDirection>? orderBy = null)
         {
@@ -51,7 +52,7 @@ namespace MatchPoint.ClubService.Services
                 "Attempting to retrieve clubs with {Count} filters", filters != null ? filters.Count : "no");
 
             var clubs = await _clubRepository.GetAllWithSpecificationAsync(
-                    pageNumber, pageSize, filters, orderBy, trackChanges: false);
+                    pageNumber, pageSize, cancellationToken, filters, orderBy, trackChanges: false);
 
             _logger.LogDebug("Received {PageSize} of {Count} Clubs found.", clubs.Data.Count(), clubs.TotalCount);
 
@@ -59,7 +60,7 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubEntity>> CreateAsync(ClubEntity clubEntity)
+        public async Task<IServiceResult<ClubEntity>> CreateAsync(ClubEntity clubEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubEntity);
 
@@ -67,7 +68,7 @@ namespace MatchPoint.ClubService.Services
 
             // Detect duplicate
             var filters = new Dictionary<string, string>() { { nameof(ClubEntity.Email), clubEntity.Email } };
-            var existingClubs = await _clubRepository.CountAsync(filters);
+            var existingClubs = await _clubRepository.CountAsync(cancellationToken, filters);
             if (existingClubs > 0)
             {
                 _logger.LogWarning("Conflict: Club with email '{Email}' already exists.", clubEntity.Email);
@@ -78,7 +79,7 @@ namespace MatchPoint.ClubService.Services
             // Set "Created" tracking fields
             clubEntity.SetTrackingFields(_azureAdService.CurrentUserId);
 
-            var createdEntity = await _clubRepository.CreateAsync(clubEntity);
+            var createdEntity = await _clubRepository.CreateAsync(clubEntity, cancellationToken);
             if (createdEntity == null)
             {
                 _logger.LogWarning("Conflict: Club with Id '{Id}' already exists.", clubEntity.Id);
@@ -92,7 +93,7 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubEntity>> UpdateAsync(ClubEntity clubEntity)
+        public async Task<IServiceResult<ClubEntity>> UpdateAsync(ClubEntity clubEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubEntity);
 
@@ -101,7 +102,7 @@ namespace MatchPoint.ClubService.Services
             // Set "Modifed" tracking fields
             clubEntity.SetTrackingFields(_azureAdService.CurrentUserId, updating: true);
 
-            var updatedEntity = await _clubRepository.UpdateAsync(clubEntity);
+            var updatedEntity = await _clubRepository.UpdateAsync(clubEntity, cancellationToken);
             if (updatedEntity == null)
             {
                 _logger.LogWarning("Not Found: Club with Id '{Id}' not found.", clubEntity.Id);
@@ -115,14 +116,14 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubEntity>> PatchAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
+        public async Task<IServiceResult<ClubEntity>> PatchAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(propertyUpdates);
 
             _logger.LogDebug("Attempting to patch club with Id: {Id}", id);
 
             // Find club
-            var clubEntity = await _clubRepository.GetByIdAsync(id, trackChanges: false);
+            var clubEntity = await _clubRepository.GetByIdAsync(id, cancellationToken, trackChanges: false);
             if (clubEntity == null)
             {
                 _logger.LogWarning("Not Found: Club with Id '{Id}' not found.", id);
@@ -142,7 +143,7 @@ namespace MatchPoint.ClubService.Services
                 return ServiceResult<ClubEntity>.Failure(ex.Message, ServiceResultType.BadRequest);
             }
 
-            var updatedEntity = await _clubRepository.UpdateAsync(clubEntity);
+            var updatedEntity = await _clubRepository.UpdateAsync(clubEntity, cancellationToken);
             if (updatedEntity == null)
             {
                 _logger.LogWarning("Not Found: Club with Id '{Id}' not found.", clubEntity.Id);
@@ -156,9 +157,9 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubEntity>> DeleteAsync(Guid id)
+        public async Task<IServiceResult<ClubEntity>> DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
-            var clubEntity = await _clubRepository.GetByIdAsync(id);
+            var clubEntity = await _clubRepository.GetByIdAsync(id, cancellationToken);
             if (clubEntity == null)
             {
                 _logger.LogWarning("Not Found: Club with Id '{Id}' not found.", id);
@@ -167,7 +168,7 @@ namespace MatchPoint.ClubService.Services
             }
 
             _logger.LogDebug("Attempting to delete club with Id: {Id}", id);
-            var deletedEntity = await _clubRepository.DeleteAsync(clubEntity);
+            var deletedEntity = await _clubRepository.DeleteAsync(clubEntity, cancellationToken);
             if (deletedEntity == null)
             {
                 _logger.LogWarning("Not Found: Club with Id '{Id}' not found.", id);

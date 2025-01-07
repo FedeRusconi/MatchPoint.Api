@@ -15,6 +15,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
         private readonly IConfiguration _configuration = DataContextHelpers.TestingConfiguration;
         private Mock<ILogger<ClubRepository>> _loggerMock = default!;
         private IClubRepository _repository = default!;
+        private CancellationToken _cancellationToken = default!;
 
         [TestInitialize]
         public void TestInitialize()
@@ -22,6 +23,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
             _dbContext = new(_configuration);
             _loggerMock = new();
             _repository = new ClubRepository(_dbContext, _loggerMock.Object);
+            _cancellationToken = new CancellationToken();
         }
 
         [TestCleanup]
@@ -33,82 +35,65 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Repositories
         [TestMethod]
         public void IsTransactionActive_WhenNoTransactionIsActive_ShouldReturnFalse()
         {
-            #region Act
+            // Act
             var result = _repository.IsTransactionActive;
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsFalse(result);
-            #endregion
         }
 
         [TestMethod]
         public void IsTransactionActive_WhenTransactionIsActive_ShouldReturnTrue()
         {
-            #region Arrange
-            // Start a transaction
+            // Arrange - Start a transaction
             _repository.BeginTransaction();
-            #endregion
 
-            #region Act
+            // Act
             var result = _repository.IsTransactionActive;
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsTrue(result);
-            #endregion
         }
 
         [TestMethod]
         public void BeginTransactionAsync_WhenTransactionIsAlreadyActive_ShouldThrowInvalidOperationException()
         {
-            #region Arrange
-            // Start first transaction
+            // Arrange - Start first transaction
             _repository.BeginTransaction();
-            #endregion
 
-            #region Act & Assert
+            // Act & Assert
             Assert.ThrowsException<InvalidOperationException>(_repository.BeginTransaction);
-            #endregion
         }
 
         [TestMethod]
         public void BeginTransactionAsync_WhenNoTransactionIsActive_ShouldStartTransaction()
         {
-            #region Act
+            // Act
             _repository.BeginTransaction();
-            #endregion
 
-            #region Assert
-            // Ensure the transaction is active
+            // Assert - Ensure the transaction is active
             Assert.IsTrue(_repository.IsTransactionActive);
-            #endregion
         }
 
         [TestMethod]
         public async Task CommitTransactionAsync_WhenNoTransactionIsActive_ShouldThrowInvalidOperationException()
         {
-            #region Act & Assert
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(_repository.CommitTransactionAsync);
-            #endregion
+            // Act & Assert
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+                () => _repository.CommitTransactionAsync(_cancellationToken));
         }
 
         [TestMethod]
         public async Task CommitTransactionAsync_WhenTransactionIsActive_ShouldCommitTransaction()
         {
-            #region Arrange
-            // Start transaction
+            // Arrange - Start transaction
             _repository.BeginTransaction();
-            #endregion
 
-            #region Act
-            await _repository.CommitTransactionAsync();
-            #endregion
+            // Act
+            await _repository.CommitTransactionAsync(_cancellationToken);
 
-            #region Assert
-            // Verify no transaction is active
+            // Assert - Verify no transaction is active
             Assert.IsFalse(_repository.IsTransactionActive);
-            #endregion
         }
     }
 }

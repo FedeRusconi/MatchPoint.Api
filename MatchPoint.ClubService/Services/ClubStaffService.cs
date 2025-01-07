@@ -20,11 +20,11 @@ namespace MatchPoint.ClubService.Services
         ILogger<ClubStaffService> _logger) : IClubStaffService
     {
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubStaffEntity>> GetByIdAsync(Guid clubId, Guid id)
+        public async Task<IServiceResult<ClubStaffEntity>> GetByIdAsync(Guid clubId, Guid id, CancellationToken cancellationToken)
         {
             _logger.LogDebug("Attempting to retrieve club staff with ID: {Id}", id);
 
-            var clubStaffEntity = await _clubStaffRepository.GetByIdAsync(id, trackChanges: false);
+            var clubStaffEntity = await _clubStaffRepository.GetByIdAsync(id, cancellationToken, trackChanges: false);
             if (clubStaffEntity == null)
             {
                 _logger.LogWarning("Not Found: Club staff with ID: {Id} not found", id);
@@ -51,6 +51,7 @@ namespace MatchPoint.ClubService.Services
             Guid clubId,
             int pageNumber,
             int pageSize,
+            CancellationToken cancellationToken,
             Dictionary<string, string>? filters = null,
             Dictionary<string, SortDirection>? orderBy = null)
         {
@@ -71,7 +72,7 @@ namespace MatchPoint.ClubService.Services
             filters ??= [];
             filters.Add(nameof(ClubStaffEntity.ClubId), clubId.ToString());
             var clubStaff = await _clubStaffRepository.GetAllWithSpecificationAsync(
-                    pageNumber, pageSize, filters, orderBy, trackChanges: false);
+                    pageNumber, pageSize, cancellationToken, filters, orderBy, trackChanges: false);
 
             _logger.LogDebug("Receieved {PageSize} of {Count} Club staff found.", clubStaff.Data.Count(), clubStaff.TotalCount);
 
@@ -79,7 +80,8 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubStaffEntity>> CreateAsync(Guid clubId, ClubStaffEntity clubStaffEntity)
+        public async Task<IServiceResult<ClubStaffEntity>> CreateAsync(
+            Guid clubId, ClubStaffEntity clubStaffEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubStaffEntity);
 
@@ -90,7 +92,7 @@ namespace MatchPoint.ClubService.Services
             {
                 { nameof(ClubStaffEntity.Email), clubStaffEntity.Email }
             };
-            var existingStaff = await _clubStaffRepository.CountAsync(filters);
+            var existingStaff = await _clubStaffRepository.CountAsync(cancellationToken, filters);
             if (existingStaff > 0)
             {
                 _logger.LogWarning("Conflict: Club staff with email '{Email}' already exists.", clubStaffEntity.Email);
@@ -117,7 +119,7 @@ namespace MatchPoint.ClubService.Services
             // TODO - Send email to staff email with temp password
             try
             {
-                var azureResult = await _azureAdService.CreateUserAsync(azureAdUser);
+                var azureResult = await _azureAdService.CreateUserAsync(azureAdUser, cancellationToken);
                 azureAdUser.Id = azureResult?.Id;
                 _logger.LogDebug(
                     "User with email '{Email}' created successfully in Azure AD. Id: {Id}", clubStaffEntity.Email, azureResult?.Id);
@@ -135,11 +137,11 @@ namespace MatchPoint.ClubService.Services
             clubStaffEntity.ClubId = clubId;
 
             // Create in db
-            var createdEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity);
+            var createdEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity, cancellationToken);
             if (createdEntity == null)
             {
                 // Rollback - Delete user from Azure AD
-                await _azureAdService.DeleteUserAsync(clubStaffEntity.Id);
+                await _azureAdService.DeleteUserAsync(clubStaffEntity.Id, cancellationToken);
                 // Log
                 _logger.LogWarning("Conflict: Club staff with Id '{Id}' already exists.", clubStaffEntity.Id);
                 return ServiceResult<ClubStaffEntity>.Failure(
@@ -153,16 +155,16 @@ namespace MatchPoint.ClubService.Services
 
         /// <inheritdoc />
         public async Task<IServiceResult<ClubStaffEntity>> PatchAsync(
-            Guid clubId, Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
+            Guid clubId, Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(propertyUpdates);
 
             _logger.LogDebug("Attempting to patch club staff with Id: {Id}", id);
 
             // Find club
-            var clubStaffEntity = await _clubStaffRepository.GetByIdAsync(id, trackChanges: false);            
+            var clubStaffEntity = await _clubStaffRepository.GetByIdAsync(id, cancellationToken, trackChanges: false);            
             // Keep this as a backup in case of rollback
-            var azureAdUser = await _azureAdService.GetUserByIdAsync(id);
+            var azureAdUser = await _azureAdService.GetUserByIdAsync(id, cancellationToken);
             if (clubStaffEntity == null || azureAdUser == null)
             {
                 _logger.LogWarning("Not Found: Club staff with Id '{Id}' not found.", id);
@@ -200,7 +202,7 @@ namespace MatchPoint.ClubService.Services
                 var surname = updatedAdUser.Surname ?? azureAdUser.Surname;
                 updatedAdUser.DisplayName = $"{givenName} {surname}";
                 updatedAdUser.MailNickname = $"{givenName?.Replace(" ", string.Empty)}.{surname?.Replace(" ", string.Empty)}";
-                await _azureAdService.UpdateUserAsync(updatedAdUser);
+                await _azureAdService.UpdateUserAsync(updatedAdUser, cancellationToken);
             }
             catch (HttpRequestException ex)
             {
@@ -209,11 +211,11 @@ namespace MatchPoint.ClubService.Services
                     $"Error while updating user '{id}' from Azure AD. Error: {ex.Message}", (ServiceResultType)(int)ex.StatusCode!);
             }
             // Update club staff in DB
-            var updatedEntity = await _clubStaffRepository.UpdateAsync(clubStaffEntity);
+            var updatedEntity = await _clubStaffRepository.UpdateAsync(clubStaffEntity, cancellationToken);
             if (updatedEntity == null)
             {
                 // Rollback in Azure AD
-                await _azureAdService.UpdateUserAsync(azureAdUser);
+                await _azureAdService.UpdateUserAsync(azureAdUser, cancellationToken: cancellationToken);
                 // Log
                 _logger.LogWarning("Not Found: Club staff with Id '{Id}' not found.", clubStaffEntity.Id);
                 return ServiceResult<ClubStaffEntity>.Failure(
@@ -226,10 +228,10 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubStaffEntity>> DeleteAsync(Guid clubId, Guid id)
+        public async Task<IServiceResult<ClubStaffEntity>> DeleteAsync(Guid clubId, Guid id, CancellationToken cancellationToken)
         {
             _logger.LogDebug("Attempting to delete club staff with Id: {Id}", id);
-            var clubStaff = await _clubStaffRepository.GetByIdAsync(id, trackChanges: false);
+            var clubStaff = await _clubStaffRepository.GetByIdAsync(id, cancellationToken, trackChanges: false);
             // Check staff exists and its ClubId matches the provided one
             if (clubStaff == null)
             {
@@ -248,7 +250,7 @@ namespace MatchPoint.ClubService.Services
                     ServiceResultType.BadRequest);
             }
 
-            var deletedEntity = await _clubStaffRepository.DeleteAsync(clubStaff);
+            var deletedEntity = await _clubStaffRepository.DeleteAsync(clubStaff, cancellationToken);
             if (deletedEntity == null)
             {
                 _logger.LogWarning("Not Found: Club staff with Id '{Id}' not found.", id);
@@ -258,12 +260,12 @@ namespace MatchPoint.ClubService.Services
 
             try
             {
-                await _azureAdService.DeleteUserAsync(id);
+                await _azureAdService.DeleteUserAsync(id, cancellationToken);
             }
             catch (HttpRequestException ex)
             {
                 // Rollback - Re-created deleted club staff from db
-                await _clubStaffRepository.CreateAsync(deletedEntity);
+                await _clubStaffRepository.CreateAsync(deletedEntity, cancellationToken);
                 _logger.LogWarning("Error while deleting user '{Id}' from Azure AD. Error: {Error}", id, ex.Message);
                 return ServiceResult<ClubStaffEntity>.Failure(
                     $"Error while deleting user '{id}' from Azure AD. Error: {ex.Message}", (ServiceResultType)(int)ex.StatusCode!);

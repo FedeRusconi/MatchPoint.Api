@@ -15,6 +15,9 @@
         /// <summary>
         /// Commits the current transaction, saving all changes made during the transaction.
         /// </summary>
-        public Task CommitTransactionAsync();
+        /// <param name="cancellationToken">
+        /// A token to monitor for cancellation requests, freeing up resources if the request is canceled.
+        /// </param>
+        public Task CommitTransactionAsync(CancellationToken cancellationToken);
     }
 }

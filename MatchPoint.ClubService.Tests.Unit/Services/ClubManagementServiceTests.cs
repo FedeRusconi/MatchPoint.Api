@@ -19,6 +19,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         private Mock<ILogger<ClubManagementService>> _loggerMock = default!;
         private ClubEntityBuilder _clubEntityBuilder = default!;
         private ClubManagementService _clubService = default!;
+        private CancellationToken _cancellationToken = default!;
 
         [TestInitialize]
         public void TestInitialize()
@@ -28,6 +29,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             _loggerMock = new();
             _clubEntityBuilder = new();
             _clubService = new(_clubRepositoryMock.Object, _azureAdServiceMock.Object, _loggerMock.Object);
+            _cancellationToken = new CancellationToken();
 
             _azureAdServiceMock.SetupGet(s => s.CurrentUserId).Returns(Guid.NewGuid());
         }
@@ -42,14 +44,15 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .WithName("Integration Testing Club")
             .Build();
 
-            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, It.IsAny<bool>()))
-                .ReturnsAsync(clubEntity);
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, _cancellationToken, It.IsAny<bool>()))
+                .ReturnsAsync(clubEntity)
+                .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.GetByIdAsync(clubEntity.Id);
+            var result = await _clubService.GetByIdAsync(clubEntity.Id, _cancellationToken);
 
             // Assert
-            _clubRepositoryMock.Verify(repo => repo.GetByIdAsync(clubEntity.Id, false), Times.Once);
+            _clubRepositoryMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);
@@ -61,10 +64,11 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             Guid clubId = Guid.NewGuid();
 
-            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubId, It.IsAny<bool>())).ReturnsAsync((ClubEntity?)null);
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubId, _cancellationToken, It.IsAny<bool>()))
+                .ReturnsAsync((ClubEntity?)null);
 
             // Act
-            var result = await _clubService.GetByIdAsync(clubId);
+            var result = await _clubService.GetByIdAsync(clubId, _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -95,12 +99,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             };
 
             _clubRepositoryMock
-                .Setup(repo => repo.GetAllWithSpecificationAsync(pageNumber, pageSize, null, null, false))
+                .Setup(repo => repo.GetAllWithSpecificationAsync(pageNumber, pageSize, _cancellationToken, null, null, false))
                 .ReturnsAsync(expectedResponse)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.GetAllWithSpecificationAsync(pageNumber, pageSize);
+            var result = await _clubService.GetAllWithSpecificationAsync(pageNumber, pageSize, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -134,6 +138,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             _clubRepositoryMock.Setup(repo => repo.GetAllWithSpecificationAsync(
                     expectedResponse.CurrentPage,
                     expectedResponse.PageSize,
+                    _cancellationToken,
                     filters,
                     null,
                     false))
@@ -141,7 +146,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.GetAllWithSpecificationAsync(1, 500, filters: filters);
+            var result = await _clubService.GetAllWithSpecificationAsync(
+                1, 500, filters: filters, cancellationToken: _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -173,6 +179,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             _clubRepositoryMock.Setup(repo => repo.GetAllWithSpecificationAsync(
                     It.IsAny<int>(),
                     It.IsAny<int>(),
+                    _cancellationToken,
                     null,
                     orderBy,
                     false))
@@ -180,7 +187,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.GetAllWithSpecificationAsync(1, 500, orderBy: orderBy);
+            var result = await _clubService.GetAllWithSpecificationAsync(
+                1, 500, orderBy: orderBy, cancellationToken: _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -197,7 +205,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenPagingIsInvalid_ShouldReturnFailResult(int pageNumber, int pageSize)
         {
             // Act
-            var result = await _clubService.GetAllWithSpecificationAsync(pageNumber, pageSize);
+            var result = await _clubService.GetAllWithSpecificationAsync(pageNumber, pageSize, _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -216,7 +224,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             };
 
             // Act
-            var result = await _clubService.GetAllWithSpecificationAsync(1, 500, filters: filters);
+            var result = await _clubService.GetAllWithSpecificationAsync(
+                1, 500, filters: filters, cancellationToken: _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -235,7 +244,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             };
 
             // Act
-            var result = await _clubService.GetAllWithSpecificationAsync(1, 500, orderBy: orderBy);
+            var result = await _clubService.GetAllWithSpecificationAsync(
+                1, 500, orderBy: orderBy, cancellationToken: _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -258,15 +268,15 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 { nameof(ClubEntity.Email), clubEntity.Email }
             };
 
-            _clubRepositoryMock.Setup(repo => repo.CountAsync(countFilters))
+            _clubRepositoryMock.Setup(repo => repo.CountAsync(_cancellationToken, countFilters))
                 .ReturnsAsync(0)
                 .Verifiable(Times.Once);
-            _clubRepositoryMock.Setup(repo => repo.CreateAsync(It.IsAny<ClubEntity>()))
+            _clubRepositoryMock.Setup(repo => repo.CreateAsync(It.IsAny<ClubEntity>(), _cancellationToken))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.CreateAsync(clubEntity);
+            var result = await _clubService.CreateAsync(clubEntity, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -288,12 +298,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 { nameof(ClubEntity.Email), clubEntity.Email }
             };
 
-            _clubRepositoryMock.Setup(repo => repo.CreateAsync(clubEntity))
+            _clubRepositoryMock.Setup(repo => repo.CreateAsync(clubEntity, _cancellationToken))
                 .ReturnsAsync((ClubEntity?)null)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.CreateAsync(clubEntity);
+            var result = await _clubService.CreateAsync(clubEntity, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -313,12 +323,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 { nameof(ClubEntity.Email), clubEntity.Email }
             };
 
-            _clubRepositoryMock.Setup(repo => repo.CountAsync(countFilters))
+            _clubRepositoryMock.Setup(repo => repo.CountAsync(_cancellationToken, countFilters))
                 .ReturnsAsync(1)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.CreateAsync(clubEntity);
+            var result = await _clubService.CreateAsync(clubEntity, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -335,7 +345,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             ClubEntity clubEntity = null!;
 
             // Act & Assert
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _clubService.CreateAsync(clubEntity));
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+                () => _clubService.CreateAsync(clubEntity, _cancellationToken));
         }
 
         #endregion
@@ -348,12 +359,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
 
-            _clubRepositoryMock.Setup(repo => repo.UpdateAsync(clubEntity))
+            _clubRepositoryMock.Setup(repo => repo.UpdateAsync(clubEntity, _cancellationToken))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.UpdateAsync(clubEntity);
+            var result = await _clubService.UpdateAsync(clubEntity, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -371,12 +382,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
 
-            _clubRepositoryMock.Setup(repo => repo.UpdateAsync(clubEntity))
+            _clubRepositoryMock.Setup(repo => repo.UpdateAsync(clubEntity, _cancellationToken))
                 .ReturnsAsync((ClubEntity?)null)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.UpdateAsync(clubEntity);
+            var result = await _clubService.UpdateAsync(clubEntity, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -393,7 +404,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             ClubEntity clubEntity = null!;
 
             // Act & Assert
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _clubService.UpdateAsync(clubEntity));
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+                () => _clubService.UpdateAsync(clubEntity, _cancellationToken));
         }
 
         #endregion
@@ -412,15 +424,15 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 new PropertyUpdate(nameof(clubEntity.Email), editedEmail)
             ];
 
-            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, It.IsAny<bool>()))
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, _cancellationToken, It.IsAny<bool>()))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
-            _clubRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<ClubEntity>()))
+            _clubRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<ClubEntity>(), _cancellationToken))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once); ;
 
             // Act
-            var result = await _clubService.PatchAsync(clubEntity.Id, updates);
+            var result = await _clubService.PatchAsync(clubEntity.Id, updates, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -440,12 +452,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             Guid clubId = Guid.NewGuid();
             List<PropertyUpdate> updates = [new PropertyUpdate(nameof(ClubEntity.Name), "Integration Testing Club")];
 
-            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubId, It.IsAny<bool>()))
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubId, _cancellationToken, It.IsAny<bool>()))
                 .ReturnsAsync((ClubEntity?)null)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.PatchAsync(clubId, updates);
+            var result = await _clubService.PatchAsync(clubId, updates, _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -463,12 +475,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 new PropertyUpdate("Invalid Property", "Value")
             ];
 
-            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, It.IsAny<bool>()))
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, _cancellationToken, It.IsAny<bool>()))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.PatchAsync(clubEntity.Id, updates);
+            var result = await _clubService.PatchAsync(clubEntity.Id, updates, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -490,15 +502,15 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 new PropertyUpdate(nameof(clubEntity.Email), editedEmail)
             ];
 
-            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, It.IsAny<bool>()))
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, _cancellationToken, It.IsAny<bool>()))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
-            _clubRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<ClubEntity>()))
+            _clubRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<ClubEntity>(), _cancellationToken))
                 .ReturnsAsync((ClubEntity?)null)
                 .Verifiable(Times.Once); ;
 
             // Act
-            var result = await _clubService.PatchAsync(clubEntity.Id, updates);
+            var result = await _clubService.PatchAsync(clubEntity.Id, updates, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -516,7 +528,8 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             List<PropertyUpdate> updates = null!;
 
             // Act & Assert
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _clubService.PatchAsync(clubId, updates));
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+                () => _clubService.PatchAsync(clubId, updates, _cancellationToken));
         }
 
         #endregion
@@ -529,15 +542,15 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
 
-            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, true))
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, _cancellationToken, true))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
-            _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity))
+            _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity, _cancellationToken))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.DeleteAsync(clubEntity.Id);
+            var result = await _clubService.DeleteAsync(clubEntity.Id, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -554,12 +567,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
 
-            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, true))
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, _cancellationToken, true))
                 .ReturnsAsync((ClubEntity?)null)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.DeleteAsync(clubEntity.Id);
+            var result = await _clubService.DeleteAsync(clubEntity.Id, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
@@ -575,15 +588,15 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             var clubEntity = _clubEntityBuilder.WithName("Integration Testing Club").Build();
 
-            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, true))
+            _clubRepositoryMock.Setup(repo => repo.GetByIdAsync(clubEntity.Id, _cancellationToken, true))
                 .ReturnsAsync(clubEntity)
                 .Verifiable(Times.Once);
-            _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity))
+            _clubRepositoryMock.Setup(repo => repo.DeleteAsync(clubEntity, _cancellationToken))
                 .ReturnsAsync((ClubEntity?)null)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubService.DeleteAsync(clubEntity.Id);
+            var result = await _clubService.DeleteAsync(clubEntity.Id, _cancellationToken);
 
             // Assert
             _clubRepositoryMock.VerifyAll();
