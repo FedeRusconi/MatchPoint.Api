@@ -17,6 +17,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
         private AzureAdService _azureAdService = default!;
 
         private AzureAdUserBuilder _azureAdUserBuilder = default!;
+        private CancellationToken _cancellationToken = default!;
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
@@ -35,6 +36,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
         {
             _azureAdService = new AzureAdService(_httpContextMock.Object, _configuration);
             _azureAdUserBuilder = new();
+            _cancellationToken = new CancellationToken();
         }
 
         #region GetUserByIdAsync
@@ -46,7 +48,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             Guid userId = TestAuthHandler.ObjectIdValue;
 
             // Act
-            var result = await _azureAdService.GetUserByIdAsync(userId);
+            var result = await _azureAdService.GetUserByIdAsync(userId, _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -60,7 +62,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             Guid userId = Guid.NewGuid();
 
             // Act
-            var result = await _azureAdService.GetUserByIdAsync(userId);
+            var result = await _azureAdService.GetUserByIdAsync(userId, _cancellationToken);
 
             // Assert
             Assert.IsNull(result);
@@ -77,7 +79,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             Guid userId = TestAuthHandler.ObjectIdValue;
 
             // Act
-            var result = await _azureAdService.GetUserManagerAsync(userId);
+            var result = await _azureAdService.GetUserManagerAsync(userId, _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -90,7 +92,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             Guid userId = TestAuthHandler.ManagerObjectIdValue;
 
             // Act
-            var result = await _azureAdService.GetUserManagerAsync(userId);
+            var result = await _azureAdService.GetUserManagerAsync(userId, _cancellationToken);
 
             // Assert
             Assert.IsNull(result);
@@ -110,7 +112,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             try
             {
                 // Act
-                result = await _azureAdService.CreateUserAsync(azureAdUser);
+                result = await _azureAdService.CreateUserAsync(azureAdUser, _cancellationToken);
 
                 // Assert
                 Assert.IsNotNull(result);
@@ -121,7 +123,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
                 // Cleanup
                 if (result != null)
                 {
-                    await _azureAdService.DeleteUserAsync(Guid.Parse(result.Id!));
+                    await _azureAdService.DeleteUserAsync(Guid.Parse(result.Id!), _cancellationToken);
                 }
             }
         }
@@ -144,7 +146,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
 
             try
             {
-                result = await _azureAdService.CreateUserAsync(azureAdUser);
+                result = await _azureAdService.CreateUserAsync(azureAdUser, _cancellationToken);
                 // Change properties
                 var updatedUser = new User()
                 {
@@ -157,13 +159,13 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
                 };
 
                 // Act
-                result = await _azureAdService.UpdateUserAsync(updatedUser);
+                result = await _azureAdService.UpdateUserAsync(updatedUser, _cancellationToken);
 
                 // Assert
                 Assert.IsNotNull(result);
                 Assert.AreNotEqual(default, result.Id);
                 // Check updates actually happened in Azure AD
-                var getResult = await _azureAdService.GetUserByIdAsync(Guid.Parse(result.Id!));
+                var getResult = await _azureAdService.GetUserByIdAsync(Guid.Parse(result.Id!), _cancellationToken);
                 Assert.IsNotNull(getResult);
                 Assert.AreEqual(updatedJobTitle, getResult.JobTitle);
                 Assert.AreEqual(updatedCity, getResult.City);
@@ -176,7 +178,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
                 // Cleanup
                 if (result != null)
                 {
-                    await _azureAdService.DeleteUserAsync(Guid.Parse(result.Id!));
+                    await _azureAdService.DeleteUserAsync(Guid.Parse(result.Id!), _cancellationToken);
                 }
             }
         }
@@ -189,7 +191,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             var azureAdUser = _azureAdUserBuilder.WithId(userId).Build();
 
             // Act
-            var result = await _azureAdService.UpdateUserAsync(azureAdUser);
+            var result = await _azureAdService.UpdateUserAsync(azureAdUser, _cancellationToken);
 
             // Assert
             Assert.IsNull(result);
@@ -208,23 +210,23 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
 
             try
             {
-                azureAdUser = await _azureAdService.CreateUserAsync(azureAdUser);
+                azureAdUser = await _azureAdService.CreateUserAsync(azureAdUser, _cancellationToken);
 
                 // Act
-                var result = await _azureAdService.AssignUserManagerAsync(Guid.Parse(azureAdUser?.Id!), managerId);
+                var result = await _azureAdService.AssignUserManagerAsync(Guid.Parse(azureAdUser?.Id!), managerId, _cancellationToken);
 
                 // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(managerId, result);
                 // Check updates actually happened in Azure AD
-                var getResult = await _azureAdService.GetUserManagerAsync(Guid.Parse(azureAdUser?.Id!));
+                var getResult = await _azureAdService.GetUserManagerAsync(Guid.Parse(azureAdUser?.Id!), _cancellationToken);
                 Assert.IsNotNull(getResult);
                 Assert.AreEqual(managerId.ToString(), getResult.Id);
             }
             finally
             {
                 // Cleanup
-                await _azureAdService.DeleteUserAsync(Guid.Parse(azureAdUser?.Id!));
+                await _azureAdService.DeleteUserAsync(Guid.Parse(azureAdUser?.Id!), _cancellationToken);
             }
         }
 
@@ -239,7 +241,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             var managerId = managerIdNull ? Guid.NewGuid() : TestAuthHandler.ManagerObjectIdValue;
 
             // Act
-            var result = await _azureAdService.AssignUserManagerAsync(userId, managerId);
+            var result = await _azureAdService.AssignUserManagerAsync(userId, managerId, _cancellationToken);
 
             // Assert
             Assert.IsNull(result);
@@ -254,15 +256,15 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
         {
             // Arrange
             var azureAdUser = _azureAdUserBuilder.WithDefaultId().Build();
-            User? createResult = await _azureAdService.CreateUserAsync(azureAdUser);
+            User? createResult = await _azureAdService.CreateUserAsync(azureAdUser, _cancellationToken);
 
             // Act
-            var result = await _azureAdService.DeleteUserAsync(Guid.Parse(createResult?.Id!));
+            var result = await _azureAdService.DeleteUserAsync(Guid.Parse(createResult?.Id!), _cancellationToken);
 
             // Assert
             Assert.IsTrue(result);
             // Ensure user is not in AD anymore
-            var getResult = await _azureAdService.GetUserByIdAsync(Guid.Parse(createResult?.Id!));
+            var getResult = await _azureAdService.GetUserByIdAsync(Guid.Parse(createResult?.Id!), _cancellationToken);
             Assert.IsNull(getResult);
         }
 
@@ -273,7 +275,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             Guid userId = Guid.NewGuid();
 
             // Act
-            var result = await _azureAdService.DeleteUserAsync(userId);
+            var result = await _azureAdService.DeleteUserAsync(userId, _cancellationToken);
 
             // Assert
             Assert.IsFalse(result);
@@ -292,22 +294,22 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
 
             try
             {
-                azureAdUser = await _azureAdService.CreateUserAsync(azureAdUser);
-                await _azureAdService.AssignUserManagerAsync(Guid.Parse(azureAdUser?.Id!), managerId);
+                azureAdUser = await _azureAdService.CreateUserAsync(azureAdUser, _cancellationToken);
+                await _azureAdService.AssignUserManagerAsync(Guid.Parse(azureAdUser?.Id!), managerId, _cancellationToken);
 
                 // Act
-                var result = await _azureAdService.RemoveUserManagerAsync(Guid.Parse(azureAdUser?.Id!));
+                var result = await _azureAdService.RemoveUserManagerAsync(Guid.Parse(azureAdUser?.Id!), _cancellationToken);
 
                 // Assert
                 Assert.IsTrue(result);
                 // Check updates actually happened in Azure AD
-                var getResult = await _azureAdService.GetUserManagerAsync(Guid.Parse(azureAdUser?.Id!));
+                var getResult = await _azureAdService.GetUserManagerAsync(Guid.Parse(azureAdUser?.Id!), _cancellationToken);
                 Assert.IsNull(getResult);
             }
             finally
             {
                 // Cleanup
-                await _azureAdService.DeleteUserAsync(Guid.Parse(azureAdUser?.Id!));
+                await _azureAdService.DeleteUserAsync(Guid.Parse(azureAdUser?.Id!), _cancellationToken);
             }
         }
 
@@ -318,7 +320,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             var userId = TestAuthHandler.ManagerObjectIdValue;
 
             // Act
-            var result = await _azureAdService.RemoveUserManagerAsync(userId);
+            var result = await _azureAdService.RemoveUserManagerAsync(userId, _cancellationToken);
 
             // Assert
             Assert.IsTrue(result);
@@ -331,7 +333,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
             var userId = Guid.NewGuid();
 
             // Act
-            var result = await _azureAdService.RemoveUserManagerAsync(userId);
+            var result = await _azureAdService.RemoveUserManagerAsync(userId, _cancellationToken);
 
             // Assert
             Assert.IsFalse(result);

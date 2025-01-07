@@ -610,7 +610,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 _dbContext = new(DataContextHelpers.TestingConfiguration);
                 _dbContext.Remove(clubStaff.ToClubStaffEntity());
                 await _dbContext.SaveChangesAsync();
-                await _azureAdService.DeleteUserAsync(clubStaff.Id);
+                await _azureAdService.DeleteUserAsync(clubStaff.Id, new CancellationToken());
             }
         }
 

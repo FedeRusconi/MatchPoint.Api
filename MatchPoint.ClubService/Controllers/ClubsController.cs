@@ -23,6 +23,7 @@ namespace MatchPoint.ClubService.Controllers
         [RequiredScope("Clubs.Read")]
         [HttpGet]
         public async Task<ActionResult<PagedResponse<Club>>> GetClubsAsync(
+            CancellationToken cancellationToken,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = Constants.MaxPageSizeAllowed,
             [FromQuery] Dictionary<string, string>? filters = null,
@@ -35,7 +36,8 @@ namespace MatchPoint.ClubService.Controllers
                 pageNumber: page,
                 pageSize: pageSize,
                 filters: filters,
-                orderBy: orderBy);
+                orderBy: orderBy,
+                cancellationToken: cancellationToken);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning(
@@ -62,10 +64,10 @@ namespace MatchPoint.ClubService.Controllers
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Read")]
         [HttpGet("{id:guid}", Name = nameof(GetClubAsync))]
-        public async Task<ActionResult<Club>> GetClubAsync(Guid id)
+        public async Task<ActionResult<Club>> GetClubAsync(Guid id, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Received GET request to retrieve club with ID: {Id}", id);
-            var result = await _clubService.GetByIdAsync(id);
+            var result = await _clubService.GetByIdAsync(id, cancellationToken);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning("Failed to retrieve club with ID: {Id}. Error: {Error}", id, result.Error);
@@ -80,12 +82,12 @@ namespace MatchPoint.ClubService.Controllers
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Write")]
         [HttpPost]
-        public async Task<ActionResult<Club>> PostClubAsync(Club club)
+        public async Task<ActionResult<Club>> PostClubAsync(Club club, CancellationToken cancellationToken)
         {
             _logger.LogInformation(
                 "Received POST request to CREATE club with name: {clubName}, email: {clubEmail}",
                 club.Name, club.Email);
-            var result = await _clubService.CreateAsync(club.ToClubEntity());
+            var result = await _clubService.CreateAsync(club.ToClubEntity(), cancellationToken);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning(
@@ -108,7 +110,7 @@ namespace MatchPoint.ClubService.Controllers
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Write")]
         [HttpPut("{id}")]
-        public async Task<ActionResult<Club>> PutClubAsync(Guid id, Club club)
+        public async Task<ActionResult<Club>> PutClubAsync(Guid id, Club club, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Received PUT request to UPDATE club with ID: {Id}", id);
             if (id != club.Id)
@@ -118,7 +120,7 @@ namespace MatchPoint.ClubService.Controllers
                 return BadRequest(errorMsg);
             }
 
-            var result = await _clubService.UpdateAsync(club.ToClubEntity());
+            var result = await _clubService.UpdateAsync(club.ToClubEntity(), cancellationToken);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning("Failed to update club with ID: {Id}. Error: {Error}", id, result.Error);
@@ -133,7 +135,7 @@ namespace MatchPoint.ClubService.Controllers
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Write")]
         [HttpPatch("{id}")]
-        public async Task<ActionResult<Club>> PatchClubAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates)
+        public async Task<ActionResult<Club>> PatchClubAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
         {
             _logger.LogInformation(
                 "Received PATCH request to UPDATE {count} properties for club with ID: {Id}", 
@@ -145,7 +147,7 @@ namespace MatchPoint.ClubService.Controllers
                 return BadRequest(errorMsg);
             }
 
-            var result = await _clubService.PatchAsync(id, propertyUpdates);
+            var result = await _clubService.PatchAsync(id, propertyUpdates, cancellationToken);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning("Failed to update club with ID: {Id}. Error: {Error}", id, result.Error);
@@ -160,10 +162,10 @@ namespace MatchPoint.ClubService.Controllers
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Delete")]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteClubAsync(Guid id)
+        public async Task<IActionResult> DeleteClubAsync(Guid id, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Received DELETE request to delete club with ID: {Id}", id);
-            var result = await _clubService.DeleteAsync(id);
+            var result = await _clubService.DeleteAsync(id, cancellationToken);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning("Failed to delete club with ID: {Id}. Error: {Error}", id, result.Error);
