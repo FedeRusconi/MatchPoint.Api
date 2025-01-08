@@ -1,13 +1,13 @@
-﻿using MatchPoint.ClubService.Entities;
+﻿using MatchPoint.AccessControlService.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace MatchPoint.ClubService.Infrastructure.Data
+namespace MatchPoint.AccessControlService.Infrastructure.Data
 {
-    public class ClubServiceDbContext(IConfiguration _config) : DbContext()
+    public class AccessControlServiceDbContext(IConfiguration _config) : DbContext()
     {
         #region DB Sets
-        public DbSet<ClubEntity> Clubs { get; set; } = default!;
-        public DbSet<ClubStaffEntity> ClubStaff { get; set; } = default!;
+        public DbSet<CustomRoleEntity> CustomRoles { get; set; } = default!;
+        public DbSet<ClubRoleEntity> ClubRoles { get; set; } = default!;
         #endregion
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -27,9 +27,9 @@ namespace MatchPoint.ClubService.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<ClubEntity>().ToContainer(nameof(Clubs)).HasPartitionKey(c => c.Id);
-            modelBuilder.Entity<ClubStaffEntity>()
-                .ToContainer(nameof(ClubStaff))
+            modelBuilder.Entity<CustomRoleEntity>().ToContainer(nameof(CustomRoles)).HasPartitionKey(c => c.Id);
+            modelBuilder.Entity<ClubRoleEntity>()
+                .ToContainer(nameof(ClubRoles))
                 .HasPartitionKey(s => s.ClubId)
                 .HasKey(e => e.Id);
         }

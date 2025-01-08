@@ -23,6 +23,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchPoint.ClubService.Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchPoint.Api.Tests.Shared", "MatchPoint.Api.Tests.Shared\MatchPoint.Api.Tests.Shared.csproj", "{F2C87B7E-09EF-4601-AFE9-AC42413BD65C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AccessControlService", "AccessControlService", "{5312D4F6-5694-48BB-85AD-6F06A310EB6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchPoint.AccessControlService", "MatchPoint.AccessControlService\MatchPoint.AccessControlService.csproj", "{90373771-51BE-40AA-879F-201FF9349AC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchPoint.AccessControlService.Tests.Integration", "MatchPoint.AccessControlService.Tests.Integration\MatchPoint.AccessControlService.Tests.Integration.csproj", "{9C65814A-90AC-4A98-ABB5-5C70295A9DA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchPoint.AccessControlService.Tests.Unit", "MatchPoint.AccessControlService.Tests.Unit\MatchPoint.AccessControlService.Tests.Unit.csproj", "{11B0B023-A476-4B75-9A21-D5704E2A4795}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +69,18 @@ Global
 		{F2C87B7E-09EF-4601-AFE9-AC42413BD65C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2C87B7E-09EF-4601-AFE9-AC42413BD65C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2C87B7E-09EF-4601-AFE9-AC42413BD65C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90373771-51BE-40AA-879F-201FF9349AC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90373771-51BE-40AA-879F-201FF9349AC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90373771-51BE-40AA-879F-201FF9349AC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90373771-51BE-40AA-879F-201FF9349AC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C65814A-90AC-4A98-ABB5-5C70295A9DA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C65814A-90AC-4A98-ABB5-5C70295A9DA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C65814A-90AC-4A98-ABB5-5C70295A9DA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C65814A-90AC-4A98-ABB5-5C70295A9DA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11B0B023-A476-4B75-9A21-D5704E2A4795}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11B0B023-A476-4B75-9A21-D5704E2A4795}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11B0B023-A476-4B75-9A21-D5704E2A4795}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11B0B023-A476-4B75-9A21-D5704E2A4795}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -72,5 +92,8 @@ Global
 		{253B2727-C06B-455F-B6BD-53EEFF3CB221} = {FB7D531C-EF2F-4F19-B7D9-B451C91B03EA}
 		{FD2FFC28-AC2A-40DA-B0F3-B46014BD5360} = {FB7D531C-EF2F-4F19-B7D9-B451C91B03EA}
 		{F2C87B7E-09EF-4601-AFE9-AC42413BD65C} = {3068FAF3-3E1B-4F49-BAEE-1BD8B91441B5}
+		{90373771-51BE-40AA-879F-201FF9349AC8} = {5312D4F6-5694-48BB-85AD-6F06A310EB6B}
+		{9C65814A-90AC-4A98-ABB5-5C70295A9DA8} = {5312D4F6-5694-48BB-85AD-6F06A310EB6B}
+		{11B0B023-A476-4B75-9A21-D5704E2A4795} = {5312D4F6-5694-48BB-85AD-6F06A310EB6B}
 	EndGlobalSection
 EndGlobal

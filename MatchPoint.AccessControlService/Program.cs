@@ -1,16 +1,16 @@
 using System.Runtime.CompilerServices;
 using Asp.Versioning;
-using MatchPoint.ClubService.Configuration;
+using MatchPoint.AccessControlService.Configuration;
 
 // Necessary to run integration tests with mock host
-[assembly: InternalsVisibleTo("MatchPoint.ClubService.Tests.Integration")]
+[assembly: InternalsVisibleTo("MatchPoint.AccessControlService.Tests.Integration")]
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 // Service custom services
-builder.AddClubServices();
+builder.AddAccessControlServices();
 
 builder.Services.AddApiVersioning(options =>
 {

@@ -1,5 +1,8 @@
-﻿namespace MatchPoint.Api.Shared.ClubService.Enums
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MatchPoint.Api.Shared.ClubService.Enums
 {
+    // Lookup Table instead?
     public enum CourtRatingAttribute
     {
         Speed,
@@ -7,6 +10,7 @@
         Traction,
         Comfort,
         Durability,
+        [Display(Name = "Weather Resistance")]
         WeatherResistance
     }
 }

@@ -1,9 +1,13 @@
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ServiceDiscovery;
+using Microsoft.Identity.Web;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -17,6 +21,8 @@ namespace Microsoft.Extensions.Hosting
     {
         public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
+            builder.AddAuthentication();
+
             builder.ConfigureOpenTelemetry();
 
             builder.AddDefaultHealthChecks();
@@ -25,6 +31,11 @@ namespace Microsoft.Extensions.Hosting
 
             builder.Logging.AddConsole();
             builder.Services.AddLogging();
+
+            builder.AddControllersWithOptions();
+
+            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+            builder.Services.AddOpenApi();
 
             builder.Services.ConfigureHttpClientDefaults(http =>
             {
@@ -40,6 +51,27 @@ namespace Microsoft.Extensions.Hosting
             // {
             //     options.AllowedSchemes = ["https"];
             // });
+
+            return builder;
+        }
+
+        private static TBuilder AddControllersWithOptions<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+        {
+            builder.Services
+                .AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                });
+
+            return builder;
+        }
+
+        private static TBuilder AddAuthentication<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+        {
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddMicrosoftIdentityWebApi(builder.Configuration, configSectionName: "AzureAdB2C");
 
             return builder;
         }
