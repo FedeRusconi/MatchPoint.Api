@@ -4,6 +4,7 @@ using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
+using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -25,9 +26,9 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         public void Setup()
         {
             _dbContext = new ClubServiceDbContext(_configuration);
-            _loggerMock = new();
+            _loggerMock = new Mock<ILogger<ClubRepository>>();
             _clubRepository = new ClubRepository(_dbContext, _loggerMock.Object);
-            _clubEntityBuilder = new();
+            _clubEntityBuilder = new ClubEntityBuilder();
             _cancellationToken = new CancellationToken();
         }
 
@@ -466,6 +467,34 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             // Act
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => _clubRepository.CreateAsync(clubEntity, _cancellationToken));
+        }
+
+        [TestMethod]
+        public async Task CreateAsync_WhenClubIdIsDuplicate_ShouldReturnNull()
+        {
+            // Arrange
+            ClubEntity clubEntity = _clubEntityBuilder.Build();
+            ClubEntity? result = null;
+
+            try
+            {
+                // Add it first to mimic the Id duplicate in the Act part
+                await _clubRepository.CreateAsync(clubEntity, _cancellationToken);
+
+                // Act
+                result = await _clubRepository.CreateAsync(clubEntity, _cancellationToken);
+
+                // Assert
+                Assert.IsNull(result);
+            }
+            finally
+            {
+                // Cleanup
+                if (result != null)
+                {
+                    await _clubRepository.DeleteAsync(result, _cancellationToken);
+                }
+            }
         }
 
         [TestMethod]

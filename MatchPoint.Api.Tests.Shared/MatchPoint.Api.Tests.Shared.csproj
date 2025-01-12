@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MatchPoint.AccessControlService\MatchPoint.AccessControlService.csproj" />
     <ProjectReference Include="..\MatchPoint.Api.Shared\MatchPoint.Api.Shared.csproj" />
     <ProjectReference Include="..\MatchPoint.ClubService\MatchPoint.ClubService.csproj" />
   </ItemGroup>

@@ -6,7 +6,7 @@ namespace MatchPoint.AccessControlService.Entities
     /// <summary>
     /// This entity represents pre-defined roles that clubs can implement.
     /// </summary>
-    public class CustomRoleEntity : ICustomRole
+    public class CustomRoleEntity : ICustomRoleEntity
     {
         public Guid Id { get; set; }
         public required string Name { get; set; }

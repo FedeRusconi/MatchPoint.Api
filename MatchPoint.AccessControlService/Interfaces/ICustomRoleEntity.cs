@@ -2,7 +2,7 @@
 
 namespace MatchPoint.AccessControlService.Interfaces
 {
-    public interface ICustomRole
+    public interface ICustomRoleEntity
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
