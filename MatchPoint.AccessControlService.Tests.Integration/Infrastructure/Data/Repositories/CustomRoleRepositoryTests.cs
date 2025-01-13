@@ -1,11 +1,9 @@
 ﻿using MatchPoint.AccessControlService.Entities;
 using MatchPoint.AccessControlService.Infrastructure.Data;
 using MatchPoint.AccessControlService.Infrastructure.Data.Repositories;
-using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.AccessControlService.Interfaces;
 using MatchPoint.Api.Tests.Shared.AccessControlService.Helpers;
-using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 using MatchPoint.Api.Tests.Shared.Common.Helpers;
-using MatchPoint.ClubService.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -170,10 +168,65 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Infrastructure.Data.
             Guid customRoleId = Guid.NewGuid();
 
             // Act
-            var result = await _clubRepository.GetByIdAsync(customRoleId, _cancellationToken);
+            var result = await _customRoleRepository.GetByIdAsync(customRoleId, _cancellationToken);
 
             // Assert
             Assert.IsNull(result);
+        }
+
+        #endregion
+
+        #region GetAllAsync
+
+        [TestMethod]
+        public async Task GetAllAsync_WhenThereAreCustomRoles_ShouldReturnAllCustomRoles()
+        {
+            // Arrange
+            var customRoleEntity1 = _customRoleEntityBuilder.Build();
+
+            _customRoleEntityBuilder = new CustomRoleEntityBuilder();
+            var customRoleEntity2 = _customRoleEntityBuilder.Build();
+
+            _customRoleEntityBuilder = new CustomRoleEntityBuilder();
+            var customRoleEntity3 = _customRoleEntityBuilder.Build();
+
+            Guid[] rolesIds = [customRoleEntity1.Id, customRoleEntity2.Id, customRoleEntity3.Id];
+
+            try
+            {
+                customRoleEntity1 = await _customRoleRepository.CreateAsync(customRoleEntity1, _cancellationToken)
+                    ?? throw new Exception("_customRoleRepository.CreateAsync() returned null");
+                customRoleEntity2 = await _customRoleRepository.CreateAsync(customRoleEntity2, _cancellationToken)
+                    ?? throw new Exception("_customRoleRepository.CreateAsync() returned null");
+                customRoleEntity3 = await _customRoleRepository.CreateAsync(customRoleEntity3, _cancellationToken)
+                    ?? throw new Exception("_customRoleRepository.CreateAsync() returned null");
+
+                // Act
+                var result = await _customRoleRepository.GetAllAsync(_cancellationToken, trackChanges: false);
+
+                // Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(3, result.Count());
+                Assert.IsTrue(result.All(r => rolesIds.Contains(r.Id)));
+            }
+            finally
+            {
+                // Cleanup
+                await _customRoleRepository.DeleteAsync(customRoleEntity1, _cancellationToken);
+                await _customRoleRepository.DeleteAsync(customRoleEntity2, _cancellationToken);
+                await _customRoleRepository.DeleteAsync(customRoleEntity3, _cancellationToken);
+            }
+        }
+
+        [TestMethod]
+        public async Task GetAllAsync_WhenThereAreNoCustomRoles_ShouldReturnEmpty()
+        {
+            // Act
+            var result = await _customRoleRepository.GetAllAsync(_cancellationToken);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(0, result.Count());
         }
 
         #endregion
@@ -227,8 +280,9 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Infrastructure.Data.
 
             try
             {
-                // Add it first to mimic the Id duplicate in the Act part
-                await _customRoleRepository.CreateAsync(customRoleEntity, _cancellationToken);
+                // Add it first to mimic the Id duplicate in the Act part;
+                customRoleEntity = await _customRoleRepository.CreateAsync(customRoleEntity, _cancellationToken)
+                    ?? throw new Exception("_customRoleRepository.CreateAsync() returned null");
 
                 // Act
                 result = await _customRoleRepository.CreateAsync(customRoleEntity, _cancellationToken);
@@ -239,11 +293,115 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Infrastructure.Data.
             finally
             {
                 // Cleanup
-                if (result != null)
-                {
-                    await _customRoleRepository.DeleteAsync(result, _cancellationToken);
-                }
+                await _customRoleRepository.DeleteAsync(customRoleEntity, _cancellationToken);
             }
+        }
+
+        #endregion
+
+        #region UpdateAsync
+
+        [TestMethod]
+        public async Task UpdateAsync_WhenCustomRoleIsValid_ShouldUpdateAndReturn()
+        {
+            // Arrange
+            var customRoleEntity = _customRoleEntityBuilder.WithName("Integration Testing Role").Build();
+            string editedName = "This is an edited role";
+            try
+            {
+                customRoleEntity = await _customRoleRepository.CreateAsync(customRoleEntity, _cancellationToken)
+                    ?? throw new Exception("_customRoleRepository.CreateAsync() returned null");
+
+                customRoleEntity.Name = editedName;
+
+                // Act
+                var result = await _customRoleRepository.UpdateAsync(customRoleEntity, _cancellationToken);
+
+                // Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(editedName, result.Name);
+            }
+            finally
+            {
+                // Cleanup
+                await _customRoleRepository.DeleteAsync(customRoleEntity, _cancellationToken);
+            }
+        }
+
+        [TestMethod]
+        public async Task UpdateAsync_WhenCustomRoleIsNotFound_ShouldReturnNull()
+        {
+            // Arrange
+            var customRoleEntity = _customRoleEntityBuilder.Build();
+
+            // Act
+            var result = await _customRoleRepository.UpdateAsync(customRoleEntity, _cancellationToken);
+
+            // Assert
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public async Task UpdateAsync_WhenCustomRoleIsNull_ShouldThrowArgumentNullException()
+        {
+            // Arrange
+            CustomRoleEntity customRoleEntity = null!;
+
+            // Act
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+                () => _customRoleRepository.UpdateAsync(customRoleEntity, _cancellationToken));
+        }
+
+        #endregion
+
+        #region DeleteAsync
+
+        [TestMethod]
+        public async Task DeleteAsync_WhenCustomRoleExists_ShouldDeleteAndReturnEntity()
+        {
+            // Arrange
+            var customRoleEntity = _customRoleEntityBuilder.Build();
+
+            try
+            {
+                customRoleEntity = await _customRoleRepository.CreateAsync(customRoleEntity, _cancellationToken)
+                    ?? throw new Exception("_customRoleRepository.CreateAsync() returned null");
+            }
+            finally
+            {
+                // Act
+                var result = await _customRoleRepository.DeleteAsync(customRoleEntity, _cancellationToken);
+
+                // Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(customRoleEntity.Id, result.Id);
+                var checkResult = await _customRoleRepository.GetByIdAsync(customRoleEntity.Id, _cancellationToken);
+                Assert.IsNull(checkResult);
+            }
+        }
+
+        [TestMethod]
+        public async Task DeleteAsync_WhenCustomRoleDoesNotExist_ShouldReturnNull()
+        {
+            // Arrange
+            var customRoleEntity = _customRoleEntityBuilder.Build();
+
+            // Act
+            var result = await _customRoleRepository.DeleteAsync(customRoleEntity, _cancellationToken);
+
+            // Assert
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public async Task DeleteAsync_WhenCustomRoleIsNull_ShouldThrowArgumentNullException()
+        {
+            // Arrange
+            CustomRoleEntity customRoleEntity = null!;
+
+            // Act & Assert
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+                () => _customRoleRepository.DeleteAsync(customRoleEntity, _cancellationToken));
         }
 
         #endregion

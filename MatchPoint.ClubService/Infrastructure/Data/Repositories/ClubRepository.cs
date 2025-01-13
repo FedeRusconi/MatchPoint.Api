@@ -101,7 +101,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             }
 
             // Get count and Apply pagination
-            int totalCount = await query.CountAsync();
+            int totalCount = await query.CountAsync(cancellationToken);
             int skip = (pageNumber - 1) * pageSize;
             var data = await query.Skip(skip).Take(pageSize).ToListAsync(cancellationToken);
             _logger.LogTrace("Returning {PageSize} of {Count} clubs found in the database", pageSize, totalCount);

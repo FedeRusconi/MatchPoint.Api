@@ -614,10 +614,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         public async Task DeleteAsync_WhenClubDoesNotExist_ShouldReturnNull()
         {
             // Arrange
-            var club = _clubEntityBuilder.Build();
+            var clubEntity = _clubEntityBuilder.Build();
 
             // Act
-            var result = await _clubRepository.DeleteAsync(club, _cancellationToken);
+            var result = await _clubRepository.DeleteAsync(clubEntity, _cancellationToken);
 
             // Assert
             Assert.IsNull(result);
