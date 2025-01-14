@@ -4,7 +4,7 @@ using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -474,15 +474,15 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         {
             // Arrange
             ClubEntity clubEntity = _clubEntityBuilder.Build();
-            ClubEntity? result = null;
 
             try
             {
                 // Add it first to mimic the Id duplicate in the Act part
-                await _clubRepository.CreateAsync(clubEntity, _cancellationToken);
+                clubEntity = await _clubRepository.CreateAsync(clubEntity, _cancellationToken)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
 
                 // Act
-                result = await _clubRepository.CreateAsync(clubEntity, _cancellationToken);
+                var result = await _clubRepository.CreateAsync(clubEntity, _cancellationToken);
 
                 // Assert
                 Assert.IsNull(result);
@@ -490,10 +490,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             finally
             {
                 // Cleanup
-                if (result != null)
-                {
-                    await _clubRepository.DeleteAsync(result, _cancellationToken);
-                }
+                _dbContext.Entry(clubEntity).State = EntityState.Detached;
+                await _clubRepository.DeleteAsync(clubEntity, _cancellationToken);
             }
         }
 

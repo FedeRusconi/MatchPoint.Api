@@ -1,9 +1,9 @@
 ﻿using MatchPoint.AccessControlService.Entities;
 using MatchPoint.AccessControlService.Infrastructure.Data;
 using MatchPoint.AccessControlService.Infrastructure.Data.Repositories;
-using MatchPoint.AccessControlService.Interfaces;
 using MatchPoint.Api.Tests.Shared.AccessControlService.Helpers;
 using MatchPoint.Api.Tests.Shared.Common.Helpers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -79,7 +79,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Infrastructure.Data.
         public async Task CountAsync_WithValidFilters_ShouldReturnCountOfFilteredCustomRoles()
         {
             // Arrange
-            var searchName = "Integration Testing Club";
+            var searchName = "Integration Testing Role";
             var customRoleEntity1 = _customRoleEntityBuilder
                 .WithName(searchName)
                 .Build();
@@ -276,7 +276,6 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Infrastructure.Data.
         {
             // Arrange
             CustomRoleEntity customRoleEntity = _customRoleEntityBuilder.Build();
-            CustomRoleEntity? result = null;
 
             try
             {
@@ -285,7 +284,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Infrastructure.Data.
                     ?? throw new Exception("_customRoleRepository.CreateAsync() returned null");
 
                 // Act
-                result = await _customRoleRepository.CreateAsync(customRoleEntity, _cancellationToken);
+                var result = await _customRoleRepository.CreateAsync(customRoleEntity, _cancellationToken);
 
                 // Assert
                 Assert.IsNull(result);
@@ -293,6 +292,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Infrastructure.Data.
             finally
             {
                 // Cleanup
+                _dbContext.Entry(customRoleEntity).State = EntityState.Detached;
                 await _customRoleRepository.DeleteAsync(customRoleEntity, _cancellationToken);
             }
         }

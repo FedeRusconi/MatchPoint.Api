@@ -76,7 +76,7 @@ namespace MatchPoint.AccessControlService.Infrastructure.Data.Repositories
         {
             ArgumentNullException.ThrowIfNull(customRoleEntity);
 
-            _logger.LogTrace("Creating a new custom role in the database with email {Name}", customRoleEntity.Name);
+            _logger.LogTrace("Creating a new custom role in the database with name {Name}", customRoleEntity.Name);
 
             _context.CustomRoles.Add(customRoleEntity);
             try
