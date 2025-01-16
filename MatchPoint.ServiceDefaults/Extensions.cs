@@ -11,6 +11,7 @@ using Microsoft.Identity.Web;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using MatchPoint.ServiceDefaults;
 
 namespace Microsoft.Extensions.Hosting
 {
@@ -45,6 +46,8 @@ namespace Microsoft.Extensions.Hosting
                 // Turn on service discovery by default
                 http.AddServiceDiscovery();
             });
+
+            builder.Services.AddScoped<ISessionService, SessionService>();
 
             // Uncomment the following to restrict the allowed schemes for service discovery.
             // builder.Services.Configure<ServiceDiscoveryOptions>(options =>

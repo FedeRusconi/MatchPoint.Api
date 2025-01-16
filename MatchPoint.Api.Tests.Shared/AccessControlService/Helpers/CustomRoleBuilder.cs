@@ -1,6 +1,8 @@
 ﻿using Bogus;
+using MatchPoint.AccessControlService.Entities;
 using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.AccessControlService.Models;
+using MatchPoint.Api.Shared.Common.Enums;
 
 namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
 {
@@ -65,6 +67,17 @@ namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
         public CustomRoleBuilder WithCapabilities(List<RoleCapability> capabilities)
         {
             _customRole.Capabilities = capabilities;
+            return this;
+        }
+
+        /// <summary>
+        /// Set a specific ActiveStatus to the <see cref="CustomRole"/>.
+        /// </summary>
+        /// <param name="activeStatus"> The <see cref="ActiveStatus"/> to use. </param>
+        /// <returns> This <see cref="CustomRoleBuilder"/>. </returns>
+        public CustomRoleBuilder WithActiveStatus(ActiveStatus activeStatus)
+        {
+            _customRole.ActiveStatus = activeStatus;
             return this;
         }
 

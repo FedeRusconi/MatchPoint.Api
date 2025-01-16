@@ -1,6 +1,8 @@
 ﻿using Bogus;
 using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.AccessControlService.Models;
+using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 
 namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
 {
@@ -65,6 +67,17 @@ namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
         public ClubRoleBuilder WithCapabilities(List<RoleCapability> capabilities)
         {
             _clubRole.Capabilities = capabilities;
+            return this;
+        }
+
+        /// <summary>
+        /// Set a specific ActiveStatus to the <see cref="ClubRole"/>.
+        /// </summary>
+        /// <param name="activeStatus"> The <see cref="ActiveStatus"/> to use. </param>
+        /// <returns> This <see cref="ClubRoleBuilder"/>. </returns>
+        public ClubRoleBuilder WithActiveStatus(ActiveStatus activeStatus)
+        {
+            _clubRole.ActiveStatus = activeStatus;
             return this;
         }
 

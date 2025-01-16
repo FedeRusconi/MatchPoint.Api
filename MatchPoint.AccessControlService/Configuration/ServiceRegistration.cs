@@ -1,4 +1,9 @@
-﻿using MatchPoint.AccessControlService.Infrastructure.Data;
+﻿using MatchPoint.AccessControlService.Entities;
+using MatchPoint.AccessControlService.Infrastructure.Data;
+using MatchPoint.AccessControlService.Infrastructure.Data.Repositories;
+using MatchPoint.AccessControlService.Interfaces;
+using MatchPoint.AccessControlService.Services;
+using MatchPoint.Api.Shared.Infrastructure.Interfaces;
 
 namespace MatchPoint.AccessControlService.Configuration
 {
@@ -11,11 +16,12 @@ namespace MatchPoint.AccessControlService.Configuration
             #endregion
 
             #region Repositories
-            //builder.Services.AddScoped<IClubRepository, ClubRepository>();
+            builder.Services.AddScoped<IRepository<CustomRoleEntity>, CustomRoleRepository>();
+            builder.Services.AddScoped<IClubRoleRepository, ClubRoleRepository>();
             #endregion
 
             #region Services
-            //builder.Services.AddScoped<IClubManagementService, ClubManagementService>();
+            builder.Services.AddScoped<ICustomRoleService, CustomRoleService>();
             #endregion
 
             #region Others
