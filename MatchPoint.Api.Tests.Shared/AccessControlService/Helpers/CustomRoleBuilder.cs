@@ -2,7 +2,9 @@
 using MatchPoint.AccessControlService.Entities;
 using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.AccessControlService.Models;
+using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 
 namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
 {
@@ -78,6 +80,19 @@ namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
         public CustomRoleBuilder WithActiveStatus(ActiveStatus activeStatus)
         {
             _customRole.ActiveStatus = activeStatus;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the tracking fields (crated, modified) for the <see cref="CustomRole"/>.
+        /// <returns> This <see cref="CustomRoleBuilder"/>. </returns>
+        public CustomRoleBuilder WithTrackingFields()
+        {
+            var faker = new Faker();
+            _customRole.CreatedBy = Guid.NewGuid();
+            _customRole.CreatedOnUtc = faker.Date.Past();
+            _customRole.ModifiedBy = Guid.NewGuid();
+            _customRole.ModifiedOnUtc = faker.Date.Past();
             return this;
         }
 

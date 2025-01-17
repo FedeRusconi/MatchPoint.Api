@@ -8,7 +8,7 @@ namespace MatchPoint.AccessControlService.Entities
     /// <summary>
     /// This entity represents club-specific custom roles.
     /// </summary>
-    public class ClubRoleEntity : ICustomRoleEntity, IDeactivable, ITrackable, IPatchable
+    public class ClubRoleEntity : ICustomRoleEntity, IDeactivable, ITrackable, IAuditable, IPatchable
     {
         public Guid Id { get; set; }
         public Guid ClubId { get; set; }

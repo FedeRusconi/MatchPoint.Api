@@ -11,6 +11,7 @@ using Moq;
 
 namespace MatchPoint.AccessControlService.Tests.Unit.Services
 {
+    [TestClass]
     public class CustomRoleServiceTests
     {
         private Mock<IRepository<CustomRoleEntity>> _customRoleRepositoryMock = default!;

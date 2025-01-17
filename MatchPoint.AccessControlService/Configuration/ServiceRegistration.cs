@@ -22,6 +22,7 @@ namespace MatchPoint.AccessControlService.Configuration
 
             #region Services
             builder.Services.AddScoped<ICustomRoleService, CustomRoleService>();
+            builder.Services.AddScoped<IClubRoleService, ClubRoleService>();
             #endregion
 
             #region Others

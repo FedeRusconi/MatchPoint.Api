@@ -4,7 +4,7 @@ using MatchPoint.Api.Shared.Common.Interfaces;
 
 namespace MatchPoint.Api.Shared.AccessControlService.Models
 {
-    public class ClubRole : ICustomRole, ITrackable, IDeactivable
+    public class ClubRole : ICustomRole, ITrackable, IAuditable, IDeactivable
     {
         public Guid Id { get; set; }
         public Guid ClubId { get; set; }

@@ -85,18 +85,18 @@ namespace MatchPoint.ClubService.Controllers
         public async Task<ActionResult<Club>> PostClubAsync(Club club, CancellationToken cancellationToken)
         {
             _logger.LogInformation(
-                "Received POST request to CREATE club with name: {clubName}, email: {clubEmail}",
+                "Received POST request to CREATE club with name: {ClubName}, email: {ClubEmail}",
                 club.Name, club.Email);
             var result = await _clubService.CreateAsync(club.ToClubEntity(), cancellationToken);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning(
-                    "Failed to create club with name: {clubName}, email: {clubEmail}. Error: {Error}",
+                    "Failed to create club with name: {ClubName}, email: {ClubEmail}. Error: {Error}",
                     club.Name, club.Email, result.Error);
                 return result.ToFailureActionResult(this);
             }
             _logger.LogInformation(
-                "Successfully created club with ID: {Id}, name: {clubName}, email: {clubEmail}",
+                "Successfully created club with ID: {Id}, name: {ClubName}, email: {ClubEmail}",
                 result.Data.Id, result.Data.Name, result.Data.Email);
 
             var apiVersion = HttpContext.GetRequestedApiVersion()?.ToString();

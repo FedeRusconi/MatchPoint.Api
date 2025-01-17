@@ -1,5 +1,4 @@
 ﻿using MatchPoint.AccessControlService.Entities;
-using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Infrastructure.Interfaces;
 

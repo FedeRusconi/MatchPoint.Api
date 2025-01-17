@@ -83,6 +83,19 @@ namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
         }
 
         /// <summary>
+        /// Set the tracking fields (crated, modified) for the <see cref="CustomRoleEntity"/>.
+        /// <returns> This <see cref="CustomRoleEntityBuilder"/>. </returns>
+        public CustomRoleEntityBuilder WithTrackingFields()
+        {
+            var faker = new Faker();
+            _customRoleEntity.CreatedBy = Guid.NewGuid();
+            _customRoleEntity.CreatedOnUtc = faker.Date.Past();
+            _customRoleEntity.ModifiedBy = Guid.NewGuid();
+            _customRoleEntity.ModifiedOnUtc = faker.Date.Past();
+            return this;
+        }
+
+        /// <summary>
         /// Complete the build operation for a random <see cref="CustomRoleEntity"/>.
         /// </summary>
         /// <returns> The built <see cref="CustomRoleEntity"/>. </returns>
