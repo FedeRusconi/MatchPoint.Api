@@ -35,7 +35,7 @@ namespace MatchPoint.AccessControlService.Controllers
             _logger.LogInformation(
                 "Successfully found {totalCount} custom roles", result.Data.Count());
 
-            return Ok(result.Data.ToCustomRoleDtoEnumerable());
+            return result.Data.ToCustomRoleDtoEnumerable().ToList();
         }
 
         // GET: api/v1/customRoles/[guid]

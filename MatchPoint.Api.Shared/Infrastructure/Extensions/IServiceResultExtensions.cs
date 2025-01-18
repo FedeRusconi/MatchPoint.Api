@@ -12,7 +12,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Extensions
             return serviceResult.ResultType switch
             {
                 ServiceResultType.BadRequest => controller.BadRequest(serviceResult.Error),
-                ServiceResultType.Unauthorized => controller.Unauthorized(serviceResult.Error),
+                ServiceResultType.Unauthorized => controller.Unauthorized(),
                 ServiceResultType.Forbidden => controller.Forbid(serviceResult.Error),
                 ServiceResultType.NotFound => controller.NotFound(serviceResult.Error),
                 ServiceResultType.Conflict => controller.Conflict(serviceResult.Error),
