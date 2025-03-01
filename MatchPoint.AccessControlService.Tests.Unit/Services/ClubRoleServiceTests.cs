@@ -20,6 +20,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         private Mock<ILogger<ClubRoleService>> _loggerMock = default!;
         private ClubRoleEntityBuilder _clubRoleEntityBuilder = default!;
         private ClubRoleService _clubRoleService = default!;
+        private readonly Guid _clubId = Guid.NewGuid();
         private CancellationToken _cancellationToken = default!;
 
         [TestInitialize]
@@ -41,14 +42,14 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task GetByIdAsync_WhenIdIsValid_ShouldReturnSuccessResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
 
             _clubRoleRepositoryMock.Setup(repo => repo.GetByIdAsync(clubRoleEntity.Id, _cancellationToken, It.IsAny<bool>()))
                 .ReturnsAsync(clubRoleEntity)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.GetByIdAsync(clubRoleEntity.Id, _cancellationToken);
+            var result = await _clubRoleService.GetByIdAsync(_clubId, clubRoleEntity.Id, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -67,13 +68,36 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                 .ReturnsAsync((ClubRoleEntity?)null);
 
             // Act
-            var result = await _clubRoleService.GetByIdAsync(clubRoleId, _cancellationToken);
+            var result = await _clubRoleService.GetByIdAsync(_clubId, clubRoleId, _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.NotFound, result.ResultType);
+        }
+
+        [TestMethod]
+        public async Task GetByIdAsync_WithClubIdMismatch_ShouldReturnFailResult()
+        {
+            // Arrange
+            // Assign a different club id for the test
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(Guid.NewGuid()).Build();
+
+            _clubRoleRepositoryMock
+                .Setup(repo => repo.GetByIdAsync(clubRoleEntity.Id, _cancellationToken, false))
+                .ReturnsAsync(clubRoleEntity)
+                .Verifiable(Times.Once);
+
+            // Act
+            var result = await _clubRoleService.GetByIdAsync(_clubId, clubRoleEntity.Id, _cancellationToken);
+
+            // Assert
+            _clubRoleRepositoryMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
         }
 
         #endregion
@@ -86,7 +110,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             // Arrange
             int pageNumber = 3;
             int pageSize = 10;
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
             PagedResponse<ClubRoleEntity> expectedResponse = new()
             {
                 CurrentPage = pageNumber,
@@ -96,12 +120,14 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             };
 
             _clubRoleRepositoryMock
-                .Setup(repo => repo.GetAllWithSpecificationAsync(pageNumber, pageSize, _cancellationToken, null, null, false))
+                .Setup(repo => repo.GetAllWithSpecificationAsync(
+                    pageNumber, pageSize, _cancellationToken, It.IsAny<Dictionary<string, string>>(), null, false))
                 .ReturnsAsync(expectedResponse)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.GetAllWithSpecificationAsync(pageNumber, pageSize, _cancellationToken);
+            var result = await _clubRoleService.GetAllWithSpecificationAsync(
+                _clubId, pageNumber, pageSize, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -115,11 +141,10 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenFiltersAreProvided_ShouldCallRepoMethodWithFiltersAndReturnSuccessResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
             Dictionary<string, string> filters = new()
             {
                 { nameof(ClubRoleEntity.Name), "Test" },
-                { nameof(ClubRoleEntity.ClubId), Guid.NewGuid().ToString() },
                 { nameof(ClubRoleEntity.ActiveStatus), ActiveStatus.Active.ToString() }
             };
             PagedResponse<ClubRoleEntity> expectedResponse = new()
@@ -142,7 +167,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
 
             // Act
             var result = await _clubRoleService.GetAllWithSpecificationAsync(
-                1, 500, filters: filters, cancellationToken: _cancellationToken);
+                _clubId, 1, 500, filters: filters, cancellationToken: _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -156,7 +181,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenSortingIsProvided_ShouldCallRepoMethodWithSortingAndReturnSuccessResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
             Dictionary<string, SortDirection> orderBy = new()
             {
                 { nameof(ClubRoleEntity.Name), SortDirection.Descending }
@@ -173,7 +198,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                     It.IsAny<int>(),
                     It.IsAny<int>(),
                     _cancellationToken,
-                    null,
+                    It.IsAny<Dictionary<string, string>>(),
                     orderBy,
                     false))
                 .ReturnsAsync(expectedResponse)
@@ -181,7 +206,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
 
             // Act
             var result = await _clubRoleService.GetAllWithSpecificationAsync(
-                1, 500, orderBy: orderBy, cancellationToken: _cancellationToken);
+                _clubId, 1, 500, orderBy: orderBy, cancellationToken: _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -198,7 +223,8 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenPagingIsInvalid_ShouldReturnFailResult(int pageNumber, int pageSize)
         {
             // Act
-            var result = await _clubRoleService.GetAllWithSpecificationAsync(pageNumber, pageSize, _cancellationToken);
+            var result = await _clubRoleService.GetAllWithSpecificationAsync(
+                _clubId, pageNumber, pageSize, _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -218,7 +244,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
 
             // Act
             var result = await _clubRoleService.GetAllWithSpecificationAsync(
-                1, 500, filters: filters, cancellationToken: _cancellationToken);
+                _clubId, 1, 500, filters: filters, cancellationToken: _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -238,7 +264,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
 
             // Act
             var result = await _clubRoleService.GetAllWithSpecificationAsync(
-                1, 500, orderBy: orderBy, cancellationToken: _cancellationToken);
+                _clubId, 1, 500, orderBy: orderBy, cancellationToken: _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -269,7 +295,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.CreateAsync(clubRoleEntity, _cancellationToken);
+            var result = await _clubRoleService.CreateAsync(_clubId, clubRoleEntity, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -277,6 +303,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);
             Assert.AreEqual(clubRoleEntity.Name, result.Data.Name);
+            Assert.AreEqual(_clubId, result.Data.ClubId);
             Assert.AreNotEqual(default, result.Data.CreatedBy);
             Assert.AreNotEqual(default, result.Data.CreatedOnUtc);
         }
@@ -285,14 +312,14 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task CreateAsync_WhenClubRoleIdIsDuplicate_ShouldReturnFailResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
 
             _clubRoleRepositoryMock.Setup(repo => repo.CreateAsync(clubRoleEntity, _cancellationToken))
                 .ReturnsAsync((ClubRoleEntity?)null)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.CreateAsync(clubRoleEntity, _cancellationToken);
+            var result = await _clubRoleService.CreateAsync(_clubId, clubRoleEntity, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -306,7 +333,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task CreateAsync_WhenClubRoleNameIsDuplicate_ShouldReturnFailResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
             var countFilters = new Dictionary<string, string>()
             {
                 { nameof(ClubRoleEntity.Name), clubRoleEntity.Name }
@@ -317,7 +344,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.CreateAsync(clubRoleEntity, _cancellationToken);
+            var result = await _clubRoleService.CreateAsync(_clubId, clubRoleEntity, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -335,7 +362,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
 
             // Act & Assert
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
-                () => _clubRoleService.CreateAsync(clubRoleEntity, _cancellationToken));
+                () => _clubRoleService.CreateAsync(_clubId, clubRoleEntity, _cancellationToken));
         }
 
         #endregion
@@ -346,14 +373,14 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task UpdateAsync_WhenClubRoleIsValid_ShouldSetTrackingUpdateAndReturnSuccessResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
 
             _clubRoleRepositoryMock.Setup(repo => repo.UpdateAsync(clubRoleEntity, _cancellationToken))
                 .ReturnsAsync(clubRoleEntity)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.UpdateAsync(clubRoleEntity, _cancellationToken);
+            var result = await _clubRoleService.UpdateAsync(_clubId, clubRoleEntity, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -361,6 +388,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);
             Assert.AreEqual(clubRoleEntity.Name, result.Data.Name);
+            Assert.AreEqual(_clubId, result.Data.ClubId);
             Assert.AreNotEqual(default, result.Data.ModifiedBy);
             Assert.AreNotEqual(default, result.Data.ModifiedOnUtc);
         }
@@ -369,14 +397,14 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task UpdateAsync_WhenClubRoleIsNotFound_ShouldReturnFailResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
 
             _clubRoleRepositoryMock.Setup(repo => repo.UpdateAsync(clubRoleEntity, _cancellationToken))
                 .ReturnsAsync((ClubRoleEntity?)null)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.UpdateAsync(clubRoleEntity, _cancellationToken);
+            var result = await _clubRoleService.UpdateAsync(_clubId, clubRoleEntity, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -394,7 +422,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
 
             // Act & Assert
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
-                () => _clubRoleService.UpdateAsync(clubRoleEntity, _cancellationToken));
+                () => _clubRoleService.UpdateAsync(_clubId, clubRoleEntity, _cancellationToken));
         }
 
         #endregion
@@ -405,7 +433,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task PatchAsync_WhenParametersAreValid_ShouldUpdateOnlySelectedAndTrackingPropertiesAndReturnSuccessResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
             string editedName = "This is an edited club role";
             var editedStatus = ActiveStatus.Inactive;
             List<PropertyUpdate> updates = [
@@ -421,7 +449,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                 .Verifiable(Times.Once); ;
 
             // Act
-            var result = await _clubRoleService.PatchAsync(clubRoleEntity.Id, updates, _cancellationToken);
+            var result = await _clubRoleService.PatchAsync(_clubId, clubRoleEntity.Id, updates, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -446,7 +474,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.PatchAsync(clubRoleId, updates, _cancellationToken);
+            var result = await _clubRoleService.PatchAsync(_clubId, clubRoleId, updates, _cancellationToken);
 
             // Assert
             Assert.IsNotNull(result);
@@ -459,7 +487,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task PatchAsync_WhenPropertyUpdatesAreInvalid_ShouldReturnFailResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
             List<PropertyUpdate> updates = [
                 new PropertyUpdate("Invalid Property", "Value")
             ];
@@ -469,7 +497,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.PatchAsync(clubRoleEntity.Id, updates, _cancellationToken);
+            var result = await _clubRoleService.PatchAsync(_clubId, clubRoleEntity.Id, updates, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -483,7 +511,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task PatchAsync_WhenRepoReturnsNull_ShouldReturnFailResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
             string editedName = "This is an edited club role";
             var editedStatus = ActiveStatus.Inactive;
             List<PropertyUpdate> updates = [
@@ -499,7 +527,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                 .Verifiable(Times.Once); ;
 
             // Act
-            var result = await _clubRoleService.PatchAsync(clubRoleEntity.Id, updates, _cancellationToken);
+            var result = await _clubRoleService.PatchAsync(_clubId, clubRoleEntity.Id, updates, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -507,6 +535,34 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.NotFound, result.ResultType);
+        }
+
+        [TestMethod]
+        public async Task PatchAsync_WhenClubIdMismatch_ShouldReturnFailResult()
+        {
+            // Arrange
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(Guid.NewGuid()).Build();
+            string editedName = "This is an edited club role";
+            var editedStatus = ActiveStatus.Inactive;
+            List<PropertyUpdate> updates = [
+                new PropertyUpdate(nameof(clubRoleEntity.Name), editedName),
+                new PropertyUpdate(nameof(clubRoleEntity.ActiveStatus), editedStatus)
+            ];
+
+            _clubRoleRepositoryMock.Setup(repo => repo.GetByIdAsync(clubRoleEntity.Id, _cancellationToken, false))
+                .ReturnsAsync(clubRoleEntity)
+                .Verifiable(Times.Once);
+
+            // Act
+            var result = await _clubRoleService.PatchAsync(
+                _clubId, clubRoleEntity.Id, updates, _cancellationToken);
+
+            // Assert
+            _clubRoleRepositoryMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
         }
 
         [TestMethod]
@@ -518,7 +574,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
 
             // Act & Assert
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
-                () => _clubRoleService.PatchAsync(clubRoleId, updates, _cancellationToken));
+                () => _clubRoleService.PatchAsync(_clubId, clubRoleId, updates, _cancellationToken));
         }
 
         #endregion
@@ -529,7 +585,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task DeleteAsync_WhenIdIsValid_ShouldReturnSuccessResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
 
             _clubRoleRepositoryMock.Setup(repo => repo.GetByIdAsync(clubRoleEntity.Id, _cancellationToken, true))
                 .ReturnsAsync(clubRoleEntity)
@@ -539,7 +595,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.DeleteAsync(clubRoleEntity.Id, _cancellationToken);
+            var result = await _clubRoleService.DeleteAsync(_clubId, clubRoleEntity.Id, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -554,14 +610,14 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task DeleteAsync_WhenClubRoleIsNotFound_ShouldReturnFailResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
 
             _clubRoleRepositoryMock.Setup(repo => repo.GetByIdAsync(clubRoleEntity.Id, _cancellationToken, true))
                 .ReturnsAsync((ClubRoleEntity?)null)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.DeleteAsync(clubRoleEntity.Id, _cancellationToken);
+            var result = await _clubRoleService.DeleteAsync(_clubId, clubRoleEntity.Id, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -575,7 +631,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         public async Task DeleteAsync_WhenDeleteReturnsNull_ShouldReturnFailResult()
         {
             // Arrange
-            var clubRoleEntity = _clubRoleEntityBuilder.Build();
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(_clubId).Build();
 
             _clubRoleRepositoryMock.Setup(repo => repo.GetByIdAsync(clubRoleEntity.Id, _cancellationToken, true))
                 .ReturnsAsync(clubRoleEntity)
@@ -585,7 +641,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _clubRoleService.DeleteAsync(clubRoleEntity.Id, _cancellationToken);
+            var result = await _clubRoleService.DeleteAsync(_clubId, clubRoleEntity.Id, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
@@ -593,6 +649,27 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             Assert.IsNull(result.Data);
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(ServiceResultType.NotFound, result.ResultType);
+        }
+
+        [TestMethod]
+        public async Task DeleteAsync_WhenClubIdMismatch_ShouldReturnFailResult()
+        {
+            // Arrange
+            var clubRoleEntity = _clubRoleEntityBuilder.WithClubId(Guid.NewGuid()).Build();
+
+            _clubRoleRepositoryMock.Setup(repo => repo.GetByIdAsync(clubRoleEntity.Id, _cancellationToken, true))
+                .ReturnsAsync(clubRoleEntity)
+                .Verifiable(Times.Once);
+
+            // Act
+            var result = await _clubRoleService.DeleteAsync(_clubId, clubRoleEntity.Id, _cancellationToken);
+
+            // Assert
+            _clubRoleRepositoryMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
         }
 
         #endregion

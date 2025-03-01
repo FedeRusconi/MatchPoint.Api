@@ -16,7 +16,7 @@ namespace MatchPoint.AccessControlService.Services
         ILogger<ClubRoleService> _logger) : IClubRoleService
     {
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubRoleEntity>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<IServiceResult<ClubRoleEntity>> GetByIdAsync(Guid clubId, Guid id, CancellationToken cancellationToken)
         {
             _logger.LogDebug("Attempting to retrieve club role with ID: {Id}", id);
 
@@ -27,12 +27,28 @@ namespace MatchPoint.AccessControlService.Services
                 return ServiceResult<ClubRoleEntity>.Failure(
                     $"Club role with id '{id}' was not found.", ServiceResultType.NotFound);
             }
+            if (clubRoleEntity.ClubId != clubId)
+            {
+                _logger.LogWarning(
+                    "Bad Request: ClubId of club role with ID: {Id} does not match provided '{clubId}'",
+                    id,
+                    clubId);
+                return ServiceResult<ClubRoleEntity>.Failure(
+                    $"ClubId of club role with id '{id}' does not match provided '{clubId}'.",
+                    ServiceResultType.BadRequest);
+            }
             _logger.LogDebug("Club role with ID: {Id} found successfully", id);
             return ServiceResult<ClubRoleEntity>.Success(clubRoleEntity);
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<PagedResponse<ClubRoleEntity>>> GetAllWithSpecificationAsync(int pageNumber, int pageSize, CancellationToken cancellationToken, Dictionary<string, string>? filters = null, Dictionary<string, SortDirection>? orderBy = null)
+        public async Task<IServiceResult<PagedResponse<ClubRoleEntity>>> GetAllWithSpecificationAsync(
+            Guid clubId, 
+            int pageNumber, 
+            int pageSize, 
+            CancellationToken cancellationToken, 
+            Dictionary<string, string>? filters = null, 
+            Dictionary<string, SortDirection>? orderBy = null)
         {
             // Validate params
             var paginationValidation = QuerySpecificationHelpers.ValidatePagination<ClubRoleEntity>(pageNumber, pageSize);
@@ -47,6 +63,9 @@ namespace MatchPoint.AccessControlService.Services
             _logger.LogDebug(
                 "Attempting to retrieve club roles with {Count} filters", filters != null ? filters.Count : "no");
 
+            // Filter for club id is added automatically
+            filters ??= [];
+            filters.Add(nameof(ClubRoleEntity.ClubId), clubId.ToString());
             var clubRoles = await _clubRoleRepository.GetAllWithSpecificationAsync(
                     pageNumber, pageSize, cancellationToken, filters, orderBy, trackChanges: false);
 
@@ -56,7 +75,8 @@ namespace MatchPoint.AccessControlService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubRoleEntity>> CreateAsync(ClubRoleEntity clubRoleEntity, CancellationToken cancellationToken)
+        public async Task<IServiceResult<ClubRoleEntity>> CreateAsync(
+            Guid clubId, ClubRoleEntity clubRoleEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubRoleEntity);
 
@@ -72,7 +92,8 @@ namespace MatchPoint.AccessControlService.Services
                     "A club role with the same name was found. Operation Canceled.", ServiceResultType.Conflict);
             }
 
-            // Set "Created" tracking fields
+            // Set ClubId and "Created" tracking fields
+            clubRoleEntity.ClubId = clubId;
             clubRoleEntity.SetTrackingFields(_sessionService.CurrentUserId);
 
             var createdEntity = await _clubRoleRepository.CreateAsync(clubRoleEntity, cancellationToken);
@@ -89,13 +110,15 @@ namespace MatchPoint.AccessControlService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubRoleEntity>> UpdateAsync(ClubRoleEntity clubRoleEntity, CancellationToken cancellationToken)
+        public async Task<IServiceResult<ClubRoleEntity>> UpdateAsync(
+            Guid clubId, ClubRoleEntity clubRoleEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubRoleEntity);
 
             _logger.LogDebug("Attempting to update club role with Id: {Id}", clubRoleEntity.Id);
 
-            // Set "Modifed" tracking fields
+            // Set ClubId and "Modifed" tracking fields
+            clubRoleEntity.ClubId = clubId;
             clubRoleEntity.SetTrackingFields(_sessionService.CurrentUserId, updating: true);
 
             var updatedEntity = await _clubRoleRepository.UpdateAsync(clubRoleEntity, cancellationToken);
@@ -112,7 +135,8 @@ namespace MatchPoint.AccessControlService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubRoleEntity>> PatchAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
+        public async Task<IServiceResult<ClubRoleEntity>> PatchAsync(
+            Guid clubId, Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(propertyUpdates);
 
@@ -125,6 +149,16 @@ namespace MatchPoint.AccessControlService.Services
                 _logger.LogWarning("Not Found: Club role with Id '{Id}' not found.", id);
                 return ServiceResult<ClubRoleEntity>.Failure(
                     $"Club role with id '{id}' was not found.", ServiceResultType.NotFound);
+            }
+            if (clubRoleEntity.ClubId != clubId)
+            {
+                _logger.LogWarning(
+                    "Bad Request: ClubId of club role with ID: {Id} does not match provided '{ClubId}'",
+                    id,
+                    clubId);
+                return ServiceResult<ClubRoleEntity>.Failure(
+                    $"ClubId of club role with id '{id}' does not match provided '{clubId}'.",
+                    ServiceResultType.BadRequest);
             }
 
             // Update
@@ -153,8 +187,11 @@ namespace MatchPoint.AccessControlService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<ClubRoleEntity>> DeleteAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<IServiceResult<ClubRoleEntity>> DeleteAsync(
+            Guid clubId, Guid id, CancellationToken cancellationToken)
         {
+            _logger.LogDebug("Attempting to delete club role with Id: {Id}", id);
+
             var clubRoleEntity = await _clubRoleRepository.GetByIdAsync(id, cancellationToken);
             if (clubRoleEntity == null)
             {
@@ -162,8 +199,17 @@ namespace MatchPoint.AccessControlService.Services
                 return ServiceResult<ClubRoleEntity>.Failure(
                     $"Club role with id '{id}' was not found.", ServiceResultType.NotFound);
             }
+            if (clubRoleEntity.ClubId != clubId)
+            {
+                _logger.LogWarning(
+                    "Bad Request: ClubId of club role with ID: {Id} does not match provided '{ClubId}'",
+                    id,
+                    clubId);
+                return ServiceResult<ClubRoleEntity>.Failure(
+                    $"ClubId of club role with id '{id}' does not match provided '{clubId}'.",
+                    ServiceResultType.BadRequest);
+            }
 
-            _logger.LogDebug("Attempting to delete club role with Id: {Id}", id);
             var deletedEntity = await _clubRoleRepository.DeleteAsync(clubRoleEntity, cancellationToken);
             if (deletedEntity == null)
             {

@@ -38,7 +38,7 @@ namespace MatchPoint.ClubService.Services
                     id,
                     clubId);
                 return ServiceResult<ClubStaffEntity>.Failure(
-                    $"ClubID of club staff with id '{id}' does not match provided '{clubId}'.", 
+                    $"ClubId of club staff with id '{id}' does not match provided '{clubId}'.", 
                     ServiceResultType.BadRequest);
             }
 
@@ -74,7 +74,7 @@ namespace MatchPoint.ClubService.Services
             var clubStaff = await _clubStaffRepository.GetAllWithSpecificationAsync(
                     pageNumber, pageSize, cancellationToken, filters, orderBy, trackChanges: false);
 
-            _logger.LogDebug("Receieved {PageSize} of {Count} Club staff found.", clubStaff.Data.Count(), clubStaff.TotalCount);
+            _logger.LogDebug("Received {PageSize} of {Count} Club staff found.", clubStaff.Data.Count(), clubStaff.TotalCount);
 
             return ServiceResult<PagedResponse<ClubStaffEntity>>.Success(clubStaff);
         }
@@ -178,7 +178,7 @@ namespace MatchPoint.ClubService.Services
                     id,
                     clubId);
                 return ServiceResult<ClubStaffEntity>.Failure(
-                    $"ClubID of club staff with id '{id}' does not match provided '{clubId}'.",
+                    $"ClubId of club staff with id '{id}' does not match provided '{clubId}'.",
                     ServiceResultType.BadRequest);
             }
 

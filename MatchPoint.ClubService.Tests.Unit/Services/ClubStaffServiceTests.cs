@@ -125,7 +125,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             int pageNumber = 3;
             int pageSize = 10;
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             PagedResponse<ClubStaffEntity> expectedResponse = new()
             {
                 CurrentPage = pageNumber,
@@ -156,7 +156,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenFiltersAreProvided_ShouldCallRepoMethodWithFiltersAndReturnSuccessResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             Dictionary<string, string> filters = new()
             {
                 { nameof(ClubStaffEntity.FirstName), "Test" },
@@ -197,7 +197,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenSortingIsProvided_ShouldCallRepoMethodWithSortingAndReturnSuccessResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             Dictionary<string, SortDirection> orderBy = new()
             {
                 { nameof(ClubStaffEntity.FirstName), SortDirection.Descending }
@@ -325,6 +325,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);
             Assert.AreEqual(clubStaffEntity.Email, result.Data.Email);
+            Assert.AreEqual(_clubId, result.Data.ClubId);
             Assert.AreNotEqual(default, result.Data.CreatedBy);
             Assert.AreNotEqual(default, result.Data.CreatedOnUtc);
         }
@@ -363,7 +364,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task CreateAsync_WhenClubStaffEmailIsDuplicate_ShouldReturnFailResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             var countFilters = new Dictionary<string, string>()
             {
                 { nameof(ClubStaffEntity.Email), clubStaffEntity.Email }

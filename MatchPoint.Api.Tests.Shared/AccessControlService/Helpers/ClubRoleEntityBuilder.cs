@@ -49,6 +49,17 @@ namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
         }
 
         /// <summary>
+        /// Set a specific ClubId to the <see cref="ClubRoleEntity"/>.
+        /// </summary>
+        /// <param name="id"> The id to use. </param>
+        /// <returns> This <see cref="ClubRoleEntityBuilder"/>. </returns>
+        public ClubRoleEntityBuilder WithClubId(Guid id)
+        {
+            _clubRoleEntity.ClubId = id;
+            return this;
+        }
+
+        /// <summary>
         /// Set a specific Name to the <see cref="ClubRoleEntity"/>.
         /// </summary>
         /// <param name="name"> The name to use. </param>

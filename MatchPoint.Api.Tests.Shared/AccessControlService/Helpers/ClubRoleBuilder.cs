@@ -1,9 +1,7 @@
 ﻿using Bogus;
 using MatchPoint.Api.Shared.AccessControlService.Enums;
-using MatchPoint.Api.Shared.AccessControlService.Interfaces;
 using MatchPoint.Api.Shared.AccessControlService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
-using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 
 namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
 {
@@ -46,6 +44,17 @@ namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
         public ClubRoleBuilder WithDefaultId()
         {
             _clubRole.Id = default;
+            return this;
+        }
+
+        /// <summary>
+        /// Set a specific ClubId to the <see cref="ClubRole"/>.
+        /// </summary>
+        /// <param name="id"> The id to use. </param>
+        /// <returns> This <see cref="ClubRoleBuilder"/>. </returns>
+        public ClubRoleBuilder WithClubId(Guid id)
+        {
+            _clubRole.ClubId = id;
             return this;
         }
 
