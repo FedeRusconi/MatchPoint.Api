@@ -6,12 +6,6 @@ namespace MatchPoint.ClubService.Interfaces
     public interface IAzureAdService
     {
         /// <summary>
-        /// The <see cref="Guid"/> of the user sending the request. 
-        /// This is based on Token claims.
-        /// </summary>
-        Guid CurrentUserId { get; }
-
-        /// <summary>
         /// Get an instance of <see cref="GraphServiceClient"/>.
         /// </summary>
         /// <param name="scopes"> Any necessary scopes. If null, the .defaul scopes for ms graph will be requested. </param>

@@ -8,6 +8,7 @@ using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
+using MatchPoint.ServiceDefaults;
 using Microsoft.Graph.Models;
 
 namespace MatchPoint.ClubService.Services
@@ -16,6 +17,7 @@ namespace MatchPoint.ClubService.Services
         IClubStaffRepository _clubStaffRepository,
         IAzureAdService _azureAdService,
         IAzureAdUserFactory _azureAdUserFactory,
+        ISessionService _sessionService,
         IConfiguration _configuration,        
         ILogger<ClubStaffService> _logger) : IClubStaffService
     {
@@ -133,7 +135,7 @@ namespace MatchPoint.ClubService.Services
 
             // Set Id and "Created" tracking fields
             clubStaffEntity.Id = Guid.Parse(azureAdUser.Id!);
-            clubStaffEntity.SetTrackingFields(_azureAdService.CurrentUserId);
+            clubStaffEntity.SetTrackingFields(_sessionService.CurrentUserId);
             clubStaffEntity.ClubId = clubId;
 
             // Create in db
@@ -185,7 +187,7 @@ namespace MatchPoint.ClubService.Services
             try
             {
                 clubStaffEntity.Patch(propertyUpdates);
-                clubStaffEntity.SetTrackingFields(_azureAdService.CurrentUserId, updating: true);
+                clubStaffEntity.SetTrackingFields(_sessionService.CurrentUserId, updating: true);
             }
             catch (ArgumentException ex)
             {

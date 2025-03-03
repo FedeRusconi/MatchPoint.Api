@@ -9,6 +9,7 @@ using MatchPoint.ClubService.Infrastructure.Data.Factories;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
 using MatchPoint.ClubService.Services;
+using MatchPoint.ServiceDefaults;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
@@ -22,6 +23,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
     {
         private Mock<IClubStaffRepository> _clubStaffRepositoryMock = default!;
         private Mock<IAzureAdService> _azureAdServiceMock = default!;
+        private Mock<ISessionService> _sessionServiceMock = default!;
         private Mock<ILogger<ClubStaffService>> _loggerMock = default!;
         private IAzureAdUserFactory _azureAdUserFactory = default!;
         private readonly IConfiguration _configuration = DataContextHelpers.TestingConfiguration;
@@ -35,6 +37,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         {
             _clubStaffRepositoryMock = new();
             _azureAdServiceMock = new();
+            _sessionServiceMock = new();
             _loggerMock = new();
             _azureAdUserFactory = new AzureAdUserFactory();
             _clubStaffEntityBuilder = new();
@@ -42,11 +45,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 _clubStaffRepositoryMock.Object,
                 _azureAdServiceMock.Object,
                 _azureAdUserFactory,
+                _sessionServiceMock.Object,
                 _configuration,
                 _loggerMock.Object);
             _cancellationToken = new CancellationToken();
 
-            _azureAdServiceMock.SetupGet(s => s.CurrentUserId).Returns(Guid.NewGuid());
+            _sessionServiceMock.SetupGet(s => s.CurrentUserId).Returns(Guid.NewGuid());
         }
 
         #region GetByIdAsync

@@ -6,12 +6,13 @@ using MatchPoint.Api.Shared.Infrastructure.Interfaces;
 using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Interfaces;
+using MatchPoint.ServiceDefaults;
 
 namespace MatchPoint.ClubService.Services
 {
     public class ClubManagementService(
-        IClubRepository _clubRepository, 
-        IAzureAdService _azureAdService,
+        IClubRepository _clubRepository,
+        ISessionService _sessionService,
         ILogger<ClubManagementService> _logger) : IClubManagementService
     {
         /// <inheritdoc />
@@ -77,7 +78,7 @@ namespace MatchPoint.ClubService.Services
             }
 
             // Set "Created" tracking fields
-            clubEntity.SetTrackingFields(_azureAdService.CurrentUserId);
+            clubEntity.SetTrackingFields(_sessionService.CurrentUserId);
 
             var createdEntity = await _clubRepository.CreateAsync(clubEntity, cancellationToken);
             if (createdEntity == null)
@@ -100,7 +101,7 @@ namespace MatchPoint.ClubService.Services
             _logger.LogDebug("Attempting to update club with Id: {Id}", clubEntity.Id);
 
             // Set "Modifed" tracking fields
-            clubEntity.SetTrackingFields(_azureAdService.CurrentUserId, updating: true);
+            clubEntity.SetTrackingFields(_sessionService.CurrentUserId, updating: true);
 
             var updatedEntity = await _clubRepository.UpdateAsync(clubEntity, cancellationToken);
             if (updatedEntity == null)
@@ -135,7 +136,7 @@ namespace MatchPoint.ClubService.Services
             try
             {
                 clubEntity.Patch(propertyUpdates);
-                clubEntity.SetTrackingFields(_azureAdService.CurrentUserId, updating: true);
+                clubEntity.SetTrackingFields(_sessionService.CurrentUserId, updating: true);
             } 
             catch (ArgumentException ex)
             {
