@@ -172,7 +172,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
 
             try
             {
-                // First create test clubs
+                // First create test club staff
                 _dbContext.ClubStaff.Add(clubStaffEntity2);
                 _dbContext.ClubStaff.Add(clubStaffEntity1);
                 _dbContext.ClubStaff.Add(clubStaffEntity3);

@@ -5,7 +5,6 @@ using MatchPoint.AccessControlService.Infrastructure.Data;
 using MatchPoint.AccessControlService.Mappers;
 using MatchPoint.AccessControlService.Tests.Integration.Helpers;
 using MatchPoint.Api.Shared.AccessControlService.Models;
-using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Tests.Shared.AccessControlService.Helpers;
@@ -171,7 +170,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
 
             // Act
             var result = await _httpClient.GetAsync(
-                $"api/v{AccessControlServiceEndpoints.CurrentVersion} /customRoles/{customRoleId}");
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRoleId}");
 
             // Assert
             Assert.IsNotNull(result);
@@ -244,7 +243,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
 
             // Act
             var result = await _httpClient.PostAsJsonAsync(
-                $"api/v{AccessControlServiceEndpoints.CurrentVersion} /customRoles", customRole);
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles", customRole);
 
             // Assert
             Assert.IsNotNull(result);
@@ -260,7 +259,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
 
             // Act
             var result = await _httpClient.PostAsJsonAsync(
-                $"api/v{AccessControlServiceEndpoints.CurrentVersion}  /customRoles", customRole);
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles", customRole);
 
             // Assert
             Assert.IsNotNull(result);
@@ -276,7 +275,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
 
             // Act
             var result = await _httpClient.PostAsJsonAsync(
-                $"api/v{AccessControlServiceEndpoints.CurrentVersion} /customRoles", customRole);
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles", customRole);
 
             // Assert
             Assert.IsNotNull(result);
@@ -349,7 +348,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
 
                 // Act
                 var result = await _httpClient.PutAsJsonAsync(
-                    $"api/v{AccessControlServiceEndpoints.CurrentVersion} /customRoles/{invalidCustomRoleId}", customRole);
+                    $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{invalidCustomRoleId}", customRole);
 
                 // Assert
                 Assert.IsNotNull(result);
@@ -478,7 +477,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             string updatedName = "New Custom Role Name";
             List<PropertyUpdate> updates = new()
             {
-                new() { Property = nameof(Club.Name), Value = updatedName }
+                new() { Property = nameof(CustomRole.Name), Value = updatedName }
             };
             try
             {

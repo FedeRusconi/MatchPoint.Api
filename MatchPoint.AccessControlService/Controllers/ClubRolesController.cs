@@ -171,7 +171,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // DELETE: api/v1/clubs/[guid]/roles/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("ClubRoles.Write")]
+        [RequiredScope("ClubRoles.Delete")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClubRoleAsync(Guid clubId, Guid id, CancellationToken cancellationToken)
         {
