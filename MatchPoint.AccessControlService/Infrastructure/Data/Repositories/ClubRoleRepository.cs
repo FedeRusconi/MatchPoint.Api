@@ -115,6 +115,8 @@ namespace MatchPoint.AccessControlService.Infrastructure.Data.Repositories
 
             _logger.LogTrace("Creating a new club role in the database with name {Name}", clubRoleEntity.Name);
 
+            clubRoleEntity.ModifiedBy = null;
+            clubRoleEntity.ModifiedOnUtc = null;
             _context.ClubRoles.Add(clubRoleEntity);
             try
             {
@@ -136,8 +138,21 @@ namespace MatchPoint.AccessControlService.Infrastructure.Data.Repositories
             ArgumentNullException.ThrowIfNull(clubRoleEntity);
 
             _logger.LogTrace("Updating club role in the database with Id {Id} ({Name})", clubRoleEntity.Id, clubRoleEntity.Name);
-            _context.ClubRoles.Attach(clubRoleEntity);
-            _context.Entry(clubRoleEntity).State = EntityState.Modified;
+
+            // Retrieve the existing entity first
+            var existingEntity = await _context.ClubRoles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == clubRoleEntity.Id, cancellationToken);
+            if (existingEntity == null)
+            {
+                _logger.LogWarning("No club role found in the database with ID: {Id}", clubRoleEntity.Id);
+                return null;
+            }
+
+            // Preserve properties that should not be updated
+            clubRoleEntity.CreatedBy = existingEntity.CreatedBy;
+            clubRoleEntity.CreatedOnUtc = existingEntity.CreatedOnUtc;
+            _context.ClubRoles.Update(clubRoleEntity);
 
             try
             {

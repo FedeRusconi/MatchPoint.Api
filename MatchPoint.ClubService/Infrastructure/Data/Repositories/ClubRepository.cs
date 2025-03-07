@@ -129,6 +129,8 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
 
             _logger.LogTrace("Creating a new club in the database with email {Email}", clubEntity.Email);
 
+            clubEntity.ModifiedBy = null;
+            clubEntity.ModifiedOnUtc = null;
             _context.Clubs.Add(clubEntity);
             if (!IsTransactionActive)
             {
@@ -161,8 +163,21 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             ArgumentNullException.ThrowIfNull(clubEntity);
 
             _logger.LogTrace("Updating club in the database with Id {Id} ({Email})", clubEntity.Id, clubEntity.Email);
-            _context.Clubs.Attach(clubEntity);
-            _context.Entry(clubEntity).State = EntityState.Modified;
+
+            // Retrieve the existing entity first
+            var existingEntity = await _context.Clubs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == clubEntity.Id, cancellationToken);
+            if (existingEntity == null)
+            {
+                _logger.LogWarning("No club found in the database with ID: {Id}", clubEntity.Id);
+                return null;
+            }
+
+            // Preserve properties that should not be updated
+            clubEntity.CreatedBy = existingEntity.CreatedBy;
+            clubEntity.CreatedOnUtc = existingEntity.CreatedOnUtc;
+            _context.Clubs.Update(clubEntity);
 
             if (!IsTransactionActive)
             {

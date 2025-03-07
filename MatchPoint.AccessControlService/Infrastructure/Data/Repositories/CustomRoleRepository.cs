@@ -78,6 +78,8 @@ namespace MatchPoint.AccessControlService.Infrastructure.Data.Repositories
 
             _logger.LogTrace("Creating a new custom role in the database with name {Name}", customRoleEntity.Name);
 
+            customRoleEntity.ModifiedBy = null;
+            customRoleEntity.ModifiedOnUtc = null;
             _context.CustomRoles.Add(customRoleEntity);
             try
             {
@@ -99,8 +101,21 @@ namespace MatchPoint.AccessControlService.Infrastructure.Data.Repositories
             ArgumentNullException.ThrowIfNull(customRoleEntity);
 
             _logger.LogTrace("Updating custom role in the database with Id {Id} ({Name})", customRoleEntity.Id, customRoleEntity.Name);
-            _context.CustomRoles.Attach(customRoleEntity);
-            _context.Entry(customRoleEntity).State = EntityState.Modified;
+
+            // Retrieve the existing entity first
+            var existingEntity = await _context.CustomRoles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == customRoleEntity.Id, cancellationToken);
+            if (existingEntity == null)
+            {
+                _logger.LogWarning("No custom role found in the database with ID: {Id}", customRoleEntity.Id);
+                return null;
+            }
+
+            // Preserve properties that should not be updated
+            customRoleEntity.CreatedBy = existingEntity.CreatedBy;
+            customRoleEntity.CreatedOnUtc = existingEntity.CreatedOnUtc;
+            _context.CustomRoles.Update(customRoleEntity);
 
             try
             {
