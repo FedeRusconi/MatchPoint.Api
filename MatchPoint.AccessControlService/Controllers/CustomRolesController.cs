@@ -4,6 +4,7 @@ using MatchPoint.AccessControlService.Mappers;
 using MatchPoint.Api.Shared.AccessControlService.Models;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Infrastructure.Extensions;
+using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web.Resource;
@@ -19,7 +20,7 @@ namespace MatchPoint.AccessControlService.Controllers
     {
         // GET: api/v1/customRoles
         [MapToApiVersion(1)]
-        [RequiredScope("CustomRoles.Read")]
+        [RequiredScope($"{Scopes.CustomRoles}.{Scopes.Read}")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CustomRole>>> GetCustomRolesAsync(CancellationToken cancellationToken)
         {
@@ -40,7 +41,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // GET: api/v1/customRoles/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("CustomRoles.Read")]
+        [RequiredScope($"{Scopes.CustomRoles}.{Scopes.Read}")]
         [HttpGet("{id:guid}", Name = nameof(GetCustomRoleAsync))]
         public async Task<ActionResult<CustomRole>> GetCustomRoleAsync(Guid id, CancellationToken cancellationToken)
         {
@@ -58,7 +59,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // POST: api/v1/customRoles
         [MapToApiVersion(1)]
-        [RequiredScope("CustomRoles.Write")]
+        [RequiredScope($"{Scopes.CustomRoles}.{Scopes.Write}")]
         [HttpPost]
         public async Task<ActionResult<CustomRole>> PostCustomRoleAsync(CustomRole customRole, CancellationToken cancellationToken)
         {
@@ -85,7 +86,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // PUT: api/v1/customRoles/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("CustomRoles.Write")]
+        [RequiredScope($"{Scopes.CustomRoles}.{Scopes.Write}")]
         [HttpPut("{id}")]
         public async Task<ActionResult<CustomRole>> PutCustomRoleAsync(Guid id, CustomRole customRole, CancellationToken cancellationToken)
         {
@@ -110,7 +111,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // PATCH: api/v1/customRoles/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("CustomRoles.Write")]
+        [RequiredScope($"{Scopes.CustomRoles}.{Scopes.Write}")]
         [HttpPatch("{id}")]
         public async Task<ActionResult<CustomRole>> PatchCustomRoleAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
         {
@@ -137,7 +138,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // DELETE: api/v1/customRoles/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("CustomRoles.Delete")]
+        [RequiredScope($"{Scopes.CustomRoles}.{Scopes.Delete}")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomRoleAsync(Guid id, CancellationToken cancellationToken)
         {

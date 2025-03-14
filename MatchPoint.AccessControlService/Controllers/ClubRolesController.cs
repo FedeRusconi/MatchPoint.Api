@@ -7,6 +7,7 @@ using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Extensions;
+using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web.Resource;
@@ -22,7 +23,7 @@ namespace MatchPoint.AccessControlService.Controllers
     {
         // GET: api/v1/clubs/[guid]/roles
         [MapToApiVersion(1)]
-        [RequiredScope("ClubRoles.Read")]
+        [RequiredScope($"{Scopes.ClubRoles}.{Scopes.Read}")]
         [HttpGet]
         public async Task<ActionResult<PagedResponse<ClubRole>>> GetClubRolesAsync(
             Guid clubId,
@@ -66,7 +67,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // GET: api/v1/clubs/[guid]/roles/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("ClubRoles.Read")]
+        [RequiredScope($"{Scopes.ClubRoles}.{Scopes.Read}")]
         [HttpGet("{id:guid}", Name = nameof(GetClubRoleAsync))]
         public async Task<ActionResult<ClubRole>> GetClubRoleAsync(Guid clubId, Guid id, CancellationToken cancellationToken)
         {
@@ -84,7 +85,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // POST: api/v1/clubs/[guid]/roles
         [MapToApiVersion(1)]
-        [RequiredScope("ClubRoles.Write")]
+        [RequiredScope($"{Scopes.ClubRoles}.{Scopes.Write}")]
         [HttpPost]
         public async Task<ActionResult<Club>> PostClubRoleAsync(Guid clubId, ClubRole clubRole, CancellationToken cancellationToken)
         {
@@ -113,7 +114,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // PUT: api/v1/clubs/[guid]/roles/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("ClubRoles.Write")]
+        [RequiredScope($"{Scopes.ClubRoles}.{Scopes.Write}")]
         [HttpPut("{id}")]
         public async Task<ActionResult<ClubRole>> PutClubRoleAsync(
             Guid clubId, Guid id, ClubRole clubRole, CancellationToken cancellationToken)
@@ -143,7 +144,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // PATCH: api/v1/clubs/[guid]/roles/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("ClubRoles.Write")]
+        [RequiredScope($"{Scopes.ClubRoles}.{Scopes.Write}")]
         [HttpPatch("{id}")]
         public async Task<ActionResult<ClubRole>> PatchClubRoleAsync(
             Guid clubId, Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
@@ -171,7 +172,7 @@ namespace MatchPoint.AccessControlService.Controllers
 
         // DELETE: api/v1/clubs/[guid]/roles/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("ClubRoles.Delete")]
+        [RequiredScope($"{Scopes.ClubRoles}.{Scopes.Delete}")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClubRoleAsync(Guid clubId, Guid id, CancellationToken cancellationToken)
         {

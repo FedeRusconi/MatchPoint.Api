@@ -4,6 +4,7 @@ using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Extensions;
+using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +22,7 @@ namespace MatchPoint.ClubService.Controllers
     {
         // GET: api/v1/clubs/[guid]/staff
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Read")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Read}")]
         [HttpGet]
         public async Task<ActionResult<PagedResponse<ClubStaff>>> GetClubStaffAsync(
             Guid clubId,
@@ -65,7 +66,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // GET: api/v1/clubs/[guid]/staff/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Read")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Read}")]
         [HttpGet("{id:guid}", Name = nameof(GetSingleClubStaffAsync))]
         public async Task<ActionResult<ClubStaff>> GetSingleClubStaffAsync(Guid clubId, Guid id, CancellationToken cancellationToken)
         {
@@ -83,7 +84,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // POST: api/v1/clubs/[guid]/staff
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Write")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Write}")]
         [HttpPost]
         public async Task<ActionResult<Club>> PostClubStaffAsync(Guid clubId, ClubStaff clubStaff, CancellationToken cancellationToken)
         {
@@ -112,7 +113,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // PATCH: api/v1/clubs/[guid]/staff/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Write")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Write}")]
         [HttpPatch("{id}")]
         public async Task<ActionResult<ClubStaff>> PatchClubStaffAsync(
             Guid clubId, Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
@@ -140,7 +141,7 @@ namespace MatchPoint.ClubService.Controllers
 
         // DELETE: api/v1/clubs/[guid]/staff/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Write")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Write}")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClubStaffAsync(Guid clubId, Guid id, CancellationToken cancellationToken)
         {
