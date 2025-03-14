@@ -1,8 +1,10 @@
 ﻿using Asp.Versioning;
+using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Common.Utilities;
+using MatchPoint.Api.Shared.Infrastructure.Attributes;
 using MatchPoint.Api.Shared.Infrastructure.Extensions;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
@@ -63,6 +65,7 @@ namespace MatchPoint.ClubService.Controllers
         // GET: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope("Clubs.Read")]
+        [RequireCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.ReadWriteDelete)]
         [HttpGet("{id:guid}", Name = nameof(GetClubAsync))]
         public async Task<ActionResult<Club>> GetClubAsync(Guid id, CancellationToken cancellationToken)
         {

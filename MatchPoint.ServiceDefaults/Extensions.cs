@@ -12,6 +12,7 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using MatchPoint.ServiceDefaults;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Microsoft.Extensions.Hosting
 {
@@ -34,6 +35,13 @@ namespace Microsoft.Extensions.Hosting
             builder.Services.AddLogging();
 
             builder.AddControllersWithOptions();
+            builder.AddHybridCache();
+            // Http client for AccessControlService
+            builder.Services.AddServiceDiscovery();
+            builder.Services.AddHttpClient("AccessControlService", client =>
+            {
+                client.BaseAddress = new Uri("http://matchpoint-accesscontrolservice");
+            }).AddServiceDiscovery();
 
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
@@ -54,6 +62,25 @@ namespace Microsoft.Extensions.Hosting
             // {
             //     options.AllowedSchemes = ["https"];
             // });
+
+            return builder;
+        }
+
+        private static TBuilder AddHybridCache<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+        {
+            builder.Services.AddHybridCache(options =>
+            {
+                // Maximum size of cached items
+                options.MaximumPayloadBytes = 1024 * 1024 * 10; // 10MB
+                options.MaximumKeyLength = 512;
+
+                // Default timeouts
+                options.DefaultEntryOptions = new HybridCacheEntryOptions
+                {
+                    Expiration = TimeSpan.FromMinutes(5),
+                    LocalCacheExpiration = TimeSpan.FromMinutes(5)
+                };
+            });
 
             return builder;
         }

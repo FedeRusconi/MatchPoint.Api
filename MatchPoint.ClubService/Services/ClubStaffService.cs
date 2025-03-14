@@ -198,7 +198,8 @@ namespace MatchPoint.ClubService.Services
             try
             {
                 // Update user is Azure AD
-                var updatedAdUser = _azureAdUserFactory.PatchedUser(propertyUpdates, id.ToString());
+                var updatedAdUser = _azureAdUserFactory.PatchedUser(
+                    propertyUpdates, id.ToString(), _configuration.GetValue<string>("AzureAdB2C:ExtenionsClientId"));
                 // Reset display name and mail nickname in case first or last name have changed
                 var givenName = updatedAdUser.GivenName ?? azureAdUser.GivenName;
                 var surname = updatedAdUser.Surname ?? azureAdUser.Surname;
