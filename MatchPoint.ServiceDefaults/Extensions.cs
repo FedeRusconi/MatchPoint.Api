@@ -36,12 +36,6 @@ namespace Microsoft.Extensions.Hosting
 
             builder.AddControllersWithOptions();
             builder.AddHybridCache();
-            // Http client for AccessControlService
-            builder.Services.AddServiceDiscovery();
-            builder.Services.AddHttpClient("AccessControlService", client =>
-            {
-                client.BaseAddress = new Uri("http://matchpoint-accesscontrolservice");
-            }).AddServiceDiscovery();
 
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
@@ -53,6 +47,11 @@ namespace Microsoft.Extensions.Hosting
 
                 // Turn on service discovery by default
                 http.AddServiceDiscovery();
+            });
+            // Http client for AccessControlService
+            builder.Services.AddHttpClient("AccessControlService", client =>
+            {
+                client.BaseAddress = new Uri("https+http://matchpoint-accesscontrolservice");
             });
 
             builder.Services.AddScoped<ISessionService, SessionService>();

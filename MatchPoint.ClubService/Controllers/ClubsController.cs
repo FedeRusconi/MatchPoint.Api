@@ -66,7 +66,7 @@ namespace MatchPoint.ClubService.Controllers
         // GET: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope($"{Scopes.Clubs}.{Scopes.Read}")]
-        [RequireCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.ReadWriteDelete)]
+        [RequiredCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.Read)]
         [HttpGet("{id:guid}", Name = nameof(GetClubAsync))]
         public async Task<ActionResult<Club>> GetClubAsync(Guid id, CancellationToken cancellationToken)
         {
