@@ -51,6 +51,11 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
         private readonly IHttpClientFactory _httpClientFactory = _context.HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
         private readonly HybridCache _hybridCache = _context.HttpContext.RequestServices.GetRequiredService<HybridCache>();
 
+        /// <summary>
+        /// NOTE: This method temporarily returns always False, to allow the other checks to happen.
+        /// This will be implemented when the admin app is built. 
+        /// Easiest option seem to be adding new custom attributes to Aure Ad b2c users for IsAdmin and IsSuperAdmin
+        /// </summary>
         /// <returns>
         /// <c>true</c> if current user is System Admin or SuperAdmin.
         /// </returns>
