@@ -4,7 +4,6 @@ using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
-using MatchPoint.ClubService.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -20,6 +19,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         private Mock<ILogger<ClubStaffRepository>> _loggerMock = default!;
 
         private ClubStaffEntityBuilder _clubStaffEntityBuilder = default!;
+        private CancellationToken _cancellationToken = default!;
 
         [TestInitialize]
         public void Setup()
@@ -28,6 +28,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             _loggerMock = new();
             _clubStaffRepository = new ClubStaffRepository(_dbContext, _loggerMock.Object);
             _clubStaffEntityBuilder = new();
+            _cancellationToken = new CancellationToken();
         }
 
         [TestCleanup]
@@ -41,7 +42,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         [TestMethod]
         public async Task CountAsync_WithNoFilters_ShouldReturnCountOfAllClubStaff()
         {
-            #region Arrange
+            // Arrange
             var clubStaffEntity1 = _clubStaffEntityBuilder.Build();
 
             _clubStaffEntityBuilder = new ClubStaffEntityBuilder();
@@ -52,36 +53,32 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1)
+                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2)
+                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity3 = await _clubStaffRepository.CreateAsync(clubStaffEntity3)
+                clubStaffEntity3 = await _clubStaffRepository.CreateAsync(clubStaffEntity3, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                #endregion
 
-                #region Act
-                var resultCount = await _clubStaffRepository.CountAsync();
-                #endregion
+                // Act
+                var resultCount = await _clubStaffRepository.CountAsync(_cancellationToken);
 
-                #region Assert
+                // Assert
                 Assert.AreEqual(3, resultCount);
-                #endregion
             }
             finally
             {
-                #region 
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity3);
-                #endregion
+                // Cleanup 
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity3, _cancellationToken);
             }
         }
 
         [TestMethod]
         public async Task CountAsync_WithValidFilters_ShouldReturnCountOfFilteredClubStaff()
         {
-            #region Arrange
+            // Arrange
             var searchClubId = Guid.NewGuid();
             var searchRoleId = Guid.NewGuid();
             var clubStaffEntity1 = _clubStaffEntityBuilder
@@ -115,32 +112,28 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1)
+                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2)
+                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity3 = await _clubStaffRepository.CreateAsync(clubStaffEntity3)
+                clubStaffEntity3 = await _clubStaffRepository.CreateAsync(clubStaffEntity3, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity4 = await _clubStaffRepository.CreateAsync(clubStaffEntity4)
+                clubStaffEntity4 = await _clubStaffRepository.CreateAsync(clubStaffEntity4, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                #endregion
 
-                #region Act
-                var resultCount = await _clubStaffRepository.CountAsync(filters);
-                #endregion
+                // Act
+                var resultCount = await _clubStaffRepository.CountAsync(_cancellationToken, filters);
 
-                #region Assert
+                // Assert
                 Assert.AreEqual(2, resultCount);
-                #endregion
             }
             finally
             {
-                #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity3);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity4);
-                #endregion
+                // Cleanup
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity3, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity4, _cancellationToken);
             }
         }
 
@@ -151,47 +144,41 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         [TestMethod]
         public async Task GetByIdAsync_WhenIdIsValid_ShouldReturnClubStaff()
         {
-            #region Arrange
+            // Arrange
             var clubStaffEntity = _clubStaffEntityBuilder.Build();
 
             try
             {
-                clubStaffEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity)
+                clubStaffEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                #endregion
 
-                #region Act
-                var result = await _clubStaffRepository.GetByIdAsync(clubStaffEntity.Id, trackChanges: false);
-                #endregion
+                // Act
+                var result = await _clubStaffRepository.GetByIdAsync(
+                    clubStaffEntity.Id, _cancellationToken, trackChanges: false);
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(clubStaffEntity.Id, result.Id);
                 Assert.AreEqual(clubStaffEntity.ClubId, result.ClubId);
-                #endregion
             }
             finally
             {
-                #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity);
-                #endregion
+                // Cleanup
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity, _cancellationToken);
             }
         }
 
         [TestMethod]
         public async Task GetByIdAsync_WhenIdDoesNotExist_ShouldReturnNull()
         {
-            #region Arrange
+            // Arrange
             Guid clubStaffId = Guid.NewGuid();
-            #endregion
 
-            #region Act
-            var result = await _clubStaffRepository.GetByIdAsync(clubStaffId);
-            #endregion
+            // Act
+            var result = await _clubStaffRepository.GetByIdAsync(clubStaffId, _cancellationToken);
 
-            #region Assert
+            // Assert
             Assert.IsNull(result);
-            #endregion
         }
 
         #endregion
@@ -201,7 +188,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         [TestMethod]
         public async Task GetAllWithSpecificationAsync_WithValidFilters_ShouldReturnFilteredClubStaff()
         {
-            #region Arrange
+            // Arrange
             var searchClubId = Guid.NewGuid();
             var searchRoleId = Guid.NewGuid();
             var clubStaffEntity1 = _clubStaffEntityBuilder
@@ -235,137 +222,125 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1)
+                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2)
+                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity3 = await _clubStaffRepository.CreateAsync(clubStaffEntity3)
+                clubStaffEntity3 = await _clubStaffRepository.CreateAsync(clubStaffEntity3, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity4 = await _clubStaffRepository.CreateAsync(clubStaffEntity4)
+                clubStaffEntity4 = await _clubStaffRepository.CreateAsync(clubStaffEntity4, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                #endregion
 
-                #region Act
+                // Act
                 var result = await _clubStaffRepository.GetAllWithSpecificationAsync(
-                    1, 10, filters: filters, trackChanges: false);
-                #endregion
+                    1, 10, _cancellationToken, filters: filters, trackChanges: false);
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(2, result.Data.Count());
                 Assert.AreEqual(2, result.TotalCount);
                 Assert.IsTrue(result.Data.All(c => c.ClubId == searchClubId && c.RoleId == searchRoleId));
-                #endregion
             }
             finally
             {
-                #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity3);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity4);
-                #endregion
+                // Cleanup
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity3, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity4, _cancellationToken);
             }
         }
 
         [TestMethod]
         public async Task GetAllWithSpecificationAsync_WithValidOrderingAscending_ShouldReturnOrderedClubStaff()
         {
-            #region Arrange
+            // Arrange
             Dictionary<string, SortDirection> orderBy = new() 
             { 
-                { nameof(ClubStaffEntity.RoleName), SortDirection.Ascending } 
+                { nameof(ClubStaffEntity.FirstName), SortDirection.Ascending } 
             };
             var clubStaffEntity1 = _clubStaffEntityBuilder
-                .WithRoleName("Integration Testing Club")
+                .WithName("Integration Testing Club")
                 .Build();
 
             _clubStaffEntityBuilder = new ClubStaffEntityBuilder();
             var clubStaffEntity2 = _clubStaffEntityBuilder
-                .WithRoleName("Another. This should come first.")
+                .WithName("Another. This should come first.")
                 .Build();
 
             try
             {
-                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1)
+                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2)
+                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                #endregion
 
-                #region Act
+                // Act
                 var result = await _clubStaffRepository.GetAllWithSpecificationAsync(
-                    1, 10, orderBy: orderBy, trackChanges: false);
-                #endregion
+                    1, 10, _cancellationToken, orderBy: orderBy, trackChanges: false);
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(2, result.Data.Count());
                 Assert.AreEqual(2, result.TotalCount);
-                Assert.IsTrue(result.Data.First().RoleName == clubStaffEntity2.RoleName);
-                Assert.IsTrue(result.Data.ElementAt(1).RoleName == clubStaffEntity1.RoleName);
-                #endregion
+                Assert.IsTrue(result.Data.First().FirstName == clubStaffEntity2.FirstName);
+                Assert.IsTrue(result.Data.ElementAt(1).FirstName == clubStaffEntity1.FirstName);
             }
             finally
             {
-                #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
-                #endregion
+                // Cleanup
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2, _cancellationToken);
             }
         }
 
         [TestMethod]
         public async Task GetAllWithSpecificationAsync_WithValidOrderingDescending_ShouldReturnOrderedClubStaff()
         {
-            #region Arrange
+            // Arrange
             Dictionary<string, SortDirection> orderBy = new() 
             { 
-                { nameof(ClubStaffEntity.RoleName), SortDirection.Descending } 
+                { nameof(ClubStaffEntity.FirstName), SortDirection.Descending } 
             };
             var clubStaffEntity1 = _clubStaffEntityBuilder
-                .WithRoleName("Integration Testing Club")
+                .WithName("Integration Testing Club")
                 .Build();
 
             _clubStaffEntityBuilder = new ClubStaffEntityBuilder();
             var clubStaffEntity2 = _clubStaffEntityBuilder
-                .WithRoleName("Another. This should come last.")
+                .WithName("Another. This should come last.")
                 .Build();
 
             try
             {
-                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1)
+                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2)
+                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                #endregion
 
-                #region Act
+                // Act
                 var result = await _clubStaffRepository.GetAllWithSpecificationAsync(
-                    1, 10, orderBy: orderBy, trackChanges: false);
-                #endregion
+                    1, 10, _cancellationToken, orderBy: orderBy, trackChanges: false);
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(2, result.Data.Count());
                 Assert.AreEqual(2, result.TotalCount);
-                Assert.IsTrue(result.Data.First().RoleName == clubStaffEntity1.RoleName);
-                Assert.IsTrue(result.Data.ElementAt(1).RoleName == clubStaffEntity2.RoleName);
-                #endregion
+                Assert.IsTrue(result.Data.First().FirstName == clubStaffEntity1.FirstName);
+                Assert.IsTrue(result.Data.ElementAt(1).FirstName == clubStaffEntity2.FirstName);
             }
             finally
             {
-                #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
-                #endregion
+                // Cleanup
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2, _cancellationToken);
             }
         }
 
         [TestMethod]
         public async Task GetAllWithSpecificationAsync_WithValidPaging_ShouldReturnPagedClubStaff()
         {
-            #region Arrange
+            // Arrange
             int pageSize = 1;
             int currentPage = 2;
             var clubStaffEntity1 = _clubStaffEntityBuilder.Build();
@@ -375,31 +350,27 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             try
             {
-                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1)
+                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2)
+                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                #endregion
 
-                #region Act
+                // Act
                 var result = await _clubStaffRepository.GetAllWithSpecificationAsync(
-                    pageNumber: currentPage, pageSize: pageSize);
-                #endregion
+                    pageNumber: currentPage, pageSize: pageSize, _cancellationToken);
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(1, result.Data.Count());
                 Assert.AreEqual(2, result.TotalCount);
                 Assert.AreEqual(2, result.TotalPages);
                 Assert.AreEqual(2, result.CurrentPage);
-                #endregion
             }
             finally
             {
-                #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
-                #endregion
+                // Cleanup
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2, _cancellationToken);
             }
         }
 
@@ -410,50 +381,44 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         [TestMethod]
         public async Task GetAllAsync_WhenClubStaffExist_ShouldReturnClubStaff()
         {
-            #region Arrange
+            // Arrange
             var clubStaffEntity1 = _clubStaffEntityBuilder.Build();
             var clubEntityBuilder2 = new ClubStaffEntityBuilder();
             var clubStaffEntity2 = clubEntityBuilder2.Build();
 
             try
             {
-                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1)
+                clubStaffEntity1 = await _clubStaffRepository.CreateAsync(clubStaffEntity1, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2)
+                clubStaffEntity2 = await _clubStaffRepository.CreateAsync(clubStaffEntity2, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                #endregion
 
-                #region Act
-                var result = await _clubStaffRepository.GetAllAsync();
-                #endregion
+                // Act
+                var result = await _clubStaffRepository.GetAllAsync(_cancellationToken);
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreNotEqual(0, result.Count());
                 Assert.AreEqual(clubStaffEntity1.Id, result.ElementAt(0).Id);
                 Assert.AreEqual(clubStaffEntity2.Id, result.ElementAt(1).Id);
-                #endregion
             }
             finally
             {
-                #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity1);
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity2);
-                #endregion
+                // Cleanup
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity1, _cancellationToken);
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity2, _cancellationToken);
             }
         }
 
         [TestMethod]
         public async Task GetAllAsync_WhenNoClubStaffExist_ShouldReturnEmpty()
         {
-            #region Act
-            var result = await _clubStaffRepository.GetAllAsync();
-            #endregion
+            // Act
+            var result = await _clubStaffRepository.GetAllAsync(_cancellationToken);
 
-            #region Assert
+            // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(0, result.Count());
-            #endregion
         }
 
         #endregion
@@ -463,44 +428,39 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         [TestMethod]
         public async Task CreateAsync_WhenClubStaffIsValid_ShouldCreateAndReturn()
         {
-            #region Arrange
+            // Arrange
             var clubStaffEntity = _clubStaffEntityBuilder.Build();
             ClubStaffEntity? result = null;
-            #endregion
 
             try
             {
-                #region Act
-                result = await _clubStaffRepository.CreateAsync(clubStaffEntity);
-                #endregion
+                // Act
+                result = await _clubStaffRepository.CreateAsync(clubStaffEntity, _cancellationToken);
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(clubStaffEntity.ClubId, result.ClubId);
                 Assert.AreNotEqual(default, result.Id);
-                #endregion
             }
             finally
             {
-                #region Cleanup
+                // Cleanup
                 if (result != null)
                 {
-                    await _clubStaffRepository.DeleteAsync(result);
+                    await _clubStaffRepository.DeleteAsync(result, _cancellationToken);
                 }
-                #endregion
             }
         }
 
         [TestMethod]
         public async Task CreateAsync_WhenClubStaffIsNull_ShouldThrowArgumentNullException()
         {
-            #region Arrange
+            // Arrange
             ClubStaffEntity clubEntity = null!;
-            #endregion
 
-            #region Act
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _clubStaffRepository.CreateAsync(clubEntity));
-            #endregion
+            // Act
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+                () => _clubStaffRepository.CreateAsync(clubEntity, _cancellationToken));
         }
 
         #endregion
@@ -510,60 +470,52 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         [TestMethod]
         public async Task UpdateAsync_WhenClubStaffIsValid_ShouldUpdateAndReturn()
         {
-            #region Arrange
+            // Arrange
             var clubStaffEntity = _clubStaffEntityBuilder.Build();
             string editedRoleName = "This is an edited role";
             try
             {
-                clubStaffEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity)
+                clubStaffEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
 
-                clubStaffEntity.RoleName = editedRoleName;
-                #endregion
+                clubStaffEntity.FirstName = editedRoleName;
 
-                #region Act
-                var result = await _clubStaffRepository.UpdateAsync(clubStaffEntity);
-                #endregion
+                // Act
+                var result = await _clubStaffRepository.UpdateAsync(clubStaffEntity, _cancellationToken);
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
-                Assert.AreEqual(editedRoleName, result.RoleName);
-                #endregion
+                Assert.AreEqual(editedRoleName, result.FirstName);
             }
             finally
             {
-                #region Cleanup
-                await _clubStaffRepository.DeleteAsync(clubStaffEntity);
-                #endregion
+                // Cleanup
+                await _clubStaffRepository.DeleteAsync(clubStaffEntity, _cancellationToken);
             }
         }
 
         [TestMethod]
         public async Task UpdateAsync_WhenClubStaffIsNotFound_ShouldReturnNull()
         {
-            #region Arrange
+            // Arrange
             var clubStaffEntity = _clubStaffEntityBuilder.Build();
-            #endregion
 
-            #region Act
-            var result = await _clubStaffRepository.UpdateAsync(clubStaffEntity);
-            #endregion
+            // Act
+            var result = await _clubStaffRepository.UpdateAsync(clubStaffEntity, _cancellationToken);
 
-            #region Assert
+            // Assert
             Assert.IsNull(result);
-            #endregion
         }
 
         [TestMethod]
         public async Task UpdateAsync_WhenClubStaffIsNull_ShouldThrowArgumentNullException()
         {
-            #region Arrange
+            // Arrange
             ClubStaffEntity clubStaffEntity = null!;
-            #endregion
 
-            #region Act
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => _clubStaffRepository.UpdateAsync(clubStaffEntity));
-            #endregion
+            // Act
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+                () => _clubStaffRepository.UpdateAsync(clubStaffEntity, _cancellationToken));
         }
 
         #endregion
@@ -573,44 +525,38 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         [TestMethod]
         public async Task DeleteAsync_WhenClubStaffExists_ShouldDeleteAndReturnEntity()
         {
-            #region Arrange
+            // Arrange
             var clubStaffEntity = _clubStaffEntityBuilder.Build();
 
             try
             {
-                clubStaffEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity)
+                clubStaffEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
-                #endregion
             }
             finally
             {
-                #region Act
-                var result = await _clubStaffRepository.DeleteAsync(clubStaffEntity);
-                #endregion
+                // Act
+                var result = await _clubStaffRepository.DeleteAsync(clubStaffEntity, _cancellationToken);
 
-                #region Assert
+                // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(clubStaffEntity.Id, result.Id);
-                var checkResult = await _clubStaffRepository.GetByIdAsync(clubStaffEntity.Id);
+                var checkResult = await _clubStaffRepository.GetByIdAsync(clubStaffEntity.Id, _cancellationToken);
                 Assert.IsNull(checkResult);
-                #endregion
             }
         }
 
         [TestMethod]
         public async Task DeleteAsync_WhenClubStaffDoesNotExist_ShouldReturnNull()
         {
-            #region
+            // Arrange
             var clubStaff = _clubStaffEntityBuilder.Build();
-            #endregion
 
-            #region Act
-            var result = await _clubStaffRepository.DeleteAsync(clubStaff);
-            #endregion
+            // Act
+            var result = await _clubStaffRepository.DeleteAsync(clubStaff, _cancellationToken);
 
-            #region Assert
+            // Assert
             Assert.IsNull(result);
-            #endregion
         }
 
         [TestMethod]
@@ -621,7 +567,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
 
             // Act & Assert
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
-                () => _clubStaffRepository.DeleteAsync(clubStaffEntity));
+                () => _clubStaffRepository.DeleteAsync(clubStaffEntity, _cancellationToken));
         }
 
         #endregion

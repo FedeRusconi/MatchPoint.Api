@@ -4,7 +4,7 @@ using MatchPoint.Api.Shared.Common.Models;
 
 namespace MatchPoint.Api.Shared.ClubService.Models
 {
-    public class ClubStaff : ITrackable, IAuditable, IPatchable, IDeactivable
+    public class ClubStaff : ITrackable, IAuditable, IDeactivable
     {
         public Guid Id { get; set; }
         public Guid ClubId { get; set; }

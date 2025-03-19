@@ -14,7 +14,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         IClubStaffRepository
     {
         /// <inheritdoc />
-        public async Task<int> CountAsync(Dictionary<string, string>? filters = null)
+        public async Task<int> CountAsync(CancellationToken cancellationToken, Dictionary<string, string>? filters = null)
         {
             _logger.LogTrace(
                 "Querying database for count of club staff with {Count} filters", filters != null ? filters.Count : "no");
@@ -26,13 +26,13 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             }
 
             // Return count
-            var count = await query.CountAsync();
+            var count = await query.CountAsync(cancellationToken);
             _logger.LogTrace("Found {Count} club staff in the database", count);
             return count;
         }
 
         /// <inheritdoc />
-        public async Task<ClubStaffEntity?> GetByIdAsync(Guid id, bool trackChanges = true)
+        public async Task<ClubStaffEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken, bool trackChanges = true)
         {
             _logger.LogTrace("Querying database for club staff with ID: '{Id}'", id);
             var query = _context.ClubStaff.AsQueryable();
@@ -42,7 +42,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 query = query.AsNoTracking();
             }
 
-            var staff = await query.FirstOrDefaultAsync(c => c.Id == id);
+            var staff = await query.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
             if (staff == null)
             {
@@ -57,7 +57,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<ClubStaffEntity>> GetAllAsync(bool trackChanges = true)
+        public async Task<IEnumerable<ClubStaffEntity>> GetAllAsync(CancellationToken cancellationToken, bool trackChanges = true)
         {
             _logger.LogTrace("Querying database for all club staff");
             var query = _context.ClubStaff.AsQueryable();
@@ -67,7 +67,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 query = query.AsNoTracking();
             }
 
-            var staff = await query.ToListAsync();
+            var staff = await query.ToListAsync(cancellationToken);
             _logger.LogTrace("Found {Count} club staff in the database", staff.Count);
             return staff;
         }
@@ -76,6 +76,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         public async Task<PagedResponse<ClubStaffEntity>> GetAllWithSpecificationAsync(
             int pageNumber,
             int pageSize,
+            CancellationToken cancellationToken,
             Dictionary<string, string>? filters = null,
             Dictionary<string, SortDirection>? orderBy = null,
             bool trackChanges = true)
@@ -112,17 +113,19 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         }
 
         /// <inheritdoc />
-        public async Task<ClubStaffEntity?> CreateAsync(ClubStaffEntity clubStaffEntity)
+        public async Task<ClubStaffEntity?> CreateAsync(ClubStaffEntity clubStaffEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubStaffEntity);
 
             _logger.LogTrace("Creating a new club staff in the database with id {Id}", clubStaffEntity.Id);
 
+            clubStaffEntity.ModifiedBy = null;
+            clubStaffEntity.ModifiedOnUtc = null;
             _context.ClubStaff.Add(clubStaffEntity);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.Conflict)
             {
@@ -135,17 +138,30 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         }
 
         /// <inheritdoc />
-        public async Task<ClubStaffEntity?> UpdateAsync(ClubStaffEntity clubStaffEntity)
+        public async Task<ClubStaffEntity?> UpdateAsync(ClubStaffEntity clubStaffEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubStaffEntity);
 
             _logger.LogTrace("Updating club staff in the database with Id {Id}", clubStaffEntity.Id);
-            _context.ClubStaff.Attach(clubStaffEntity);
-            _context.Entry(clubStaffEntity).State = EntityState.Modified;
+
+            // Retrieve the existing entity first
+            var existingEntity = await _context.ClubStaff
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == clubStaffEntity.Id, cancellationToken);
+            if (existingEntity == null)
+            {
+                _logger.LogWarning("No club staff found in the database with ID: {Id}", clubStaffEntity.Id);
+                return null;
+            }
+
+            // Preserve properties that should not be updated
+            clubStaffEntity.CreatedBy = existingEntity.CreatedBy;
+            clubStaffEntity.CreatedOnUtc = existingEntity.CreatedOnUtc;
+            _context.ClubStaff.Update(clubStaffEntity);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateException ex) when (ex.InnerException is NullReferenceException)
             {
@@ -163,7 +179,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         }
 
         /// <inheritdoc />
-        public async Task<ClubStaffEntity?> DeleteAsync(ClubStaffEntity clubStaffEntity)
+        public async Task<ClubStaffEntity?> DeleteAsync(ClubStaffEntity clubStaffEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubStaffEntity);
             _logger.LogTrace("Deleting club staff from the database with Id {Id}", clubStaffEntity.Id);
@@ -171,7 +187,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             try
             {
                 _context.ClubStaff.Remove(clubStaffEntity);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.NotFound)
             {

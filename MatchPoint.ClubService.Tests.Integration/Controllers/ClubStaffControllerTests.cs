@@ -77,7 +77,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public void TestInitialize()
         {
             _dbContext = new(DataContextHelpers.TestingConfiguration);
-            _azureAdService = new AzureAdService(_httpContextMock.Object, DataContextHelpers.TestingConfiguration);
+            _azureAdService = new AzureAdService(DataContextHelpers.TestingConfiguration);
             _entityBuilder = new ClubStaffEntityBuilder();
             _dtoBuilder = new ClubStaffBuilder();
         }
@@ -172,7 +172,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
 
             try
             {
-                // First create test clubs
+                // First create test club staff
                 _dbContext.ClubStaff.Add(clubStaffEntity2);
                 _dbContext.ClubStaff.Add(clubStaffEntity1);
                 _dbContext.ClubStaff.Add(clubStaffEntity3);
@@ -610,7 +610,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 _dbContext = new(DataContextHelpers.TestingConfiguration);
                 _dbContext.Remove(clubStaff.ToClubStaffEntity());
                 await _dbContext.SaveChangesAsync();
-                await _azureAdService.DeleteUserAsync(clubStaff.Id);
+                await _azureAdService.DeleteUserAsync(clubStaff.Id, new CancellationToken());
             }
         }
 

@@ -11,6 +11,9 @@ namespace MatchPoint.Api.Shared.Infrastructure.Interfaces
         /// </summary>
         /// <param name="pageNumber"> The number of the page to retrieve, based on page size. </param>
         /// <param name="pageSize"> The number of elements to return. </param>
+        /// <param name="cancellationToken">
+        /// A token to monitor for cancellation requests, freeing up resources if the request is canceled.
+        /// </param>
         /// <param name="filters"> 
         /// A Dictionary containing property name as the key and the filter value. Default is null.
         /// </param>
@@ -25,6 +28,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Interfaces
         public Task<PagedResponse<T>> GetAllWithSpecificationAsync(
             int pageNumber,
             int pageSize,
+            CancellationToken cancellationToken,
             Dictionary<string, string>? filters = null,
             Dictionary<string, SortDirection>? orderBy = null,
             bool trackChanges = true);

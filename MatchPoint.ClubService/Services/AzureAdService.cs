@@ -4,22 +4,15 @@ using MatchPoint.ClubService.Interfaces;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
-using Microsoft.Identity.Web;
 
 namespace MatchPoint.ClubService.Services
 {
-    public class AzureAdService(IHttpContextAccessor _httpContextAccessor, IConfiguration _configuration)
-        : IAzureAdService
+    public class AzureAdService(IConfiguration _configuration) : IAzureAdService
     {
         private static readonly string[] UserParams =
             ["id", "mail", "givenName", "surname", "jobTitle", "mobilePhone", "BusinessPhones",
             "accountEnabled", "streetAddress", "city", "state", "postalCode", "country",
             "employeeHireDate", "employeeLeaveDateTime"];
-
-        /// <inheritdoc />
-        public Guid CurrentUserId => Guid.TryParse(_httpContextAccessor.HttpContext?.User.GetObjectId(), out var guid)
-            ? guid
-            : Guid.Empty;
 
         /// <inheritdoc />
         public GraphServiceClient GetGraphClient(string[]? scopes = null)
@@ -39,7 +32,7 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<User?> GetUserByIdAsync(Guid userId, GraphServiceClient? client = null)
+        public async Task<User?> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken, GraphServiceClient? client = null)
         {
             // Use graph client provided or get a new one.
             client ??= GetGraphClient();
@@ -48,7 +41,7 @@ namespace MatchPoint.ClubService.Services
                 return await client.Users[userId.ToString()].GetAsync(requestConfiguration =>
                 {
                     requestConfiguration.QueryParameters.Select = UserParams;
-                });
+                }, cancellationToken);
             }
             // If user is not found (404) simply return null
             catch (ODataError ex) when (ex.ResponseStatusCode == 404)
@@ -62,13 +55,13 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<Stream?> GetUserPhotoAsync(Guid userId, GraphServiceClient? client = null)
+        public async Task<Stream?> GetUserPhotoAsync(Guid userId, CancellationToken cancellationToken, GraphServiceClient? client = null)
         {
             // Use graph client provided or get a new one.
             client ??= GetGraphClient();
             try
             {
-                return await client.Users[userId.ToString()].Photo.Content.GetAsync();
+                return await client.Users[userId.ToString()].Photo.Content.GetAsync(cancellationToken: cancellationToken);
             }
             // If image is not found (404) simply return null
             catch (ODataError ex) when (ex.ResponseStatusCode == 404)
@@ -82,7 +75,7 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<User?> GetUserManagerAsync(Guid userId, GraphServiceClient? client = null)
+        public async Task<User?> GetUserManagerAsync(Guid userId, CancellationToken cancellationToken, GraphServiceClient? client = null)
         {
             // Use graph client provided or get a new one.
             client ??= GetGraphClient();
@@ -91,7 +84,7 @@ namespace MatchPoint.ClubService.Services
                 return await client.Users[userId.ToString()].Manager.GetAsync(requestConfiguration =>
                 {
                     requestConfiguration.QueryParameters.Select = UserParams;
-                }) as User;
+                }, cancellationToken) as User;
             }
             // If manager is not found (404) simply return null
             catch (ODataError ex) when (ex.ResponseStatusCode == 404)
@@ -105,14 +98,14 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<User?> CreateUserAsync(User user, GraphServiceClient? client = null)
+        public async Task<User?> CreateUserAsync(User user, CancellationToken cancellationToken, GraphServiceClient? client = null)
         {
             ArgumentNullException.ThrowIfNull(user, nameof(user));
             // Use graph client provided or get a new one.
             client ??= GetGraphClient();
             try
             {
-                return await client.Users.PostAsync(user);
+                return await client.Users.PostAsync(user, cancellationToken: cancellationToken);
             }
             catch (ODataError ex)
             {
@@ -121,14 +114,14 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<User?> UpdateUserAsync(User user, GraphServiceClient? client = null)
+        public async Task<User?> UpdateUserAsync(User user, CancellationToken cancellationToken, GraphServiceClient? client = null)
         {
             ArgumentNullException.ThrowIfNull(user, nameof(user));
             // Use graph client provided or get a new one.
             client ??= GetGraphClient();
             try
             {
-                return await client.Users[user.Id].PatchAsync(user) ?? user;
+                return await client.Users[user.Id].PatchAsync(user, cancellationToken: cancellationToken) ?? user;
             }
             // If user is not found (404) simply return null
             catch (ODataError ex) when (ex.ResponseStatusCode == 404)
@@ -142,7 +135,7 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<Guid?> AssignUserManagerAsync(Guid userId, Guid managerId, GraphServiceClient? client = null)
+        public async Task<Guid?> AssignUserManagerAsync(Guid userId, Guid managerId, CancellationToken cancellationToken, GraphServiceClient? client = null)
         {
             // Use graph client provided or get a new one.
             client ??= GetGraphClient();
@@ -152,7 +145,7 @@ namespace MatchPoint.ClubService.Services
                 {
                     OdataId = $"https://graph.microsoft.com/v1.0/users/{managerId}",
                 };
-                await client.Users[userId.ToString()].Manager.Ref.PutAsync(requestBody);
+                await client.Users[userId.ToString()].Manager.Ref.PutAsync(requestBody, cancellationToken: cancellationToken);
                 return managerId;
             }
             // If manager is not found (404) simply return null
@@ -167,13 +160,13 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<bool> DeleteUserAsync(Guid userId, GraphServiceClient? client = null)
+        public async Task<bool> DeleteUserAsync(Guid userId, CancellationToken cancellationToken, GraphServiceClient? client = null)
         {
             // Use graph client provided or get a new one.
             client ??= GetGraphClient();
             try
             {
-                await client.Users[userId.ToString()].DeleteAsync();
+                await client.Users[userId.ToString()].DeleteAsync(cancellationToken: cancellationToken);
                 return true;
             }
             // If user is not found (404) simply return null
@@ -188,13 +181,13 @@ namespace MatchPoint.ClubService.Services
         }
 
         /// <inheritdoc />
-        public async Task<bool> RemoveUserManagerAsync(Guid userId, GraphServiceClient? client = null)
+        public async Task<bool> RemoveUserManagerAsync(Guid userId, CancellationToken cancellationToken, GraphServiceClient? client = null)
         {
             // Use graph client provided or get a new one.
             client ??= GetGraphClient();
             try
             {
-                await client.Users[userId.ToString()].Manager.Ref.DeleteAsync();
+                await client.Users[userId.ToString()].Manager.Ref.DeleteAsync(cancellationToken: cancellationToken);
                 return true;
             }
             // If user is not found (404) simply return null

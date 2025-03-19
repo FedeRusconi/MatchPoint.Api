@@ -20,14 +20,14 @@ namespace MatchPoint.Api.Shared.Infrastructure.RepositoryBases
         }
 
         /// <inheritdoc />
-        public async Task CommitTransactionAsync()
+        public async Task CommitTransactionAsync(CancellationToken cancellationToken)
         {
             if (!IsTransactionActive)
             {
                 throw new InvalidOperationException("No active transaction to commit.");
             }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
             IsTransactionActive = false;
         }
     }

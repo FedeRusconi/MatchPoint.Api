@@ -16,7 +16,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         IClubRepository
     {
         /// <inheritdoc />
-        public async Task<int> CountAsync(Dictionary<string, string>? filters = null)
+        public async Task<int> CountAsync(CancellationToken cancellationToken, Dictionary<string, string>? filters = null)
         {
             _logger.LogTrace(
                 "Querying database for count of clubs with {Count} filters", filters != null ? filters.Count : "no");
@@ -28,13 +28,13 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             }
 
             // Return count
-            var count =  await query.CountAsync();
+            var count =  await query.CountAsync(cancellationToken);
             _logger.LogTrace("Found {Count} clubs in the database", count);
             return count;
         }
 
         /// <inheritdoc />
-        public async Task<ClubEntity?> GetByIdAsync(Guid id, bool trackChanges = true)
+        public async Task<ClubEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken, bool trackChanges = true)
         {
             _logger.LogTrace("Querying database for club with ID: '{Id}'", id);
             var query = _context.Clubs.AsQueryable();
@@ -44,7 +44,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 query = query.AsNoTracking();
             }
 
-            var club = await query.FirstOrDefaultAsync(c => c.Id == id);
+            var club = await query.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
             if (club == null)
             {
@@ -59,7 +59,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<ClubEntity>> GetAllAsync(bool trackChanges = true)
+        public async Task<IEnumerable<ClubEntity>> GetAllAsync(CancellationToken cancellationToken, bool trackChanges = true)
         {
             _logger.LogTrace("Querying database for all clubs");
             var query = _context.Clubs.AsQueryable();
@@ -69,7 +69,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 query = query.AsNoTracking();
             }
 
-            var clubs = await query.ToListAsync();
+            var clubs = await query.ToListAsync(cancellationToken);
             _logger.LogTrace("Found {Count} clubs in the database", clubs.Count);
             return clubs;
         }
@@ -77,7 +77,8 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         /// <inheritdoc />
         public async Task<PagedResponse<ClubEntity>> GetAllWithSpecificationAsync(
             int pageNumber, 
-            int pageSize, 
+            int pageSize,
+            CancellationToken cancellationToken,
             Dictionary<string, string>? filters = null, 
             Dictionary<string, SortDirection>? orderBy = null,
             bool trackChanges = true)
@@ -100,9 +101,9 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             }
 
             // Get count and Apply pagination
-            int totalCount = await query.CountAsync();
+            int totalCount = await query.CountAsync(cancellationToken);
             int skip = (pageNumber - 1) * pageSize;
-            var data = await query.Skip(skip).Take(pageSize).ToListAsync();
+            var data = await query.Skip(skip).Take(pageSize).ToListAsync(cancellationToken);
             _logger.LogTrace("Returning {PageSize} of {Count} clubs found in the database", pageSize, totalCount);
             return new PagedResponse<ClubEntity>()
             {
@@ -118,19 +119,24 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         /// Saves the changes immediately if no active transaction exists.
         /// </summary>
         /// <param name="clubEntity">The <see cref="ClubEntity"/> to add.</param>
+        /// <param name="cancellationToken">
+        /// A token to monitor for cancellation requests, freeing up resources if the request is canceled.
+        /// </param>
         /// <returns> The newly created <see cref="ClubEntity"/>. </returns>
-        public async Task<ClubEntity?> CreateAsync(ClubEntity clubEntity)
+        public async Task<ClubEntity?> CreateAsync(ClubEntity clubEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubEntity);
 
             _logger.LogTrace("Creating a new club in the database with email {Email}", clubEntity.Email);
 
+            clubEntity.ModifiedBy = null;
+            clubEntity.ModifiedOnUtc = null;
             _context.Clubs.Add(clubEntity);
             if (!IsTransactionActive)
             {
                 try
                 {
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync(cancellationToken);
                 }
                 catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.Conflict)
                 {
@@ -148,20 +154,36 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         /// Saves the changes immediately if no active transaction exists.
         /// </summary>
         /// <param name="clubEntity">The <see cref="ClubEntity"/> to update.</param>
+        /// <param name="cancellationToken">
+        /// A token to monitor for cancellation requests, freeing up resources if the request is canceled.
+        /// </param>
         /// <returns> The updated <see cref="ClubEntity"/>. </returns>
-        public async Task<ClubEntity?> UpdateAsync(ClubEntity clubEntity)
+        public async Task<ClubEntity?> UpdateAsync(ClubEntity clubEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubEntity);
 
             _logger.LogTrace("Updating club in the database with Id {Id} ({Email})", clubEntity.Id, clubEntity.Email);
-            _context.Clubs.Attach(clubEntity);
-            _context.Entry(clubEntity).State = EntityState.Modified;
+
+            // Retrieve the existing entity first
+            var existingEntity = await _context.Clubs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == clubEntity.Id, cancellationToken);
+            if (existingEntity == null)
+            {
+                _logger.LogWarning("No club found in the database with ID: {Id}", clubEntity.Id);
+                return null;
+            }
+
+            // Preserve properties that should not be updated
+            clubEntity.CreatedBy = existingEntity.CreatedBy;
+            clubEntity.CreatedOnUtc = existingEntity.CreatedOnUtc;
+            _context.Clubs.Update(clubEntity);
 
             if (!IsTransactionActive)
             {
                 try
                 {
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync(cancellationToken);
                 }
                 catch (DbUpdateException ex) when (ex.InnerException is NullReferenceException)
                 {
@@ -184,10 +206,13 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
         /// Saves the changes immediately if no active transaction exists.
         /// </summary>
         /// <param name="clubEntity">The <see cref="ClubEntity"/> to delete.</param>
+        /// <param name="cancellationToken">
+        /// A token to monitor for cancellation requests, freeing up resources if the request is canceled.
+        /// </param>
         /// <returns>
         /// True if successful, false if no <see cref="ClubEntity"/> with matching Id was found.
         /// </returns>
-        public async Task<ClubEntity?> DeleteAsync(ClubEntity clubEntity)
+        public async Task<ClubEntity?> DeleteAsync(ClubEntity clubEntity, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(clubEntity);
             _logger.LogTrace("Deleting club from the database with Id {Id} ({Email})", clubEntity.Id, clubEntity.Email);
@@ -197,7 +222,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
                 _context.Clubs.Remove(clubEntity);
                 if (!IsTransactionActive)
                 {
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync(cancellationToken);
                 }
             }
             catch (DbUpdateException ex) when (ex.InnerException is CosmosException cosmosEx && cosmosEx.StatusCode == HttpStatusCode.NotFound)

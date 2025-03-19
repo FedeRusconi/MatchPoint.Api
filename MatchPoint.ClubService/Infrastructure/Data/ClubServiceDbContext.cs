@@ -12,17 +12,17 @@ namespace MatchPoint.ClubService.Infrastructure.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var cosmosDbUrl = _config.GetValue<string>("CosmosDb:Url");
-            var cosmosDbKey = _config.GetValue<string>("CosmosDb:Key");
-            var databaseName = _config.GetValue<string>("CosmosDb:DatabaseName");
+            var cosmosDbUrl = _config.GetValue<string>("CosmosDb:Url")
+                ?? throw new KeyNotFoundException("CosmosDB URL is not defined.");
+            var cosmosDbKey = _config.GetValue<string>("CosmosDb:Key")
+                ?? throw new KeyNotFoundException("CosmosDB Key is not defined.");
+            var databaseName = _config.GetValue<string>("CosmosDb:DatabaseName")
+                ?? throw new KeyNotFoundException("CosmosDB Database Name is not defined.");
 
-            if (cosmosDbUrl != null && cosmosDbKey != null && databaseName != null)
-            {
-                optionsBuilder.UseCosmos(
+            optionsBuilder.UseCosmos(
                     cosmosDbUrl,
                     cosmosDbKey,
                     databaseName);
-            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
