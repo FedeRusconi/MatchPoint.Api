@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using MatchPoint.Api.Shared.ClubService.Models;
+using MatchPoint.Api.Shared.Infrastructure.Attributes;
 using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Mappers;
@@ -115,7 +116,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             PropertyInfo[] properties = result.GetType().GetProperties();
             foreach (var prop in properties)
             {
-                if (prop.GetValue(result) == default)
+                if (prop.GetCustomAttribute<ClientOnlyAttribute>() == null && prop.GetValue(result) == default)
                 {
                     Assert.Fail($"{prop.Name} has not been set.");
                     break;

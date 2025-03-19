@@ -1,6 +1,7 @@
 ﻿using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Interfaces;
 using MatchPoint.Api.Shared.Common.Models;
+using MatchPoint.Api.Shared.Infrastructure.Attributes;
 
 namespace MatchPoint.Api.Shared.ClubService.Models
 {
@@ -17,6 +18,7 @@ namespace MatchPoint.Api.Shared.ClubService.Models
         public string? BusinessPhoneNumber { get; set; }
         public string? Photo { get; set; }
         public Guid? RoleId { get; set; }
+        [ClientOnly]
         public string? RoleName { get; set; }
         public ActiveStatus ActiveStatus { get; set; } = ActiveStatus.Active;
         public Address? Address { get; set; }
