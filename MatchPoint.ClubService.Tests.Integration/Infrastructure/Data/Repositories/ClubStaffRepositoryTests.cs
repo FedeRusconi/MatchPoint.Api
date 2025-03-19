@@ -472,20 +472,20 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         {
             // Arrange
             var clubStaffEntity = _clubStaffEntityBuilder.Build();
-            string editedRoleName = "This is an edited role";
+            string editedFirstName = "This is an edited role";
             try
             {
                 clubStaffEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
 
-                clubStaffEntity.FirstName = editedRoleName;
+                clubStaffEntity.FirstName = editedFirstName;
 
                 // Act
                 var result = await _clubStaffRepository.UpdateAsync(clubStaffEntity, _cancellationToken);
 
                 // Assert
                 Assert.IsNotNull(result);
-                Assert.AreEqual(editedRoleName, result.FirstName);
+                Assert.AreEqual(editedFirstName, result.FirstName);
             }
             finally
             {
