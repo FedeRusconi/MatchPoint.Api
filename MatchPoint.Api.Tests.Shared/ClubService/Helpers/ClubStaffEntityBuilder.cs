@@ -129,17 +129,6 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         }
 
         /// <summary>
-        /// Set a specific RoleName to the <see cref="ClubStaffEntity"/>.
-        /// </summary>
-        /// <param name="name"> The name to use. </param>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithRoleName(string name)
-        {
-            _clubStaff.RoleName = name;
-            return this;
-        }
-
-        /// <summary>
         /// Set a specific Name to the <see cref="ClubStaffEntity"/>.
         /// </summary>
         /// <param name="firstName"> 

@@ -56,7 +56,6 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             Assert.AreEqual(clubStaffDto.Email, result.Email);
             Assert.AreEqual(clubStaffDto.Photo, result.Photo);
             Assert.AreEqual(clubStaffDto.RoleId, result.RoleId);
-            Assert.AreEqual(clubStaffDto.RoleName, result.RoleName);
             Assert.AreEqual(clubStaffDto.ClubId, result.ClubId);
             Assert.AreEqual(clubStaffDto.CreatedBy, result.CreatedBy);
             Assert.AreEqual(clubStaffDto.CreatedOnUtc, result.CreatedOnUtc);
@@ -97,7 +96,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
 
             // Act & Assert
             var result = clubStaffs.ToClubStaffEntityEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion
@@ -138,7 +137,6 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             Assert.AreEqual(clubStaffEntity.Email, result.Email);
             Assert.AreEqual(clubStaffEntity.Photo, result.Photo);
             Assert.AreEqual(clubStaffEntity.RoleId, result.RoleId);
-            Assert.AreEqual(clubStaffEntity.RoleName, result.RoleName);
             Assert.AreEqual(clubStaffEntity.ClubId, result.ClubId);
             Assert.AreEqual(clubStaffEntity.CreatedBy, result.CreatedBy);
             Assert.AreEqual(clubStaffEntity.CreatedOnUtc, result.CreatedOnUtc);
@@ -179,7 +177,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
 
             // Act & Assert
             var result = clubStaffs.ToClubStaffDtoEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion

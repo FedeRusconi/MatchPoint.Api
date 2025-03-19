@@ -77,7 +77,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         public void TestInitialize()
         {
             _dbContext = new(DataContextHelpers.TestingConfiguration);
-            _azureAdService = new AzureAdService(_httpContextMock.Object, DataContextHelpers.TestingConfiguration);
+            _azureAdService = new AzureAdService(DataContextHelpers.TestingConfiguration);
             _entityBuilder = new ClubStaffEntityBuilder();
             _dtoBuilder = new ClubStaffBuilder();
         }
