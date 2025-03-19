@@ -6,6 +6,7 @@
         ManageClubStaff,
         ManageClubMembers,
         ManageCourts,
-        ManageBookings
+        ManageBookings,
+        ManageClubRoles
     }
 }

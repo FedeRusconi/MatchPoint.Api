@@ -113,6 +113,7 @@ namespace MatchPoint.ClubService.Controllers
         // PUT: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope($"{Scopes.Clubs}.{Scopes.Write}")]
+        [RequiredCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.ReadWrite)]
         [HttpPut("{id}")]
         public async Task<ActionResult<Club>> PutClubAsync(Guid id, Club club, CancellationToken cancellationToken)
         {
@@ -138,6 +139,7 @@ namespace MatchPoint.ClubService.Controllers
         // PATCH: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope($"{Scopes.Clubs}.{Scopes.Write}")]
+        [RequiredCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.ReadWrite)]
         [HttpPatch("{id}")]
         public async Task<ActionResult<Club>> PatchClubAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
         {
@@ -165,6 +167,7 @@ namespace MatchPoint.ClubService.Controllers
         // DELETE: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope($"{Scopes.Clubs}.{Scopes.Delete}")]
+        [RequiredCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.ReadWriteDelete)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClubAsync(Guid id, CancellationToken cancellationToken)
         {
