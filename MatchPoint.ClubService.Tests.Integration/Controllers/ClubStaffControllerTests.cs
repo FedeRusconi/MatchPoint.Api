@@ -1,10 +1,12 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
+using MatchPoint.Api.Tests.Shared.Common.Extensions;
 using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
@@ -12,15 +14,9 @@ using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
 using MatchPoint.ClubService.Services;
 using MatchPoint.ClubService.Tests.Integration.Helpers;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Moq;
 
 namespace MatchPoint.ClubService.Tests.Integration.Controllers
 {
@@ -28,47 +24,24 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
     public class ClubStaffControllerTests
     {
         private static WebApplicationFactory<Program> _factory = default!;
-        private static HttpClient _httpClient = default!;
         private static ClubServiceDbContext _dbContext = null!;
-        private static Mock<IHttpContextAccessor> _httpContextMock = default!;
+        private HttpClient _httpClient = default!;
         private IAzureAdService _azureAdService = default!;
         private ClubStaffEntityBuilder _entityBuilder = default!;
         private ClubStaffBuilder _dtoBuilder = default!;
-        private readonly Guid _clubId = Guid.NewGuid();
+        private static readonly Guid _clubId = Guid.NewGuid();
+        private static readonly Guid _userRoleId = Guid.NewGuid();
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
+            TestAuthHandler.ClubRoleId = _userRoleId;
             _factory = new WebApplicationFactory<Program>();
-            _httpClient = _factory.WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
-                {
-                    // Set test authentication
-                    services.AddAuthentication(defaultScheme: "TestScheme")
-                        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                            "TestScheme", options => { });
-
-                    // Replace IConfiguration in the DI container with test-specific configuration
-                    services.RemoveAll<IConfiguration>();
-                    services.AddSingleton(DataContextHelpers.TestingConfiguration);
-                });
-            })
-            .CreateClient();
-
-            // Set up IHttpContextAccessor to return the mock HttpContext
-            _httpContextMock = new Mock<IHttpContextAccessor>();
-            var httpContext = new DefaultHttpContext
-            {
-                User = TestAuthHandler.Principal
-            };
-            _httpContextMock.Setup(x => x.HttpContext).Returns(httpContext);
         }
 
         [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
         public static void ClassCleanup()
         {
-            _httpClient.Dispose();
             _factory.Dispose();
             _dbContext.Dispose();
         }
@@ -80,6 +53,19 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             _azureAdService = new AzureAdService(DataContextHelpers.TestingConfiguration);
             _entityBuilder = new ClubStaffEntityBuilder();
             _dtoBuilder = new ClubStaffBuilder();
+
+            // Calls custom Extension method to set up a test http client for tests
+            _httpClient = _factory.GetTestHttpClient(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubStaff,
+                RoleCapabilityAction.ReadWriteDelete);
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            _httpClient.Dispose();
         }
 
         #region GetClubStaffAsync
@@ -236,6 +222,69 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             Assert.IsNotNull(result);
             Assert.AreEqual(HttpStatusCode.NotFound, result.StatusCode);
         }
+
+        [TestMethod]
+        public async Task GetClubStaffAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "Clubs.Read";
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClient(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubStaff,
+                RoleCapabilityAction.ReadWriteDelete,
+                authenticated: false);
+
+            // Act
+            var result = await _httpClient.GetAsync(
+                $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{_clubId}/staff");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetClubStaffAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "Clubs.Read";
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClient(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubStaff,
+                // Insufficient
+                RoleCapabilityAction.None);
+
+            // Act
+            var result = await _httpClient.GetAsync(
+                $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{_clubId}/staff");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetClubStaffAsync_WithWrongScopes_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "Wrong.Scopes";
+
+            // Act
+            var result = await _httpClient.GetAsync(
+                $"api/v{ClubServiceEndpoints.CurrentVersion}/clubs/{_clubId}/staff");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
+        }
+
+        // Unauthenticated
+        // Invalid ClubRole action
+        // Invalid Scopes
 
         #endregion
 
@@ -421,11 +470,11 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             ClubStaff? clubStaffResponse = null;
             string updatedFirstName = "New First Name";
             string updatedEmail = "changed@email.com";
-            List<PropertyUpdate> updates = new()
-            {
+            List<PropertyUpdate> updates =
+            [
                 new() { Property = nameof(ClubStaff.Email), Value = updatedEmail },
                 new() { Property = nameof(ClubStaff.FirstName), Value = updatedFirstName },
-            };
+            ];
             try
             {
                 // Create the record to test the update
