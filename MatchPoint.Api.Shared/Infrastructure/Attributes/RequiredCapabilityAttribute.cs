@@ -25,7 +25,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
             // Extract Ids
             if (!service.TryGetClubId(out Guid clubId) || !service.TryGetRoleId(out Guid roleId))
             {
-                context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
+                context.Result = new StatusCodeResult(StatusCodes.Status400BadRequest);
                 return;
             }
 
