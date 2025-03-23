@@ -8,14 +8,10 @@ using MatchPoint.Api.Shared.AccessControlService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Tests.Shared.AccessControlService.Helpers;
+using MatchPoint.Api.Tests.Shared.Common.Extensions;
 using MatchPoint.Api.Tests.Shared.Common.Helpers;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
 {
@@ -32,27 +28,11 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         public static void ClassInitialize(TestContext context)
         {
             _factory = new WebApplicationFactory<Program>();
-            _httpClient = _factory.WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
-                {
-                    // Set test authentication
-                    services.AddAuthentication(defaultScheme: "TestScheme")
-                        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                            "TestScheme", options => { });
-
-                    // Replace IConfiguration in the DI container with test-specific configuration
-                    services.RemoveAll<IConfiguration>();
-                    services.AddSingleton(DataContextHelpers.TestingConfiguration);
-                });
-            })
-            .CreateClient();
         }
 
         [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
         public static void ClassCleanup()
         {
-            _httpClient.Dispose();
             _factory.Dispose();
             _dbContext.Dispose();
         }
@@ -63,6 +43,15 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             _dbContext = new(DataContextHelpers.TestingConfiguration);
             _entityBuilder = new CustomRoleEntityBuilder();
             _dtoBuilder = new CustomRoleBuilder();
+
+            // Calls custom Extension method to set up a test http client for tests
+            _httpClient = _factory.GetTestHttpClient();
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            _httpClient.Dispose();
         }
 
         #region GetCustomRolesAsync
@@ -87,7 +76,8 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
                 await _dbContext.SaveChangesAsync();
 
                 // Act
-                var result = await _httpClient.GetAsync($"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles");
+                var result = await _httpClient.GetAsync(
+                    $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles");
                 var response = await result.Content.ReadFromJsonAsync<IEnumerable<CustomRole>>();
 
                 // Assert
@@ -104,6 +94,23 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
                 _dbContext.Remove(customRoleEntity3);
                 await _dbContext.SaveChangesAsync();
             }
+        }
+
+        [TestMethod]
+        public async Task GetCustomRolesAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Read";
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClient(authenticated: false);
+
+            // Act
+            var result = await _httpClient.GetAsync(
+                    $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
         }
 
         [TestMethod]
@@ -175,6 +182,24 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(HttpStatusCode.NotFound, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetCustomRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Read";
+            Guid customRoleId = Guid.NewGuid();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClient(authenticated: false);
+
+            // Act
+            var result = await _httpClient.GetAsync(
+                    $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRoleId}");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
         }
 
         [TestMethod]
@@ -264,6 +289,24 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task PostCustomRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Write";
+            CustomRole customRole = _dtoBuilder.WithDefaultId().Build();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClient(authenticated: false);
+
+            // Act
+            var result = await _httpClient.PostAsJsonAsync(
+                    $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles", customRole);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
         }
 
         [TestMethod]
@@ -395,6 +438,24 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task PutCustomRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Write";
+            CustomRole customRole = _dtoBuilder.WithDefaultId().Build();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClient(authenticated: false);
+
+            // Act
+            var result = await _httpClient.PutAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRole.Id}", customRole);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task PutCustomRoleAsync_WithWrongScopes_ShouldReturnForbidden()
         {
             // Arrange
@@ -423,11 +484,11 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             CustomRole? customRoleResponse = null;
             string updatedName = "New Custom Role Name";
             ActiveStatus updatedStatus = ActiveStatus.Inactive;
-            List<PropertyUpdate> updates = new()
-            {
+            List<PropertyUpdate> updates =
+            [
                 new() { Property = nameof(CustomRole.ActiveStatus), Value = updatedStatus },
                 new() { Property = nameof(CustomRole.Name), Value = updatedName },
-            };
+            ];
             try
             {
                 // Create the record to test the update
@@ -475,10 +536,10 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             string invalidClubId = "Invalid Custom Role Id";
             CustomRole customRole = _dtoBuilder.Build();
             string updatedName = "New Custom Role Name";
-            List<PropertyUpdate> updates = new()
-            {
+            List<PropertyUpdate> updates =
+            [
                 new() { Property = nameof(CustomRole.Name), Value = updatedName }
-            };
+            ];
             try
             {
                 // Create the record to test the update
@@ -533,15 +594,41 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task PatchCustomRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Write";
+            Guid customRoleId = Guid.NewGuid();
+            List<PropertyUpdate> updates =
+            [
+                new() { Property = nameof(CustomRole.Name), Value = "Updated Name" }
+            ];
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClient(authenticated: false);
+
+            // Act
+            var result = await _httpClient.PatchAsJsonAsync(
+                    $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRoleId}", updates);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task PatchCustomRoleAsync_WithWrongScopes_ShouldReturnForbidden()
         {
             // Arrange
             TestAuthHandler.Scopes = "Wrong.Scopes";
-            CustomRole customRole = _dtoBuilder.Build();
+            Guid customRoleId = Guid.NewGuid();
+            List<PropertyUpdate> updates =
+            [
+                new() { Property = nameof(CustomRole.Name), Value = "Updated Name" }
+            ];
 
             // Act
             var result = await _httpClient.PatchAsJsonAsync(
-                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRole.Id}", customRole);
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRoleId}", updates);
 
             // Assert
             Assert.IsNotNull(result);
@@ -629,6 +716,24 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(HttpStatusCode.NotFound, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task DeleteCustomRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Delete";
+            Guid customRoleId = Guid.NewGuid();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClient(authenticated: false);
+
+            // Act
+            var result = await _httpClient.DeleteAsync(
+                    $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRoleId}");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
         }
 
         [TestMethod]

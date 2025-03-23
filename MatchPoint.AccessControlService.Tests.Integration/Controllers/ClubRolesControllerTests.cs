@@ -4,19 +4,16 @@ using MatchPoint.AccessControlService.Entities;
 using MatchPoint.AccessControlService.Infrastructure.Data;
 using MatchPoint.AccessControlService.Mappers;
 using MatchPoint.AccessControlService.Tests.Integration.Helpers;
+using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.AccessControlService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Tests.Shared.AccessControlService.Helpers;
+using MatchPoint.Api.Tests.Shared.Common.Extensions;
 using MatchPoint.Api.Tests.Shared.Common.Helpers;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
 {
@@ -29,32 +26,18 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         private ClubRoleEntityBuilder _entityBuilder = default!;
         private ClubRoleBuilder _dtoBuilder = default!;
         private readonly Guid _clubId = Guid.NewGuid();
+        private static readonly Guid _userRoleId = Guid.NewGuid();
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
+            TestAuthHandler.ClubRoleId = _userRoleId;
             _factory = new WebApplicationFactory<Program>();
-            _httpClient = _factory.WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
-                {
-                    // Set test authentication
-                    services.AddAuthentication(defaultScheme: "TestScheme")
-                        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                            "TestScheme", options => { });
-
-                    // Replace IConfiguration in the DI container with test-specific configuration
-                    services.RemoveAll<IConfiguration>();
-                    services.AddSingleton(DataContextHelpers.TestingConfiguration);
-                });
-            })
-            .CreateClient();
         }
 
         [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
         public static void ClassCleanup()
         {
-            _httpClient.Dispose();
             _factory.Dispose();
             _dbContext.Dispose();
         }
@@ -65,6 +48,19 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             _dbContext = new(DataContextHelpers.TestingConfiguration);
             _entityBuilder = new ClubRoleEntityBuilder();
             _dtoBuilder = new ClubRoleBuilder();
+
+            // Calls custom Extension method to set up a test http client for tests
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                RoleCapabilityAction.ReadWriteDelete);
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            _httpClient.Dispose();
         }
 
         #region GetClubRolesAsync
@@ -223,6 +219,50 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task GetClubRolesAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Read";
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                RoleCapabilityAction.ReadWriteDelete,
+                authenticated: false);
+
+            // Act
+            var result = await _httpClient.GetAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetClubRolesAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Read";
+            // Redefine a HttpClient with insufficient permissions
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                // Insufficient
+                RoleCapabilityAction.None);
+
+            // Act
+            var result = await _httpClient.GetAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task GetClubRolesAsync_WithWrongScopes_ShouldReturnForbidden()
         {
             // Arrange
@@ -293,6 +333,29 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(HttpStatusCode.NotFound, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetClubRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Read";
+            Guid clubRoleId = Guid.NewGuid();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                RoleCapabilityAction.ReadWriteDelete,
+                authenticated: false);
+
+            // Act
+            var result = await _httpClient.GetAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles/{clubRoleId}");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
         }
 
         [TestMethod]
@@ -383,6 +446,52 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task PostClubRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Write";
+            ClubRole clubRole = _dtoBuilder.Build();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                RoleCapabilityAction.ReadWriteDelete,
+                authenticated: false);
+
+            // Act
+            var result = await _httpClient.PostAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles", clubRole);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task PostClubRoleAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Write";
+            ClubRole clubRole = _dtoBuilder.Build();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                // Insufficient
+                RoleCapabilityAction.None);
+
+            // Act
+            var result = await _httpClient.PostAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles", clubRole);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
         }
 
         [TestMethod]
@@ -514,6 +623,52 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task PutClubRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Write";
+            ClubRole clubRole = _dtoBuilder.Build();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                RoleCapabilityAction.ReadWriteDelete,
+                authenticated: false);
+
+            // Act
+            var result = await _httpClient.PutAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles/{clubRole.Id}", clubRole);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task PutClubRoleAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Write";
+            ClubRole clubRole = _dtoBuilder.Build();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                // Insufficient
+                RoleCapabilityAction.None);
+
+            // Act
+            var result = await _httpClient.PutAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles/{clubRole.Id}", clubRole);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task PutClubRoleAsync_WithWrongScopes_ShouldReturnForbidden()
         {
             // Arrange
@@ -545,11 +700,11 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             ClubRole? clubRoleResponse = null;
             string updatedName = "New Club Role Name";
             ActiveStatus updatedStatus = ActiveStatus.Inactive;
-            List<PropertyUpdate> updates = new()
-            {
+            List<PropertyUpdate> updates =
+            [
                 new() { Property = nameof(ClubRole.ActiveStatus), Value = updatedStatus },
                 new() { Property = nameof(ClubRole.Name), Value = updatedName },
-            };
+            ];
             try
             {
                 // Create the record to test the update
@@ -597,10 +752,10 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             string invalidClubId = "Invalid Club Role Id";
             ClubRole clubRole = _dtoBuilder.Build();
             string updatedName = "New Club Role Name";
-            List<PropertyUpdate> updates = new()
-            {
+            List<PropertyUpdate> updates =
+            [
                 new() { Property = nameof(ClubRole.Name), Value = updatedName }
-            };
+            ];
             try
             {
                 // Create the record to test the update
@@ -655,15 +810,73 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task PatchClubRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Write";
+            Guid clubRoleId = Guid.NewGuid();
+            List<PropertyUpdate> updates =
+            [
+                new() { Property = nameof(ClubRole.Name), Value = "Updated Name" },
+            ];
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                RoleCapabilityAction.ReadWriteDelete,
+                authenticated: false);
+
+            // Act
+            var result = await _httpClient.PatchAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles/{clubRoleId}", updates);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task PatchClubRoleAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Write";
+            Guid clubRoleId = Guid.NewGuid();
+            List<PropertyUpdate> updates =
+            [
+                new() { Property = nameof(ClubRole.Name), Value = "Updated Name" },
+            ];
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                // Insufficient
+                RoleCapabilityAction.None);
+
+            // Act
+            var result = await _httpClient.PatchAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles/{clubRoleId}", updates);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task PatchClubRoleAsync_WithWrongScopes_ShouldReturnForbidden()
         {
             // Arrange
             TestAuthHandler.Scopes = "Wrong.Scopes";
-            ClubRole clubRole = _dtoBuilder.Build();
+            Guid clubRoleId = Guid.NewGuid();
+            List<PropertyUpdate> updates =
+            [
+                new() { Property = nameof(ClubRole.Name), Value = "Updated Name" },
+            ];
 
             // Act
             var result = await _httpClient.PatchAsJsonAsync(
-                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles/{clubRole.Id}", clubRole);
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles/{clubRoleId}", updates);
 
             // Assert
             Assert.IsNotNull(result);
@@ -751,6 +964,52 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(HttpStatusCode.NotFound, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task DeleteClubRoleAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Delete";
+            Guid clubRoleId = Guid.NewGuid();
+            // Redefine a HttpClient without an authenticated user
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                RoleCapabilityAction.ReadWriteDelete,
+                authenticated: false);
+
+            // Act
+            var result = await _httpClient.DeleteAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles/{clubRoleId}");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, result.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task DeleteClubRoleAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "ClubRoles.Delete";
+            Guid clubRoleId = Guid.NewGuid();
+            // Redefine a HttpClient with insufficient permissions
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
+                _clubId,
+                _userRoleId,
+                RoleCapabilityFeature.ManageClubRoles,
+                // Insufficient
+                RoleCapabilityAction.None);
+
+            // Act
+            var result = await _httpClient.DeleteAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/clubs/{_clubId}/roles/{clubRoleId}");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
         }
 
         [TestMethod]

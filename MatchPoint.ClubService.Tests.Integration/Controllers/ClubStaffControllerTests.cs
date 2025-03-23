@@ -55,7 +55,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             _dtoBuilder = new ClubStaffBuilder();
 
             // Calls custom Extension method to set up a test http client for tests
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -229,7 +229,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             // Arrange
             TestAuthHandler.Scopes = "Clubs.Read";
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -251,7 +251,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             // Arrange
             TestAuthHandler.Scopes = "Clubs.Read";
             // Redefine a HttpClient with insufficient permissions
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -364,7 +364,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Read";
             Guid clubStaffId = Guid.NewGuid();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -387,7 +387,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Read";
             Guid clubStaffId = Guid.NewGuid();
             // Redefine a HttpClient with insufficient permissions
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -524,7 +524,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 .WithDefaultId()
                 .Build();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -549,7 +549,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 .WithDefaultId()
                 .Build();
             // Redefine a HttpClient with insufficient permissions
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -758,7 +758,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 new() { Property = nameof(ClubStaff.Email), Value = "updated@email.com" }
             ];
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -785,7 +785,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 new() { Property = nameof(ClubStaff.Email), Value = "updated@email.com" }
             ];
             // Redefine a HttpClient with insufficient permissions
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -946,7 +946,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Write";
             Guid clubStaffId = Guid.NewGuid();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,
@@ -969,7 +969,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Write";
             Guid clubStaffId = Guid.NewGuid();
             // Redefine a HttpClient with insufficient permissions
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClubStaff,

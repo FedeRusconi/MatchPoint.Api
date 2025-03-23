@@ -15,6 +15,43 @@ namespace MatchPoint.Api.Tests.Shared.Common.Extensions
         /// <summary>
         /// Prepares and returns an <see cref="HttpClient"/>
         /// specifically set for MatchPoint integration tests for controllers.
+        /// This Defines a test AuthHandler and test IConfiguration.
+        /// </summary>
+        /// <typeparam name="T"> The Program class. </typeparam>
+        /// <param name="factory"> 
+        /// The <see cref="WebApplicationFactory{TEntryPoint}"/> used as the source
+        /// </param>
+        /// <param name="authenticated"> 
+        /// Whether the HttpClient should mock an authenticated user or not. Default is true.
+        /// </param>
+        /// <returns> An <see cref="HttpClient"/>. </returns>
+        public static HttpClient GetTestHttpClient<T>(
+            this WebApplicationFactory<T> factory,
+            bool authenticated = true) where T : class
+        {
+            return factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureTestServices(services =>
+                {
+                    // Set test authentication
+                    if (authenticated)
+                    {
+                        services.AddAuthentication(defaultScheme: "TestScheme")
+                            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                                "TestScheme", options => { });
+                    }
+
+                    // Replace IConfiguration in the DI container with test-specific configuration
+                    services.RemoveAll<IConfiguration>();
+                    services.AddSingleton(DataContextHelpers.TestingConfiguration);
+                });
+            })
+            .CreateClient();
+        }
+
+        /// <summary>
+        /// Prepares and returns an <see cref="HttpClient"/>
+        /// specifically set for MatchPoint integration tests for controllers.
         /// This Defines a test AuthHandler, test IConfiguration and a mock Handler for
         /// AccessControlService http client, to mock the call to retrieve the user's ClubRole.
         /// </summary>
@@ -34,7 +71,7 @@ namespace MatchPoint.Api.Tests.Shared.Common.Extensions
         /// Whether the HttpClient should mock an authenticated user or not. Default is true.
         /// </param>
         /// <returns> An <see cref="HttpClient"/>. </returns>
-        public static HttpClient GetTestHttpClient<T>(
+        public static HttpClient GetTestHttpClientWithRoleCheck<T>(
             this WebApplicationFactory<T> factory,
             Guid clubId,
             Guid roleId,

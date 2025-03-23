@@ -50,7 +50,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             _dtoBuilder = new ClubBuilder();
 
             // Calls custom Extension method to set up a test http client for tests
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -187,7 +187,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             // Arrange
             TestAuthHandler.Scopes = "Clubs.Read";
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -280,7 +280,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Read";
             Guid clubId = Guid.NewGuid();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -303,7 +303,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Read";
             Guid clubId = Guid.NewGuid();
             // Redefine a HttpClient with insufficient permissions
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -419,7 +419,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 .WithDefaultId()
                 .Build();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -572,7 +572,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Write";
             Club club = _dtoBuilder.Build();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -595,7 +595,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Write";
             Club club = _dtoBuilder.Build();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -762,7 +762,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 new() { Property = nameof(Club.Email), Value = "updated@email.com" }
             ];
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -789,7 +789,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 new() { Property = nameof(Club.Email), Value = "updated@email.com" }
             ];
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -914,7 +914,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Delete";
             Guid clubId = Guid.NewGuid();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
@@ -937,7 +937,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Delete";
             Guid clubId = Guid.NewGuid();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClient(
+            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
                 _clubId,
                 _userRoleId,
                 RoleCapabilityFeature.ManageClub,
