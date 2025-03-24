@@ -4,22 +4,15 @@ using MatchPoint.ClubService.Interfaces;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Graph.Models.ODataErrors;
-using Microsoft.Identity.Web;
 
 namespace MatchPoint.ClubService.Services
 {
-    public class AzureAdService(IHttpContextAccessor _httpContextAccessor, IConfiguration _configuration)
-        : IAzureAdService
+    public class AzureAdService(IConfiguration _configuration) : IAzureAdService
     {
         private static readonly string[] UserParams =
             ["id", "mail", "givenName", "surname", "jobTitle", "mobilePhone", "BusinessPhones",
             "accountEnabled", "streetAddress", "city", "state", "postalCode", "country",
             "employeeHireDate", "employeeLeaveDateTime"];
-
-        /// <inheritdoc />
-        public Guid CurrentUserId => Guid.TryParse(_httpContextAccessor.HttpContext?.User.GetObjectId(), out var guid)
-            ? guid
-            : Guid.Empty;
 
         /// <inheritdoc />
         public GraphServiceClient GetGraphClient(string[]? scopes = null)

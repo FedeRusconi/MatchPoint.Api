@@ -257,15 +257,15 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             // Arrange
             Dictionary<string, SortDirection> orderBy = new() 
             { 
-                { nameof(ClubStaffEntity.RoleName), SortDirection.Ascending } 
+                { nameof(ClubStaffEntity.FirstName), SortDirection.Ascending } 
             };
             var clubStaffEntity1 = _clubStaffEntityBuilder
-                .WithRoleName("Integration Testing Club")
+                .WithName("Integration Testing Club")
                 .Build();
 
             _clubStaffEntityBuilder = new ClubStaffEntityBuilder();
             var clubStaffEntity2 = _clubStaffEntityBuilder
-                .WithRoleName("Another. This should come first.")
+                .WithName("Another. This should come first.")
                 .Build();
 
             try
@@ -283,8 +283,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 Assert.IsNotNull(result);
                 Assert.AreEqual(2, result.Data.Count());
                 Assert.AreEqual(2, result.TotalCount);
-                Assert.IsTrue(result.Data.First().RoleName == clubStaffEntity2.RoleName);
-                Assert.IsTrue(result.Data.ElementAt(1).RoleName == clubStaffEntity1.RoleName);
+                Assert.IsTrue(result.Data.First().FirstName == clubStaffEntity2.FirstName);
+                Assert.IsTrue(result.Data.ElementAt(1).FirstName == clubStaffEntity1.FirstName);
             }
             finally
             {
@@ -300,15 +300,15 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             // Arrange
             Dictionary<string, SortDirection> orderBy = new() 
             { 
-                { nameof(ClubStaffEntity.RoleName), SortDirection.Descending } 
+                { nameof(ClubStaffEntity.FirstName), SortDirection.Descending } 
             };
             var clubStaffEntity1 = _clubStaffEntityBuilder
-                .WithRoleName("Integration Testing Club")
+                .WithName("Integration Testing Club")
                 .Build();
 
             _clubStaffEntityBuilder = new ClubStaffEntityBuilder();
             var clubStaffEntity2 = _clubStaffEntityBuilder
-                .WithRoleName("Another. This should come last.")
+                .WithName("Another. This should come last.")
                 .Build();
 
             try
@@ -326,8 +326,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 Assert.IsNotNull(result);
                 Assert.AreEqual(2, result.Data.Count());
                 Assert.AreEqual(2, result.TotalCount);
-                Assert.IsTrue(result.Data.First().RoleName == clubStaffEntity1.RoleName);
-                Assert.IsTrue(result.Data.ElementAt(1).RoleName == clubStaffEntity2.RoleName);
+                Assert.IsTrue(result.Data.First().FirstName == clubStaffEntity1.FirstName);
+                Assert.IsTrue(result.Data.ElementAt(1).FirstName == clubStaffEntity2.FirstName);
             }
             finally
             {
@@ -472,20 +472,20 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         {
             // Arrange
             var clubStaffEntity = _clubStaffEntityBuilder.Build();
-            string editedRoleName = "This is an edited role";
+            string editedFirstName = "This is an edited role";
             try
             {
                 clubStaffEntity = await _clubStaffRepository.CreateAsync(clubStaffEntity, _cancellationToken)
                     ?? throw new Exception("_clubStaffRepository.CreateAsync() returned null");
 
-                clubStaffEntity.RoleName = editedRoleName;
+                clubStaffEntity.FirstName = editedFirstName;
 
                 // Act
                 var result = await _clubStaffRepository.UpdateAsync(clubStaffEntity, _cancellationToken);
 
                 // Assert
                 Assert.IsNotNull(result);
-                Assert.AreEqual(editedRoleName, result.RoleName);
+                Assert.AreEqual(editedFirstName, result.FirstName);
             }
             finally
             {

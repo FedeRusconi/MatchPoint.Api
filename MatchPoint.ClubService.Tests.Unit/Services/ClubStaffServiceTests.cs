@@ -9,6 +9,7 @@ using MatchPoint.ClubService.Infrastructure.Data.Factories;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
 using MatchPoint.ClubService.Services;
+using MatchPoint.ServiceDefaults;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
@@ -22,6 +23,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
     {
         private Mock<IClubStaffRepository> _clubStaffRepositoryMock = default!;
         private Mock<IAzureAdService> _azureAdServiceMock = default!;
+        private Mock<ISessionService> _sessionServiceMock = default!;
         private Mock<ILogger<ClubStaffService>> _loggerMock = default!;
         private IAzureAdUserFactory _azureAdUserFactory = default!;
         private readonly IConfiguration _configuration = DataContextHelpers.TestingConfiguration;
@@ -35,6 +37,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         {
             _clubStaffRepositoryMock = new();
             _azureAdServiceMock = new();
+            _sessionServiceMock = new();
             _loggerMock = new();
             _azureAdUserFactory = new AzureAdUserFactory();
             _clubStaffEntityBuilder = new();
@@ -42,11 +45,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
                 _clubStaffRepositoryMock.Object,
                 _azureAdServiceMock.Object,
                 _azureAdUserFactory,
+                _sessionServiceMock.Object,
                 _configuration,
                 _loggerMock.Object);
             _cancellationToken = new CancellationToken();
 
-            _azureAdServiceMock.SetupGet(s => s.CurrentUserId).Returns(Guid.NewGuid());
+            _sessionServiceMock.SetupGet(s => s.CurrentUserId).Returns(Guid.NewGuid());
         }
 
         #region GetByIdAsync
@@ -125,7 +129,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             // Arrange
             int pageNumber = 3;
             int pageSize = 10;
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             PagedResponse<ClubStaffEntity> expectedResponse = new()
             {
                 CurrentPage = pageNumber,
@@ -156,7 +160,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenFiltersAreProvided_ShouldCallRepoMethodWithFiltersAndReturnSuccessResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             Dictionary<string, string> filters = new()
             {
                 { nameof(ClubStaffEntity.FirstName), "Test" },
@@ -197,7 +201,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task GetAllWithSpecificationAsync_WhenSortingIsProvided_ShouldCallRepoMethodWithSortingAndReturnSuccessResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             Dictionary<string, SortDirection> orderBy = new()
             {
                 { nameof(ClubStaffEntity.FirstName), SortDirection.Descending }
@@ -325,6 +329,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);
             Assert.AreEqual(clubStaffEntity.Email, result.Data.Email);
+            Assert.AreEqual(_clubId, result.Data.ClubId);
             Assert.AreNotEqual(default, result.Data.CreatedBy);
             Assert.AreNotEqual(default, result.Data.CreatedOnUtc);
         }
@@ -363,7 +368,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Services
         public async Task CreateAsync_WhenClubStaffEmailIsDuplicate_ShouldReturnFailResult()
         {
             // Arrange
-            var clubStaffEntity = _clubStaffEntityBuilder.Build();
+            var clubStaffEntity = _clubStaffEntityBuilder.WithClubId(_clubId).Build();
             var countFilters = new Dictionary<string, string>()
             {
                 { nameof(ClubStaffEntity.Email), clubStaffEntity.Email }

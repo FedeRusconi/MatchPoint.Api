@@ -34,7 +34,6 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
                 .RuleFor(c => c.BusinessPhoneNumber, f => f.Phone.PhoneNumber())
                 .RuleFor(c => c.Photo, f => f.Random.AlphaNumeric(10))
                 .RuleFor(c => c.RoleId, Guid.NewGuid())
-                .RuleFor(c => c.RoleName, f => f.PickRandom("Team Admin", "Supervisor", "Manager", "Coach", "Club President"))
                 .RuleFor(c => c.ActiveStatus, ActiveStatus.Active)
                 .RuleFor(c => c.Address, addressGenerator.Generate())
                 .RuleFor(c => c.ManagerId, Guid.NewGuid())
@@ -125,17 +124,6 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         public ClubStaffEntityBuilder WithDefaultRoleId()
         {
             _clubStaff.RoleId = default;
-            return this;
-        }
-
-        /// <summary>
-        /// Set a specific RoleName to the <see cref="ClubStaffEntity"/>.
-        /// </summary>
-        /// <param name="name"> The name to use. </param>
-        /// <returns> This <see cref="ClubStaffEntityBuilder"/>. </returns>
-        public ClubStaffEntityBuilder WithRoleName(string name)
-        {
-            _clubStaff.RoleName = name;
             return this;
         }
 

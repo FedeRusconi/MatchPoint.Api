@@ -8,6 +8,7 @@ using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
+using MatchPoint.ServiceDefaults;
 using Microsoft.Graph.Models;
 
 namespace MatchPoint.ClubService.Services
@@ -16,6 +17,7 @@ namespace MatchPoint.ClubService.Services
         IClubStaffRepository _clubStaffRepository,
         IAzureAdService _azureAdService,
         IAzureAdUserFactory _azureAdUserFactory,
+        ISessionService _sessionService,
         IConfiguration _configuration,        
         ILogger<ClubStaffService> _logger) : IClubStaffService
     {
@@ -38,7 +40,7 @@ namespace MatchPoint.ClubService.Services
                     id,
                     clubId);
                 return ServiceResult<ClubStaffEntity>.Failure(
-                    $"ClubID of club staff with id '{id}' does not match provided '{clubId}'.", 
+                    $"ClubId of club staff with id '{id}' does not match provided '{clubId}'.", 
                     ServiceResultType.BadRequest);
             }
 
@@ -74,7 +76,7 @@ namespace MatchPoint.ClubService.Services
             var clubStaff = await _clubStaffRepository.GetAllWithSpecificationAsync(
                     pageNumber, pageSize, cancellationToken, filters, orderBy, trackChanges: false);
 
-            _logger.LogDebug("Receieved {PageSize} of {Count} Club staff found.", clubStaff.Data.Count(), clubStaff.TotalCount);
+            _logger.LogDebug("Received {PageSize} of {Count} Club staff found.", clubStaff.Data.Count(), clubStaff.TotalCount);
 
             return ServiceResult<PagedResponse<ClubStaffEntity>>.Success(clubStaff);
         }
@@ -133,7 +135,7 @@ namespace MatchPoint.ClubService.Services
 
             // Set Id and "Created" tracking fields
             clubStaffEntity.Id = Guid.Parse(azureAdUser.Id!);
-            clubStaffEntity.SetTrackingFields(_azureAdService.CurrentUserId);
+            clubStaffEntity.SetTrackingFields(_sessionService.CurrentUserId);
             clubStaffEntity.ClubId = clubId;
 
             // Create in db
@@ -178,14 +180,14 @@ namespace MatchPoint.ClubService.Services
                     id,
                     clubId);
                 return ServiceResult<ClubStaffEntity>.Failure(
-                    $"ClubID of club staff with id '{id}' does not match provided '{clubId}'.",
+                    $"ClubId of club staff with id '{id}' does not match provided '{clubId}'.",
                     ServiceResultType.BadRequest);
             }
 
             try
             {
                 clubStaffEntity.Patch(propertyUpdates);
-                clubStaffEntity.SetTrackingFields(_azureAdService.CurrentUserId, updating: true);
+                clubStaffEntity.SetTrackingFields(_sessionService.CurrentUserId, updating: true);
             }
             catch (ArgumentException ex)
             {
@@ -196,7 +198,8 @@ namespace MatchPoint.ClubService.Services
             try
             {
                 // Update user is Azure AD
-                var updatedAdUser = _azureAdUserFactory.PatchedUser(propertyUpdates, id.ToString());
+                var updatedAdUser = _azureAdUserFactory.PatchedUser(
+                    propertyUpdates, id.ToString(), _configuration.GetValue<string>("AzureAdB2C:ExtensionsClientId"));
                 // Reset display name and mail nickname in case first or last name have changed
                 var givenName = updatedAdUser.GivenName ?? azureAdUser.GivenName;
                 var surname = updatedAdUser.Surname ?? azureAdUser.Surname;

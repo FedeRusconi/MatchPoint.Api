@@ -13,7 +13,6 @@ namespace MatchPoint.ClubService.Entities
         public required string LastName { get; set; }
         public string? Photo { get; set; }
         public Guid? RoleId { get; set; }
-        public string? RoleName { get; set; }        
         public string? JobTitle { get; set; }
         public string? PhoneNumber { get; set; }
         public string? BusinessPhoneNumber { get; set; }

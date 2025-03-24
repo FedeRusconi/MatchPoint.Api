@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using MatchPoint.Api.Shared.ClubService.Models;
+using MatchPoint.Api.Shared.Infrastructure.Attributes;
 using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Mappers;
@@ -19,7 +20,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             _clubStaffBuilder = new();
         }
 
-        #region To ClubStaffEntity
+        #region ToClubStaffEntity
 
         [TestMethod]
         public void ToClubStaffEntity_FromClubStaffDto_AllExpectedPropertiesShouldBeSet()
@@ -56,8 +57,11 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             Assert.AreEqual(clubStaffDto.Email, result.Email);
             Assert.AreEqual(clubStaffDto.Photo, result.Photo);
             Assert.AreEqual(clubStaffDto.RoleId, result.RoleId);
-            Assert.AreEqual(clubStaffDto.RoleName, result.RoleName);
             Assert.AreEqual(clubStaffDto.ClubId, result.ClubId);
+            Assert.AreEqual(clubStaffDto.CreatedBy, result.CreatedBy);
+            Assert.AreEqual(clubStaffDto.CreatedOnUtc, result.CreatedOnUtc);
+            Assert.AreEqual(clubStaffDto.ModifiedBy, result.ModifiedBy);
+            Assert.AreEqual(clubStaffDto.ModifiedOnUtc, result.ModifiedOnUtc);
         }
 
         [TestMethod]
@@ -93,11 +97,11 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
 
             // Act & Assert
             var result = clubStaffs.ToClubStaffEntityEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion
-        #region To ClubStaffDto
+        #region ToClubStaffDto
 
         [TestMethod]
         public void ToClubStaffDto_FromClubStaffEntity_AllExpectedPropertiesShouldBeSet()
@@ -112,7 +116,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
             PropertyInfo[] properties = result.GetType().GetProperties();
             foreach (var prop in properties)
             {
-                if (prop.GetValue(result) == default)
+                if (prop.GetCustomAttribute<ClientOnlyAttribute>() == null && prop.GetValue(result) == default)
                 {
                     Assert.Fail($"{prop.Name} has not been set.");
                     break;
@@ -124,16 +128,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         public void ToClubStaffDto_FromClubStaffEntity_ValidParameter_ShouldReturnClubStaffEntity()
         {
             // Arrange
-            ClubStaffEntity clubStaffEntity = _clubStaffEntityBuilder.WithName().Build();
+            ClubStaffEntity clubStaffEntity = _clubStaffEntityBuilder.WithTrackingFields().Build();
 
             // Act
             ClubStaff result = clubStaffEntity.ToClubStaffDto();
 
             // Assert
             Assert.AreEqual(clubStaffEntity.Id, result.Id);
-            Assert.AreEqual(clubStaffEntity.FirstName, result.FirstName);
-            Assert.AreEqual(clubStaffEntity.LastName, result.LastName);
             Assert.AreEqual(clubStaffEntity.Email, result.Email);
+            Assert.AreEqual(clubStaffEntity.Photo, result.Photo);
+            Assert.AreEqual(clubStaffEntity.RoleId, result.RoleId);
+            Assert.AreEqual(clubStaffEntity.ClubId, result.ClubId);
+            Assert.AreEqual(clubStaffEntity.CreatedBy, result.CreatedBy);
+            Assert.AreEqual(clubStaffEntity.CreatedOnUtc, result.CreatedOnUtc);
+            Assert.AreEqual(clubStaffEntity.ModifiedBy, result.ModifiedBy);
+            Assert.AreEqual(clubStaffEntity.ModifiedOnUtc, result.ModifiedOnUtc);
         }
 
         [TestMethod]
@@ -169,11 +178,11 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
 
             // Act & Assert
             var result = clubStaffs.ToClubStaffDtoEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion
-        #region To ToAzureAdUser
+        #region ToAzureAdUser
 
         [TestMethod]
         public void ToAzureAdUser_FromClubStaffEntity_ValidParameter_ShouldReturnClubStaffEntity()

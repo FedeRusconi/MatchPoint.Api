@@ -119,6 +119,8 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
 
             _logger.LogTrace("Creating a new club staff in the database with id {Id}", clubStaffEntity.Id);
 
+            clubStaffEntity.ModifiedBy = null;
+            clubStaffEntity.ModifiedOnUtc = null;
             _context.ClubStaff.Add(clubStaffEntity);
 
             try
@@ -141,8 +143,21 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Repositories
             ArgumentNullException.ThrowIfNull(clubStaffEntity);
 
             _logger.LogTrace("Updating club staff in the database with Id {Id}", clubStaffEntity.Id);
-            _context.ClubStaff.Attach(clubStaffEntity);
-            _context.Entry(clubStaffEntity).State = EntityState.Modified;
+
+            // Retrieve the existing entity first
+            var existingEntity = await _context.ClubStaff
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == clubStaffEntity.Id, cancellationToken);
+            if (existingEntity == null)
+            {
+                _logger.LogWarning("No club staff found in the database with ID: {Id}", clubStaffEntity.Id);
+                return null;
+            }
+
+            // Preserve properties that should not be updated
+            clubStaffEntity.CreatedBy = existingEntity.CreatedBy;
+            clubStaffEntity.CreatedOnUtc = existingEntity.CreatedOnUtc;
+            _context.ClubStaff.Update(clubStaffEntity);
 
             try
             {

@@ -4,6 +4,7 @@ using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data;
 using MatchPoint.ClubService.Infrastructure.Data.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -25,9 +26,9 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         public void Setup()
         {
             _dbContext = new ClubServiceDbContext(_configuration);
-            _loggerMock = new();
+            _loggerMock = new Mock<ILogger<ClubRepository>>();
             _clubRepository = new ClubRepository(_dbContext, _loggerMock.Object);
-            _clubEntityBuilder = new();
+            _clubEntityBuilder = new ClubEntityBuilder();
             _cancellationToken = new CancellationToken();
         }
 
@@ -469,6 +470,32 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         }
 
         [TestMethod]
+        public async Task CreateAsync_WhenClubIdIsDuplicate_ShouldReturnNull()
+        {
+            // Arrange
+            ClubEntity clubEntity = _clubEntityBuilder.Build();
+
+            try
+            {
+                // Add it first to mimic the Id duplicate in the Act part
+                clubEntity = await _clubRepository.CreateAsync(clubEntity, _cancellationToken)
+                    ?? throw new Exception("_clubRepository.CreateAsync() returned null");
+
+                // Act
+                var result = await _clubRepository.CreateAsync(clubEntity, _cancellationToken);
+
+                // Assert
+                Assert.IsNull(result);
+            }
+            finally
+            {
+                // Cleanup
+                _dbContext.Entry(clubEntity).State = EntityState.Detached;
+                await _clubRepository.DeleteAsync(clubEntity, _cancellationToken);
+            }
+        }
+
+        [TestMethod]
         public async Task CreateAsync_TransactionIsActive_ShouldNotCommitAutomatically()
         {
             // Arrange
@@ -585,10 +612,10 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
         public async Task DeleteAsync_WhenClubDoesNotExist_ShouldReturnNull()
         {
             // Arrange
-            var club = _clubEntityBuilder.Build();
+            var clubEntity = _clubEntityBuilder.Build();
 
             // Act
-            var result = await _clubRepository.DeleteAsync(club, _cancellationToken);
+            var result = await _clubRepository.DeleteAsync(clubEntity, _cancellationToken);
 
             // Assert
             Assert.IsNull(result);

@@ -30,23 +30,16 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Factories
             { nameof(ClubStaffEntity.LeftOnUtc), nameof(User.EmployeeLeaveDateTime) }
         };
 
-        /// <summary>
-        /// Prepare a <see cref="User"/> instance with the information patched as per
-        /// parameter of property updates.
-        /// </summary>
-        /// <param name="updates">
-        /// A List of <see cref="PropertyUpdate"/> containing information about the updates to apply.
-        /// </param>
-        /// <param name="id"> The Id to assign to the user. Default is null. </param>
-        /// <returns><see cref="User"/></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        public User PatchedUser(IEnumerable<PropertyUpdate> updates, string? id = null)
+        /// <inheritdoc />
+        public User PatchedUser(IEnumerable<PropertyUpdate> updates, string? id = null, string? extensionsClientId = null)
         {
             ArgumentNullException.ThrowIfNull(updates, nameof(updates));
 
             var adUser = new PatchableAzureUser()
             {
-                Id = id
+                Id = id,
+                // Required to modify user in AzureAD
+                OdataType = "#microsoft.graph.user"
             };
             List<PropertyUpdate> userUpdates = [];
             foreach (var patchProperty in updates)
@@ -54,7 +47,11 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Factories
                 // Handle the special cases first
                 if (patchProperty.Property == nameof(ClubStaffEntity.Address))
                 {
-                    var addressValue = patchProperty.Value as Address;
+                    var addressString = patchProperty?.Value?.ToString();
+                    if (addressString == null || !Address.TryParse(addressString, out var addressValue))
+                    {
+                        continue;
+                    }
                     adUser.StreetAddress = addressValue?.Street;
                     adUser.City = addressValue?.City;
                     adUser.State = addressValue?.State;
@@ -71,6 +68,13 @@ namespace MatchPoint.ClubService.Infrastructure.Data.Factories
                 {
                     adUser.BusinessPhones = [patchProperty.Value?.ToString()];
                     continue;
+                }
+                if (patchProperty.Property == nameof(ClubStaffEntity.RoleId))
+                {
+                    // The format below is required by AzureAD when dealing with custom attributes
+                    // extension_{extensionClientIdNoHypens}_{CustomAttribute}
+                    adUser.AdditionalData.Add(
+                        $"extension_{extensionsClientId?.Replace("-", string.Empty)}_RoleId", patchProperty.Value);
                 }
                 // Skip properties not found or mapped
                 if (!_propertiesMapping.TryGetValue(patchProperty.Property, out var userProperty))

@@ -2,10 +2,8 @@
 using MatchPoint.Api.Tests.Shared.ClubService.Helpers;
 using MatchPoint.Api.Tests.Shared.Common.Helpers;
 using MatchPoint.ClubService.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Graph.Models;
-using Moq;
 
 namespace MatchPoint.ClubService.Tests.Integration.Services
 {
@@ -13,28 +11,15 @@ namespace MatchPoint.ClubService.Tests.Integration.Services
     public class AzureAdServiceTests
     {
         private readonly IConfiguration _configuration = DataContextHelpers.TestingConfiguration;
-        private static Mock<IHttpContextAccessor> _httpContextMock = default!;
         private AzureAdService _azureAdService = default!;
 
         private AzureAdUserBuilder _azureAdUserBuilder = default!;
         private CancellationToken _cancellationToken = default!;
 
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
-        {
-            // Set up IHttpContextAccessor to return the mock HttpContext
-            _httpContextMock = new Mock<IHttpContextAccessor>();
-            var httpContext = new DefaultHttpContext
-            {
-                User = TestAuthHandler.Principal
-            };
-            _httpContextMock.Setup(x => x.HttpContext).Returns(httpContext);
-        }
-
         [TestInitialize]
         public void TestInitialize()
         {
-            _azureAdService = new AzureAdService(_httpContextMock.Object, _configuration);
+            _azureAdService = new AzureAdService(_configuration);
             _azureAdUserBuilder = new();
             _cancellationToken = new CancellationToken();
         }

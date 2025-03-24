@@ -1,9 +1,12 @@
 ﻿using Asp.Versioning;
+using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Common.Utilities;
+using MatchPoint.Api.Shared.Infrastructure.Attributes;
 using MatchPoint.Api.Shared.Infrastructure.Extensions;
+using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.ClubService.Interfaces;
 using MatchPoint.ClubService.Mappers;
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +23,7 @@ namespace MatchPoint.ClubService.Controllers
     {
         // GET: api/v1/clubs
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Read")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Read}")]
         [HttpGet]
         public async Task<ActionResult<PagedResponse<Club>>> GetClubsAsync(
             CancellationToken cancellationToken,
@@ -62,7 +65,8 @@ namespace MatchPoint.ClubService.Controllers
 
         // GET: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Read")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Read}")]
+        [RequiredCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.Read)]
         [HttpGet("{id:guid}", Name = nameof(GetClubAsync))]
         public async Task<ActionResult<Club>> GetClubAsync(Guid id, CancellationToken cancellationToken)
         {
@@ -80,23 +84,23 @@ namespace MatchPoint.ClubService.Controllers
 
         // POST: api/v1/clubs
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Write")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Write}")]
         [HttpPost]
         public async Task<ActionResult<Club>> PostClubAsync(Club club, CancellationToken cancellationToken)
         {
             _logger.LogInformation(
-                "Received POST request to CREATE club with name: {clubName}, email: {clubEmail}",
+                "Received POST request to CREATE club with name: {ClubName}, email: {ClubEmail}",
                 club.Name, club.Email);
             var result = await _clubService.CreateAsync(club.ToClubEntity(), cancellationToken);
             if (!result.IsSuccess || result.Data == null)
             {
                 _logger.LogWarning(
-                    "Failed to create club with name: {clubName}, email: {clubEmail}. Error: {Error}",
+                    "Failed to create club with name: {ClubName}, email: {ClubEmail}. Error: {Error}",
                     club.Name, club.Email, result.Error);
                 return result.ToFailureActionResult(this);
             }
             _logger.LogInformation(
-                "Successfully created club with ID: {Id}, name: {clubName}, email: {clubEmail}",
+                "Successfully created club with ID: {Id}, name: {ClubName}, email: {ClubEmail}",
                 result.Data.Id, result.Data.Name, result.Data.Email);
 
             var apiVersion = HttpContext.GetRequestedApiVersion()?.ToString();
@@ -108,7 +112,8 @@ namespace MatchPoint.ClubService.Controllers
 
         // PUT: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Write")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Write}")]
+        [RequiredCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.ReadWrite)]
         [HttpPut("{id}")]
         public async Task<ActionResult<Club>> PutClubAsync(Guid id, Club club, CancellationToken cancellationToken)
         {
@@ -133,7 +138,8 @@ namespace MatchPoint.ClubService.Controllers
 
         // PATCH: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Write")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Write}")]
+        [RequiredCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.ReadWrite)]
         [HttpPatch("{id}")]
         public async Task<ActionResult<Club>> PatchClubAsync(Guid id, IEnumerable<PropertyUpdate> propertyUpdates, CancellationToken cancellationToken)
         {
@@ -160,7 +166,8 @@ namespace MatchPoint.ClubService.Controllers
 
         // DELETE: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
-        [RequiredScope("Clubs.Delete")]
+        [RequiredScope($"{Scopes.Clubs}.{Scopes.Delete}")]
+        [RequiredCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.ReadWriteDelete)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClubAsync(Guid id, CancellationToken cancellationToken)
         {

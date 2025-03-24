@@ -1,12 +1,18 @@
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ServiceDiscovery;
+using Microsoft.Identity.Web;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using MatchPoint.ServiceDefaults;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Microsoft.Extensions.Hosting
 {
@@ -17,6 +23,8 @@ namespace Microsoft.Extensions.Hosting
     {
         public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
+            builder.AddAuthentication();
+
             builder.ConfigureOpenTelemetry();
 
             builder.AddDefaultHealthChecks();
@@ -26,6 +34,12 @@ namespace Microsoft.Extensions.Hosting
             builder.Logging.AddConsole();
             builder.Services.AddLogging();
 
+            builder.AddControllersWithOptions();
+            builder.AddHybridCache();
+
+            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+            builder.Services.AddOpenApi();
+
             builder.Services.ConfigureHttpClientDefaults(http =>
             {
                 // Turn on resilience by default
@@ -34,12 +48,59 @@ namespace Microsoft.Extensions.Hosting
                 // Turn on service discovery by default
                 http.AddServiceDiscovery();
             });
+            // Http client for AccessControlService
+            builder.Services.AddHttpClient("AccessControlService", client =>
+            {
+                client.BaseAddress = new Uri("https+http://matchpoint-accesscontrolservice");
+            });
+
+            builder.Services.AddScoped<ISessionService, SessionService>();
 
             // Uncomment the following to restrict the allowed schemes for service discovery.
             // builder.Services.Configure<ServiceDiscoveryOptions>(options =>
             // {
             //     options.AllowedSchemes = ["https"];
             // });
+
+            return builder;
+        }
+
+        private static TBuilder AddHybridCache<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+        {
+            builder.Services.AddHybridCache(options =>
+            {
+                // Maximum size of cached items
+                options.MaximumPayloadBytes = 1024 * 1024 * 10; // 10MB
+                options.MaximumKeyLength = 512;
+
+                // Default timeouts
+                options.DefaultEntryOptions = new HybridCacheEntryOptions
+                {
+                    Expiration = TimeSpan.FromMinutes(5),
+                    LocalCacheExpiration = TimeSpan.FromMinutes(5)
+                };
+            });
+
+            return builder;
+        }
+
+        private static TBuilder AddControllersWithOptions<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+        {
+            builder.Services
+                .AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                });
+
+            return builder;
+        }
+
+        private static TBuilder AddAuthentication<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+        {
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddMicrosoftIdentityWebApi(builder.Configuration, configSectionName: "AzureAdB2C");
 
             return builder;
         }

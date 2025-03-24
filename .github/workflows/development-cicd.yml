@@ -1,9 +1,6 @@
 name: Development CI/CD Pipeline
 
 on:
-  push:
-    branches:
-      - development
   pull_request:
     branches:
       - development
@@ -19,8 +16,11 @@ jobs:
       CosmosDb:DatabaseName:  ${{ vars.COSMOSDB_DATABASE_NAME }}
       AzureAdB2C:TenantId: ${{ vars.AZUREADB2C_TENANT_ID }}
       AzureAdB2C:Domain: ${{ vars.AZUREADB2C_DOMAIN }}
+      AzureAdB2C:Instance: ${{ vars.AZUREADB2C_INSTANCE }}
       AzureAdB2C:ClientId: ${{ vars.AZUREADB2C_CLIENT_ID }}
       AzureAdB2C:ClientSecret: ${{ secrets.AZUREADB2C_CLIENT_SECRET }}
+      AzureAdB2C:ExtensionsClientId: ${{ vars.AZUREADB2C_EXTENSIONS_CLIENT_ID }}
+      AzureAdB2C:SignUpSignInPolicyId: ${{ vars.AZUREADB2C_SIGNUP_SIGNIN_POLICY_ID }}
 
     steps:
       - name: Checkout repository
