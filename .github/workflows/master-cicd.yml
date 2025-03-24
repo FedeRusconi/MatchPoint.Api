@@ -16,8 +16,11 @@ jobs:
       CosmosDb:DatabaseName:  ${{ vars.TESTS_COSMOSDB_DATABASE_NAME }}
       AzureAdB2C:TenantId: ${{ vars.TESTS_AZUREADB2C_TENANT_ID }}
       AzureAdB2C:Domain: ${{ vars.TESTS_AZUREADB2C_DOMAIN }}
+      AzureAdB2C:Instance: ${{ vars.AZUREADB2C_INSTANCE }}
       AzureAdB2C:ClientId: ${{ vars.TESTS_AZUREADB2C_CLIENT_ID }}
       AzureAdB2C:ClientSecret: ${{ secrets.TESTS_AZUREADB2C_CLIENT_SECRET }}
+      AzureAdB2C:ExtensionsClientId: ${{ vars.AZUREADB2C_EXTENSIONS_CLIENT_ID }}
+      AzureAdB2C:SignUpSignInPolicyId: ${{ vars.AZUREADB2C_SIGNUP_SIGNIN_POLICY_ID }}
 
     steps:
       - name: Checkout repository
