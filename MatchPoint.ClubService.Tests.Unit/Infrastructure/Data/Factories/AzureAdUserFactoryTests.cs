@@ -1,4 +1,5 @@
-﻿using MatchPoint.Api.Shared.Common.Enums;
+﻿using System.Text.Json;
+using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Infrastructure.Data.Factories;
@@ -45,7 +46,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Infrastructure.Data.Factories
                 new() { Property = nameof(ClubStaffEntity.PhoneNumber), Value = phone },
                 new() { Property = nameof(ClubStaffEntity.BusinessPhoneNumber), Value = businessPhone },
                 new() { Property = nameof(ClubStaffEntity.ActiveStatus), Value = status },
-                new() { Property = nameof(ClubStaffEntity.Address), Value = address},
+                new() { Property = nameof(ClubStaffEntity.Address), Value = JsonSerializer.Serialize(address)},
                 new() { Property = nameof(ClubStaffEntity.HiredOnUtc), Value = hiredDate},
                 new() { Property = nameof(ClubStaffEntity.LeftOnUtc), Value = letftDate}
             ];
