@@ -40,6 +40,10 @@ namespace MatchPoint.Api.Tests.Shared.Common.Extensions
                             .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
                                 "TestScheme", options => { });
                     }
+                    else
+                    {
+                        services.AddAuthentication();
+                    }
 
                     // Replace IConfiguration in the DI container with test-specific configuration
                     services.RemoveAll<IConfiguration>();
@@ -89,6 +93,10 @@ namespace MatchPoint.Api.Tests.Shared.Common.Extensions
                         services.AddAuthentication(defaultScheme: "TestScheme")
                             .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
                                 "TestScheme", options => { });
+                    }
+                    else
+                    {
+                        services.AddAuthentication();
                     }
 
                     // Replace IConfiguration in the DI container with test-specific configuration
