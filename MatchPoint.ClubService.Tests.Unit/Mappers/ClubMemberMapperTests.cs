@@ -8,20 +8,12 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
     [TestClass]
     public class ClubMemberMapperTests
     {
-        // This is used to ensure no properties are forgotten
-        private readonly string[] expectedClubMemberEntityProperties = [
-            nameof(ClubMemberEntity.Id), nameof(ClubMemberEntity.FirstName), nameof(ClubMemberEntity.LastName), 
-            nameof(ClubMemberEntity.Photo)];
-        private readonly string[] expectedClubMemberDtoProperties = [
-            nameof(ClubMember.Id), nameof(ClubMember.FirstName), nameof(ClubMember.LastName),
-            nameof(ClubMember.Photo)];
-
         #region To ClubMemberEntity
 
         [TestMethod]
         public void ToClubMemberEntity_FromClubMemberDto_AllExpectedPropertiesShouldBeSet()
         {
-            #region Arrange
+            // Arrange
             ClubMember clubMemberDto = new()
             {
                 Id = Guid.NewGuid(),
@@ -29,22 +21,26 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 LastName = "Last",
                 Photo = "PhotoURL"
             };
-            #endregion
 
-            #region Act
+            // Act
             ClubMemberEntity result = clubMemberDto.ToClubMemberEntity();
-            #endregion
 
-            #region Assert
+            //Assert
             PropertyInfo[] properties = result.GetType().GetProperties();
-            Assert.IsTrue(properties.All(prop => expectedClubMemberEntityProperties.Contains(prop.Name)));
-            #endregion
+            foreach (var prop in properties)
+            {
+                if (prop.GetValue(result) == default)
+                {
+                    Assert.Fail($"{prop.Name} has not been set.");
+                    break;
+                }
+            }
         }
 
         [TestMethod]
         public void ToClubMemberEntity_FromClubMemberDto_ValidParameter_ShouldReturnClubMemberEntity()
         {
-            #region Arrange
+            // Arrange
             ClubMember clubMemberDto = new()
             {
                 Id = Guid.NewGuid(),
@@ -52,24 +48,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 LastName = "Last",
                 Photo = "PhotoURL"
             };
-            #endregion
 
-            #region Act
+            // Act
             ClubMemberEntity result = clubMemberDto.ToClubMemberEntity();
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.AreEqual(clubMemberDto.Id, result.Id);
             Assert.AreEqual(clubMemberDto.FirstName, result.FirstName);
             Assert.AreEqual(clubMemberDto.LastName, result.LastName);
             Assert.AreEqual(clubMemberDto.Photo, result.Photo);
-            #endregion
         }
 
         [TestMethod]
         public void ToClubMemberEntityEnumerable_ValidParameter_ShouldReturnEnumerableOfClubMemberEntity()
         {
-            #region Arrange
+            // Arrange
             ClubMember clubMember1 = new()
             {
                 Id = Guid.NewGuid(),
@@ -89,24 +82,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 LastName = "Last 3"
             };
             List<ClubMember> clubMembers = [clubMember1, clubMember2, clubMember3];
-            #endregion
 
-            #region  Act
+            //  Act
             IEnumerable<ClubMemberEntity> result = clubMembers.ToClubMemberEntityEnumerable();
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.AreEqual(clubMembers.Count, result.Count());
             Assert.AreEqual(clubMembers[0].Id, result.ElementAt(0).Id);
             Assert.AreEqual(clubMembers[1].Id, result.ElementAt(1).Id);
             Assert.AreEqual(clubMembers[2].Id, result.ElementAt(2).Id);
-            #endregion
         }
 
         [TestMethod]
         public void ToClubMemberEntityEnumerable_NullClubMember_ShouldThrowNullReferenceException()
         {
-            #region  Arrange
+            //  Arrange
             ClubMember clubMember1 = new()
             {
                 Id = Guid.NewGuid(),
@@ -121,12 +111,10 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 LastName = "Last 3"
             };
             List<ClubMember> clubMembers = [clubMember1, clubMember2, clubMember3];
-            #endregion
 
-            #region Act & Assert
+            // Act & Assert
             var result = clubMembers.ToClubMemberEntityEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
-            #endregion
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion
@@ -136,7 +124,7 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         [TestMethod]
         public void ToClubMemberDto_FromClubMemberEntity_AllExpectedPropertiesShouldBeSet()
         {
-            #region Arrange
+            // Arrange
             ClubMemberEntity clubMemberEntity = new()
             {
                 Id = Guid.NewGuid(),
@@ -144,22 +132,26 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 LastName = "Last",
                 Photo = "PhotoURL"
             };
-            #endregion
 
-            #region Act
+            // Act
             ClubMember result = clubMemberEntity.ToClubMemberDto();
-            #endregion
 
-            #region Assert
+            // Assert
             PropertyInfo[] properties = result.GetType().GetProperties();
-            Assert.IsTrue(properties.All(prop => expectedClubMemberDtoProperties.Contains(prop.Name)));
-            #endregion
+            foreach (var prop in properties)
+            {
+                if (prop.GetValue(result) == default)
+                {
+                    Assert.Fail($"{prop.Name} has not been set.");
+                    break;
+                }
+            }
         }
 
         [TestMethod]
         public void ToClubMemberDto_FromClubMemberEntity_ValidParameter_ShouldReturnClubMemberDto()
         {
-            #region Arrange
+            // Arrange
             ClubMemberEntity clubMemberEntity = new()
             {
                 Id = Guid.NewGuid(),
@@ -167,24 +159,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 LastName = "Last",
                 Photo = "PhotoURL"
             };
-            #endregion
 
-            #region Act
+            // Act
             ClubMember result = clubMemberEntity.ToClubMemberDto();
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.AreEqual(clubMemberEntity.Id, result.Id);
             Assert.AreEqual(clubMemberEntity.FirstName, result.FirstName);
             Assert.AreEqual(clubMemberEntity.LastName, result.LastName);
             Assert.AreEqual(clubMemberEntity.Photo, result.Photo);
-            #endregion
         }
 
         [TestMethod]
         public void ToClubMemberDtoEnumerable_ValidParameter_ShouldReturnEnumerableOfClubMemberDto()
         {
-            #region Arrange
+            // Arrange
             ClubMemberEntity clubMemberEntity1 = new()
             {
                 Id = Guid.NewGuid(),
@@ -204,24 +193,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 LastName = "Last 3"
             };
             List<ClubMemberEntity> clubMemberEntities = [clubMemberEntity1, clubMemberEntity2, clubMemberEntity3];
-            #endregion
 
-            #region  Act
+            // Act
             IEnumerable<ClubMember> result = clubMemberEntities.ToClubMemberDtoEnumerable();
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.AreEqual(clubMemberEntities.Count, result.Count());
             Assert.AreEqual(clubMemberEntities[0].Id, result.ElementAt(0).Id);
             Assert.AreEqual(clubMemberEntities[1].Id, result.ElementAt(1).Id);
             Assert.AreEqual(clubMemberEntities[2].Id, result.ElementAt(2).Id);
-            #endregion
         }
 
         [TestMethod]
         public void ToClubMemberDtoEnumerable_NullClubMember_ShouldThrowNullReferenceException()
         {
-            #region  Arrange
+            // Arrange
             ClubMemberEntity clubMemberEntity1 = new()
             {
                 Id = Guid.NewGuid(),
@@ -236,12 +222,10 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 LastName = "Last 3"
             };
             List<ClubMemberEntity> clubMemberEntities = [clubMemberEntity1, clubMemberEntity2, clubMemberEntity3];
-            #endregion
 
-            #region Act & Assert
+            // Act & Assert
             var result = clubMemberEntities.ToClubMemberDtoEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
-            #endregion
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion

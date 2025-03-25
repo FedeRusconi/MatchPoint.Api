@@ -31,6 +31,8 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
                 .RuleFor(c => c.Address, f => addressGenerator.Generate())
                 .RuleFor(c => c.Email, f => f.Person.Email)
                 .RuleFor(c => c.PhoneNumber, f => f.Phone.PhoneNumber())
+                .RuleFor(c => c.Logo, f => $"{f.Random.AlphaNumeric(10)}.png")
+                .RuleFor(c => c.TimezoneId, f => TimeZoneInfo.Utc.Id)
                 .Generate();
         }
 
@@ -96,6 +98,19 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         public ClubBuilder WithActiveStatus(ActiveStatus activeStatus)
         {
             _club.ActiveStatus = activeStatus;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the tracking fields (crated, modified) for the <see cref="Club"/>.
+        /// <returns> This <see cref="ClubBuilder"/>. </returns>
+        public ClubBuilder WithTrackingFields()
+        {
+            var faker = new Faker();
+            _club.CreatedBy = Guid.NewGuid();
+            _club.CreatedOnUtc = faker.Date.Past();
+            _club.ModifiedBy = Guid.NewGuid();
+            _club.ModifiedOnUtc = faker.Date.Past();
             return this;
         }
 
