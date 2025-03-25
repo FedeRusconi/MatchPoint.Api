@@ -12,7 +12,7 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
         [TestMethod]
         public void CreateFilters_WithValidFilters_ShouldReturnFilterExpression()
         {
-            #region Arrange
+            // Arrange
             string idPropName = nameof(GenericEntityTest.Id);
             Guid? idPropValue = Guid.NewGuid();
             string descPropName = nameof(GenericEntityTest.Description);
@@ -45,29 +45,24 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
                         Expression.Equal(propertyCreated, constantCreated)),
                     Expression.Equal(propertyAvailable, constantAvailable)),
                 parameter);
-            #endregion
 
-            #region Act
+            // Act
             var filterExp = QuerySpecificationFactory<GenericEntityTest>.CreateFilters(filters);
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsNotNull(filterExp);
             Assert.IsTrue(ExpressionComparer.Compare(expectedExp, filterExp));
-            #endregion
         }
 
         [TestMethod]
         public void CreateFilters_WithEmptyFilters_ShouldThrowArgumentException()
         {
-            #region Arrange
+            // Arrange
             Dictionary<string, string> filters = [];
-            #endregion
 
-            #region Act & Assert
-            Assert.ThrowsException<ArgumentException>(
-                () => QuerySpecificationFactory<GenericEntityTest>.CreateFilters(filters));
-            #endregion
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentException>(
+                () => _ = QuerySpecificationFactory<GenericEntityTest>.CreateFilters(filters));
         }
 
         #endregion
@@ -76,36 +71,31 @@ namespace MatchPoint.Api.Tests.Unit.Infrastructure.Utilities
         [TestMethod]
         public void CreateOrderBy_WithValidPropertyName_ShouldReturnOrderByExpression()
         {
-            #region Arrange
+            // Arrange
             string idPropName = nameof(GenericEntityTest.Id);
 
             var parameter = Expression.Parameter(typeof(GenericEntityTest), "entity");
             var propertyExpression = Expression.Property(parameter, idPropName);
             var expectedExp = Expression.Lambda<Func<GenericEntityTest, object>>(
                 Expression.Convert(propertyExpression, typeof(object)), parameter);
-            #endregion
 
-            #region Act
+            // Act
             var orderByExp = QuerySpecificationFactory<GenericEntityTest>.CreateOrderBy(idPropName);
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsNotNull(orderByExp);
             Assert.IsTrue(ExpressionComparer.Compare(expectedExp, orderByExp));
-            #endregion
         }
 
         [TestMethod]
         public void CreateOrderBy_WithNullPropertyName_ShouldThrowArgumentNullException()
         {
-            #region Arrange
+            // Arrange
             string idPropName = null!;
-            #endregion
 
-            #region Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(
-                () => QuerySpecificationFactory<GenericEntityTest>.CreateOrderBy(idPropName));
-            #endregion
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentNullException>(
+                () => _ = QuerySpecificationFactory<GenericEntityTest>.CreateOrderBy(idPropName));
         }
 
         #endregion
