@@ -11,8 +11,8 @@ namespace MatchPoint.Api.Tests.Unit.Common.Extensions
         [TestMethod]
         public void Patch_WhenValidTypesAndValuesAreProvided_ShouldUpdateProvidedFields()
         {
-            #region Arrange
-            var patchableEntity = new PatchableEntityTest();
+            // Arrange
+            PatchableEntityTest patchableEntity = new();
             int intProperty = 1;
             int? nullableIntProperty = 2;
             double doubleProperty = 2.5;
@@ -21,8 +21,8 @@ namespace MatchPoint.Api.Tests.Unit.Common.Extensions
             DateTime dateTimeProperty = new(2024, 12, 12, 10, 05, 12);
             bool boolProperty = true;
             ActiveStatus enumProperty = ActiveStatus.Active;
-            var propertyUpdates = new List<PropertyUpdate>()
-            {
+            List<PropertyUpdate> propertyUpdates =
+            [
                 new(nameof(PatchableEntityTest.IntProperty), intProperty),
                 new(nameof(PatchableEntityTest.NullableIntProperty), nullableIntProperty),
                 new(nameof(PatchableEntityTest.DoubleProperty), doubleProperty),
@@ -31,14 +31,12 @@ namespace MatchPoint.Api.Tests.Unit.Common.Extensions
                 new(nameof(PatchableEntityTest.DateTimeProperty), dateTimeProperty),
                 new(nameof(PatchableEntityTest.BoolProperty), boolProperty),
                 new(nameof(PatchableEntityTest.EnumProperty), enumProperty),
-            };
-            #endregion
+            ];
 
-            #region Act
+            // Act
             patchableEntity.Patch(propertyUpdates);
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.AreEqual(intProperty, patchableEntity.IntProperty);
             Assert.AreEqual(nullableStringProperty, patchableEntity.NullableStringProperty);
             Assert.AreEqual(doubleProperty, patchableEntity.DoubleProperty);
@@ -47,33 +45,29 @@ namespace MatchPoint.Api.Tests.Unit.Common.Extensions
             Assert.AreEqual(dateTimeProperty, patchableEntity.DateTimeProperty);
             Assert.AreEqual(boolProperty, patchableEntity.BoolProperty);
             Assert.AreEqual(enumProperty, patchableEntity.EnumProperty);
-            #endregion
         }
 
         [TestMethod]
         public void Patch_WhenValidNullValuesAreProvided_ShouldUpdateProvidedFields()
         {
-            #region Arrange
-            var patchableEntity = new PatchableEntityTest()
+            // Arrange
+            PatchableEntityTest patchableEntity = new()
             {
                 NullableIntProperty = 1,
                 NullableStringProperty = "Not Null"
             };
-            var propertyUpdates = new List<PropertyUpdate>()
-            {
+            List<PropertyUpdate> propertyUpdates =
+            [
                 new(nameof(PatchableEntityTest.NullableIntProperty), null),
                 new(nameof(PatchableEntityTest.NullableStringProperty), null)
-            };
-            #endregion
+            ];
 
-            #region Act
+            // Act
             patchableEntity.Patch(propertyUpdates);
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.IsNull(patchableEntity.NullableStringProperty);
             Assert.IsNull(patchableEntity.NullableStringProperty);
-            #endregion
         }
 
         [TestMethod]
@@ -82,37 +76,33 @@ namespace MatchPoint.Api.Tests.Unit.Common.Extensions
         public void Patch_WhenInvalidNullValuesAreProvided_ShouldThrowInvalidOperationException(
             string propertyName, string? value)
         {
-            #region Arrange
-            var patchableEntity = new PatchableEntityTest()
+            // Arrange
+            PatchableEntityTest patchableEntity = new()
             {
                 IntProperty = 1,
                 StringProperty = "Not Nullable"
             };
-            var propertyUpdates = new List<PropertyUpdate>()
-            {
+            List<PropertyUpdate> propertyUpdates =
+            [
                 new(propertyName, value)
-            };
-            #endregion
+            ];
 
-            #region Act & Assert
-            Assert.ThrowsException<InvalidOperationException>(() => patchableEntity.Patch(propertyUpdates));
-            #endregion
+            // Act & Assert
+            Assert.ThrowsExactly<InvalidOperationException>(() => _ = patchableEntity.Patch(propertyUpdates));
         }
 
         [TestMethod]
         public void Patch_WhenPropertyIsReadOnly_ShouldThrowInvalidOperationException()
         {
-            #region Arrange
-            var patchableEntity = new PatchableEntityTest();
-            var propertyUpdates = new List<PropertyUpdate>()
-            {
+            // Arrange
+            PatchableEntityTest patchableEntity = new();
+            List<PropertyUpdate> propertyUpdates =
+            [
                 new(nameof(PatchableEntityTest.ReadOnlyProperty), 3)
-            };
-            #endregion
+            ];
 
-            #region Act & Assert
-            Assert.ThrowsException<InvalidOperationException>(() => patchableEntity.Patch(propertyUpdates));
-            #endregion
+            // Act & Assert
+            Assert.ThrowsExactly<InvalidOperationException>(() => _ = patchableEntity.Patch(propertyUpdates));
         }
 
         [TestMethod]
@@ -124,17 +114,15 @@ namespace MatchPoint.Api.Tests.Unit.Common.Extensions
         public void Patch_WhenInvalidTypesAndValuesAreProvided_ShouldThrowInvalidCastException(
             string propertyName, string value)
         {
-            #region Arrange
-            var patchableEntity = new PatchableEntityTest();
-            var propertyUpdates = new List<PropertyUpdate>()
-            {
+            // Arrange
+            PatchableEntityTest patchableEntity = new();
+            List<PropertyUpdate> propertyUpdates =
+            [
                 new(propertyName, value),
-            };
-            #endregion
+            ];
 
-            #region Act & Assert
-            Assert.ThrowsException<InvalidCastException>(() => patchableEntity.Patch(propertyUpdates));
-            #endregion
+            // Act & Assert
+            Assert.ThrowsExactly<InvalidCastException>(() => _ = patchableEntity.Patch(propertyUpdates));
         }
 
         [TestMethod]
@@ -143,43 +131,37 @@ namespace MatchPoint.Api.Tests.Unit.Common.Extensions
         public void Patch_WhenPropertyIsPrivateOrStatic_ShouldThrowArgumentException(
             string propertyName, int value)
         {
-            #region Arrange
-            var patchableEntity = new PatchableEntityTest();
-            var propertyUpdates = new List<PropertyUpdate>()
-            {
+            // Arrange
+            PatchableEntityTest patchableEntity = new();
+            List<PropertyUpdate> propertyUpdates =
+            [
                 new(propertyName, value),
-            };
-            #endregion
+            ];
 
-            #region Act & Assert
-            Assert.ThrowsException<ArgumentException>(() => patchableEntity.Patch(propertyUpdates));
-            #endregion
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentException>(() => _ = patchableEntity.Patch(propertyUpdates));
         }
 
         [TestMethod]
         public void Patch_WhenListOfUpdatesIsNull_ShouldThrowArgumentNullException()
         {
-            #region Arrange
-            var patchableEntity = new PatchableEntityTest();
+            // Arrange
+            PatchableEntityTest patchableEntity = new();
             List<PropertyUpdate> propertyUpdates = null!;
-            #endregion
 
-            #region Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => patchableEntity.Patch(propertyUpdates));
-            #endregion
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentNullException>(() => _ = patchableEntity.Patch(propertyUpdates));
         }
 
         [TestMethod]
         public void Patch_WhenEntityIsNull_ShouldThrowArgumentNullException()
         {
-            #region Arrange
+            // Arrange
             PatchableEntityTest patchableEntity = null!;
             List<PropertyUpdate> propertyUpdates = null!;
-            #endregion
 
-            #region Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => patchableEntity.Patch(propertyUpdates));
-            #endregion
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentNullException>(() => _ = patchableEntity.Patch(propertyUpdates));
         }
     }
 }

@@ -17,7 +17,6 @@ namespace MatchPoint.ClubService.Entities
         public List<TimeSlot> OpeningTimes { get; set; } = [];
         public List<ClubCourtEntity> Courts { get; set; } = [];
         public List<SocialMediaLink> SocialMedia { get; set; } = [];
-        //public List<ClubStaffEntity> Staff { get; set; } = [];
         public List<ClubMemberEntity> Members { get; set; } = [];
         public Guid CreatedBy { get; set; }
         public DateTime CreatedOnUtc { get; set; }

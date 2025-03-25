@@ -95,7 +95,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Mappers
 
             // Act & Assert
             var result = customRoles.ToCustomRoleEntityEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion
@@ -175,7 +175,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Mappers
 
             // Act & Assert
             var result = customRoles.ToCustomRoleDtoEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion
