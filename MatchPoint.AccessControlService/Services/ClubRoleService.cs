@@ -7,12 +7,14 @@ using MatchPoint.Api.Shared.Infrastructure.Enums;
 using MatchPoint.Api.Shared.Infrastructure.Interfaces;
 using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using MatchPoint.ServiceDefaults;
+using MatchPoint.ServiceDefaults.MockEventBus;
 
 namespace MatchPoint.AccessControlService.Services
 {
     public class ClubRoleService(
         IClubRoleRepository _clubRoleRepository,
         ISessionService _sessionService,
+        IEventBusClient _eventBus,
         ILogger<ClubRoleService> _logger) : IClubRoleService
     {
         /// <inheritdoc />
@@ -129,6 +131,9 @@ namespace MatchPoint.AccessControlService.Services
                     $"Club role with id '{clubRoleEntity.Id}' was not found.", ServiceResultType.NotFound);
             }
 
+            // Send an event to notify any listener
+            await _eventBus.PublishAsync(Topics.ClubRoles, EventType.Update, clubRoleEntity.Id);
+
             _logger.LogDebug(
                 "Club role with Id '{Id}' updated successfully.", updatedEntity.Id);
             return ServiceResult<ClubRoleEntity>.Success(updatedEntity);
@@ -181,6 +186,9 @@ namespace MatchPoint.AccessControlService.Services
                     $"Club role with id '{clubRoleEntity.Id}' was not found.", ServiceResultType.NotFound);
             }
 
+            // Send an event to notify any listener
+            await _eventBus.PublishAsync(Topics.ClubRoles, EventType.Update, clubRoleEntity.Id);
+
             _logger.LogDebug(
                 "Club role with Id '{Id}' updated successfully.", updatedEntity.Id);
             return ServiceResult<ClubRoleEntity>.Success(updatedEntity);
@@ -217,6 +225,9 @@ namespace MatchPoint.AccessControlService.Services
                 return ServiceResult<ClubRoleEntity>.Failure(
                     $"Club role with id '{id}' was not found.", ServiceResultType.NotFound);
             }
+
+            // Send an event to notify any listener
+            await _eventBus.PublishAsync(Topics.ClubRoles, EventType.Update, clubRoleEntity.Id);
 
             _logger.LogDebug(
                 "Club role with Id '{Id}' deleted successfully.", deletedEntity.Id);
