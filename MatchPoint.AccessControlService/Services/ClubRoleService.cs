@@ -227,7 +227,7 @@ namespace MatchPoint.AccessControlService.Services
             }
 
             // Send an event to notify any listener
-            await _eventBus.PublishAsync(Topics.ClubRoles, EventType.Update, clubRoleEntity.Id);
+            await _eventBus.PublishAsync(Topics.ClubRoles, EventType.Delete, clubRoleEntity.Id);
 
             _logger.LogDebug(
                 "Club role with Id '{Id}' deleted successfully.", deletedEntity.Id);

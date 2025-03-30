@@ -13,12 +13,8 @@ namespace MatchPoint.ServiceDefaults.MockEventBus
         public EventBusClient(IHttpClientFactory httpClientFactory)
         {
             _httpClient = httpClientFactory.CreateClient(HttpClients.EventBusBroker);
-            _brokerUrl = "https://localhost:7015"; //httpClient.BaseAddress?.ToString() ?? "http://localhost:5000";
-            //_brokerUrl = config["EventBus:BrokerUrl"] ?? "http://localhost:5000";
-            //_httpClient = new HttpClient()
-            //{
-            //    BaseAddress = new Uri($"{_brokerUrl}/")
-            //};
+            // Test only
+            _brokerUrl = "https://localhost:7015";
             _hubConnection = new HubConnectionBuilder()
                 .WithUrl($"{_brokerUrl}/eventshub")
                 .Build();
