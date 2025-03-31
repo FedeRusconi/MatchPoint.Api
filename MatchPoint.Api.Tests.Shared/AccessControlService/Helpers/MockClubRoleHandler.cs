@@ -54,8 +54,8 @@ namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
                 return await Task.FromResult(response);
             }
 
-            // Pass through to the real handler if no match
-            return await base.SendAsync(request, cancellationToken);
+                // Pass through to the real handler if no match
+                return await base.SendAsync(request, cancellationToken);
         }
     }
 }
