@@ -830,6 +830,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "Clubs.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             ClubStaff clubStaff = _dtoBuilder.WithDefaultId().WithClubId(_clubId).Build();
             try
             {
@@ -860,6 +861,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
                 _dbContext.Remove(clubStaff.ToClubStaffEntity());
                 await _dbContext.SaveChangesAsync();
                 await _azureAdService.DeleteUserAsync(clubStaff.Id, new CancellationToken());
+                throw;
             }
         }
 
@@ -868,6 +870,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "Clubs.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             string invalidClubStaffId = "Invalid Id";
             ClubStaff clubStaff = _dtoBuilder.WithClubId(_clubId).Build();
             try
@@ -898,6 +901,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "Clubs.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             string invalidClubId = "Invalid Club Id";
             ClubStaff clubStaff = _dtoBuilder.WithClubId(_clubId).Build();
             try
@@ -928,6 +932,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "Clubs.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             ClubStaff clubStaff = _dtoBuilder.WithClubId(_clubId).Build();
 
             // Act
@@ -946,12 +951,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Clubs.Write";
             Guid clubStaffId = Guid.NewGuid();
             // Redefine a HttpClient without an authenticated user
-            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
-                _clubId,
-                _userRoleId,
-                RoleCapabilityFeature.ManageClubStaff,
-                RoleCapabilityAction.ReadWriteDelete,
-                authenticated: false);
+            _httpClient = _factory.GetTestHttpClient(authenticated: false);
 
             // Act
             var result = await _httpClient.DeleteAsync(
@@ -967,14 +967,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "Clubs.Write";
+            TestAuthHandler.SystemRole = SystemRole.None;
             Guid clubStaffId = Guid.NewGuid();
-            // Redefine a HttpClient with insufficient permissions
-            _httpClient = _factory.GetTestHttpClientWithRoleCheck(
-                _clubId,
-                _userRoleId,
-                RoleCapabilityFeature.ManageClubStaff,
-                // Insufficient
-                RoleCapabilityAction.None);
 
             // Act
             var result = await _httpClient.DeleteAsync(
@@ -990,6 +984,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "Wrong.Scopes";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             Guid clubStaffId = Guid.NewGuid();
 
             // Act

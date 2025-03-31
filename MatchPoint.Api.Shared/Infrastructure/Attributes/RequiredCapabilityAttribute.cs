@@ -14,6 +14,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MatchPoint.Api.Shared.Infrastructure.Attributes
 {
+    /// <summary>
+    /// This attribute is used to implement RBAC to endpoints.
+    /// This allows users to pass only if they have the required permissions for a given feature.
+    /// </summary>
+    /// <param name="_feature"> The <see cref="RoleCapabilityFeature"/> to check for. </param>
+    /// <param name="_action"> The minimum <see cref="RoleCapabilityAction"/> allowed. </param>
     [AttributeUsage(AttributeTargets.Method)]
     public class RequiredCapabilityAttribute(RoleCapabilityFeature _feature, RoleCapabilityAction _action)
         : Attribute, IAsyncAuthorizationFilter, IAsyncDisposable
