@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.AccessControlService.Models;
 using MatchPoint.Api.Shared.ClubService.Models;
+using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.ServiceDefaults;
 using MatchPoint.ServiceDefaults.MockEventBus;
 using Microsoft.AspNetCore.Http;
@@ -66,20 +67,21 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
         private readonly IEventBusClient _eventBus = _context.HttpContext.RequestServices.GetRequiredService<IEventBusClient>();
 
         /// <summary>
-        /// NOTE: This method temporarily returns always False, to allow the other checks to happen.
-        /// This will be implemented when the admin app is built. 
-        /// Easiest option seem to be adding new custom attributes to Aure Ad b2c users for IsAdmin and IsSuperAdmin
+        /// Extract user's SystemRole from custom claim and returns true if user is Admin or SuperAdmin.
         /// </summary>
         /// <returns>
-        /// <c>true</c> if current user is System Admin or SuperAdmin.
+        /// <c>true</c> if current user is <see cref="SystemRole.Admin"/> or <see cref="SystemRole.SuperAdmin"/>.
         /// </returns>
         public bool IsSystemAdmin()
         {
-            return false;
+            var systemRoleString = _context.HttpContext.User.FindFirst("extension_SystemRole")?.Value;
+            return !string.IsNullOrEmpty(systemRoleString)
+                && Enum.TryParse<SystemRole>(systemRoleString, out var systemRole)
+                && systemRole > SystemRole.None;
         }
 
         /// <summary>
-        /// Try to extract club id from incoming request and output reesult.
+        /// Try to extract club id from incoming request and output result.
         /// </summary>
         /// <param name="clubId">
         /// The <see cref="Guid"/> extracted belonging to the <see cref="Club"/>.
@@ -97,7 +99,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
         }
 
         /// <summary>
-        /// Try to extract role id from incoming request and output reesult.
+        /// Try to extract role id from incoming request and output result.
         /// </summary>
         /// <param name="roleId">
         /// The <see cref="Guid"/> extracted belonging to the <see cref="ClubRole"/>.
