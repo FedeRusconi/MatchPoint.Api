@@ -3,6 +3,8 @@ using System.Net.Http.Json;
 using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.AccessControlService.Models;
 using MatchPoint.Api.Shared.ClubService.Models;
+using MatchPoint.ServiceDefaults;
+using MatchPoint.ServiceDefaults.MockEventBus;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -13,24 +15,27 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class RequiredCapabilityAttribute(RoleCapabilityFeature _feature, RoleCapabilityAction _action)
-        : Attribute, IAsyncAuthorizationFilter
+        : Attribute, IAsyncAuthorizationFilter, IAsyncDisposable
     {
+        RequiredCapabilityService? _service;
+
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
-            var service = new RequiredCapabilityService(context);
+            _service = new RequiredCapabilityService(context);
 
             // Bypass checks if user is system admin
-            if (service.IsSystemAdmin()) return;
+            if (_service.IsSystemAdmin()) return;
 
             // Extract Ids
-            if (!service.TryGetClubId(out Guid clubId) || !service.TryGetRoleId(out Guid roleId))
+            if (!_service.TryGetClubId(out Guid clubId) || !_service.TryGetRoleId(out Guid roleId))
             {
                 context.Result = new StatusCodeResult(StatusCodes.Status400BadRequest);
                 return;
             }
 
-            // Find ClubRole
-            var clubRole = await service.GetClubRoleAsync(clubId, roleId);
+            // Find ClubRole and add listener for role changes
+            var clubRole = await _service.GetClubRoleAsync(clubId, roleId);
+            await _service.SubscribeToRoleChanges(roleId);
             if (clubRole == null)
             {
                 context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
@@ -44,12 +49,21 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
                 context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
             }
         }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_service != null)
+            {
+                await _service.UnsubscribeToRoleChanges();
+            }
+        }
     }
 
     public class RequiredCapabilityService(AuthorizationFilterContext _context)
     {
         private readonly IHttpClientFactory _httpClientFactory = _context.HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
         private readonly HybridCache _hybridCache = _context.HttpContext.RequestServices.GetRequiredService<HybridCache>();
+        private readonly IEventBusClient _eventBus = _context.HttpContext.RequestServices.GetRequiredService<IEventBusClient>();
 
         /// <summary>
         /// NOTE: This method temporarily returns always False, to allow the other checks to happen.
@@ -109,8 +123,8 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
         public async Task<ClubRole?> GetClubRoleAsync(Guid clubId, Guid roleId)
         {
             // Set http client
-            var client = _httpClientFactory.CreateClient("AccessControlService");
-            var userToken = _context.HttpContext.Request.Headers["Authorization"];
+            var client = _httpClientFactory.CreateClient(HttpClients.AccessControlService);
+            var userToken = _context.HttpContext.Request.Headers.Authorization;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Bearer", userToken.ToString().Replace("Bearer ", ""));
             // Set cache
@@ -123,7 +137,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
                 return await _hybridCache.GetOrCreateAsync(
                     cacheKey,
                     async cancel => await client.GetFromJsonAsync<ClubRole>($"api/v1/clubs/{clubId}/roles/{roleId}", cancel),
-                    new HybridCacheEntryOptions { Expiration = TimeSpan.FromDays(7) }, // Simplified to just Expiration
+                    new HybridCacheEntryOptions { Expiration = TimeSpan.FromDays(7) },
                     tags: cacheTags,
                     cancellationToken: CancellationToken.None);
             }
@@ -131,6 +145,24 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Subscribe to the events regarding club roles. If a changes to the selected club role is detected
+        /// the cache is invalidated so next time the updated role is loaded.
+        /// </summary>
+        /// <param name="roleId"> The <see cref="Guid"/> of the selected role. </param>
+        public async Task SubscribeToRoleChanges(Guid roleId)
+        {
+            await _eventBus.SubscribeAsync(Topics.ClubRoles, GetType().Name, async message => await _hybridCache.RemoveByTagAsync(roleId.ToString()));
+        }
+
+        /// <summary>
+        /// Unsubscribe to the events regarding club roles.
+        /// </summary>
+        public async Task UnsubscribeToRoleChanges()
+        {
+            await _eventBus.UnsubscribeAsync(Topics.ClubRoles, GetType().Name);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Tests.Shared.AccessControlService.Helpers;
 using MatchPoint.Api.Tests.Shared.Common.Helpers;
+using MatchPoint.ServiceDefaults.MockEventBus;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -94,6 +95,10 @@ namespace MatchPoint.Api.Tests.Shared.Common.Extensions
                     // Replace IConfiguration in the DI container with test-specific configuration
                     services.RemoveAll<IConfiguration>();
                     services.AddSingleton(DataContextHelpers.TestingConfiguration);
+
+                    // Replace IEventBusClient in the DI container with test-specific class
+                    services.RemoveAll<IEventBusClient>();
+                    services.AddSingleton<IEventBusClient, TestEventBusClient>();
 
                     // Override the HttpClient for the AccessControlService
                     var mockHandler = new MockClubRoleHandler(clubId, roleId)

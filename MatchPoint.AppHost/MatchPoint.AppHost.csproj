@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MatchPoint.AccessControlService\MatchPoint.AccessControlService.csproj" />
     <ProjectReference Include="..\MatchPoint.ClubService\MatchPoint.ClubService.csproj" />
+    <ProjectReference Include="..\MockEventBus.Broker\MockEventBus.Broker.csproj" />
   </ItemGroup>
 
 </Project>
