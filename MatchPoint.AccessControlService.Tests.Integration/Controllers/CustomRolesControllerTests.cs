@@ -227,6 +227,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             CustomRole customRole = _dtoBuilder.WithDefaultId().Build();
             CustomRole? customRoleResponse = null;
 
@@ -263,6 +264,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             CustomRole customRole = _dtoBuilder.Build();
             customRole.Name = null!;
 
@@ -280,6 +282,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             string customRole = "Invalid Custom Role";
 
             // Act
@@ -310,10 +313,28 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task PostCustomRoleAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.None;
+            CustomRole customRole = _dtoBuilder.WithDefaultId().Build();
+
+            // Act
+            var result = await _httpClient.PostAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles", customRole);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task PostCustomRoleAsync_WithWrongScopes_ShouldReturnForbidden()
         {
             // Arrange
             TestAuthHandler.Scopes = "Wrong.Scopes";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             CustomRole customRole = _dtoBuilder.Build();
 
             // Act
@@ -334,6 +355,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             CustomRole customRole = _dtoBuilder.Build();
             CustomRole? customRoleResponse = null;
             string updatedName = "Updated Role Name";
@@ -381,6 +403,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             string invalidCustomRoleId = "Invalid CustomRole Id";
             CustomRole customRole = _dtoBuilder.Build();
             try
@@ -411,6 +434,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             CustomRole customRole = _dtoBuilder.Build();
             try
             {
@@ -456,10 +480,28 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task PutCustomRoleAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.None;
+            CustomRole customRole = _dtoBuilder.Build();
+
+            // Act
+            var result = await _httpClient.PutAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRole.Id}", customRole);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task PutCustomRoleAsync_WithWrongScopes_ShouldReturnForbidden()
         {
             // Arrange
             TestAuthHandler.Scopes = "Wrong.Scopes";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             CustomRole customRole = _dtoBuilder.Build();
 
             // Act
@@ -480,6 +522,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             CustomRole customRole = _dtoBuilder.WithActiveStatus(ActiveStatus.Active).Build();
             CustomRole? customRoleResponse = null;
             string updatedName = "New Custom Role Name";
@@ -533,6 +576,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             string invalidClubId = "Invalid Custom Role Id";
             CustomRole customRole = _dtoBuilder.Build();
             string updatedName = "New Custom Role Name";
@@ -568,6 +612,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             CustomRole customRole = _dtoBuilder.Build();
             string invalidPropertyUpdates = "Invalid Property Updates";
             try
@@ -616,10 +661,33 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task PatchCustomRoleAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Write";
+            TestAuthHandler.SystemRole = SystemRole.None;
+            CustomRole customRole = _dtoBuilder.Build();
+            string updatedName = "New Custom Role Name";
+            List<PropertyUpdate> updates =
+            [
+                new() { Property = nameof(CustomRole.Name), Value = updatedName },
+            ];
+
+            // Act
+            var result = await _httpClient.PatchAsJsonAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRole.Id}", updates);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task PatchCustomRoleAsync_WithWrongScopes_ShouldReturnForbidden()
         {
             // Arrange
             TestAuthHandler.Scopes = "Wrong.Scopes";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             Guid customRoleId = Guid.NewGuid();
             List<PropertyUpdate> updates =
             [
@@ -644,6 +712,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Delete";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             CustomRole customRole = _dtoBuilder.Build();
             try
             {
@@ -677,6 +746,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Delete";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             string invalidCustomRoleId = "Invalid CustomRole Id";
             CustomRole customRole = _dtoBuilder.Build();
             try
@@ -707,6 +777,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Delete";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             Guid customRoleId = Guid.NewGuid();
 
             // Act
@@ -737,10 +808,28 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task DeleteCustomRoleAsync_WithInsufficientRoleCapabilities_ShouldReturnForbidden()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Delete";
+            TestAuthHandler.SystemRole = SystemRole.None;
+            CustomRole customRole = _dtoBuilder.Build();
+
+            // Act
+            var result = await _httpClient.DeleteAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles/{customRole.Id}");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.Forbidden, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task DeleteCustomRoleAsync_WithWrongScopes_ShouldReturnForbidden()
         {
             // Arrange
             TestAuthHandler.Scopes = "Wrong.Scopes";
+            TestAuthHandler.SystemRole = SystemRole.SuperAdmin;
             Guid customRoleId = Guid.NewGuid();
 
             // Act
