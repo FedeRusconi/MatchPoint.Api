@@ -7,6 +7,7 @@ using MatchPoint.AccessControlService.Tests.Integration.Helpers;
 using MatchPoint.Api.Shared.AccessControlService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
+using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Tests.Shared.AccessControlService.Helpers;
 using MatchPoint.Api.Tests.Shared.Common.Extensions;
 using MatchPoint.Api.Tests.Shared.Common.Helpers;
@@ -57,15 +58,22 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         #region GetCustomRolesAsync
 
         [TestMethod]
-        public async Task GetCustomRolesAsync_ValidRequest_ShouldReturnAllRecords()
+        public async Task GetCustomRolesAsync_WithNoQueryParameters_ShouldReturnAllRecordsWithDefaultPaging()
         {
             // Arrange
             TestAuthHandler.Scopes = "CustomRoles.Read";
-            CustomRoleEntity customRoleEntity1 = _entityBuilder.WithName("Custom Role 1").Build();
+            CustomRoleEntity customRoleEntity1 = _entityBuilder
+                .WithName("Custom Role 1")
+                .Build();
             _entityBuilder = new();
-            CustomRoleEntity customRoleEntity2 = _entityBuilder.WithName("Custom Role 2").Build();
+            CustomRoleEntity customRoleEntity2 = _entityBuilder
+                .WithName("Custom Role 2")
+                .Build();
             _entityBuilder = new();
-            CustomRoleEntity customRoleEntity3 = _entityBuilder.WithName("Custom Role 3").Build();
+            CustomRoleEntity customRoleEntity3 = _entityBuilder
+                .WithName("Custom Role 3")
+                .Build();
+            _entityBuilder = new();
 
             try
             {
@@ -78,13 +86,16 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
                 // Act
                 var result = await _httpClient.GetAsync(
                     $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles");
-                var response = await result.Content.ReadFromJsonAsync<IEnumerable<CustomRole>>();
+                var pagedResponse = await result.Content.ReadFromJsonAsync<PagedResponse<CustomRole>>();
 
                 // Assert
                 Assert.IsNotNull(result);
                 Assert.AreEqual(HttpStatusCode.OK, result.StatusCode);
-                Assert.IsNotNull(response);
-                Assert.AreEqual(3, response.Count());
+                Assert.IsNotNull(pagedResponse);
+                Assert.AreEqual(1, pagedResponse.CurrentPage);
+                Assert.AreEqual(Constants.MaxPageSizeAllowed, pagedResponse.PageSize);
+                Assert.AreEqual(3, pagedResponse.TotalCount);
+                Assert.AreEqual(3, pagedResponse.Data.Count());
             }
             finally
             {
@@ -97,6 +108,80 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
         }
 
         [TestMethod]
+        public async Task GetCustomRolesAsync_WithValidQueryParameters_ShouldReturnFilteredSortedRecordsWithPaging()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Read";
+            int page = 2;
+            int pageSize = 1;
+            ActiveStatus filterStatus = ActiveStatus.Active;
+            CustomRoleEntity customRoleEntity1 = _entityBuilder
+                .WithName("Custom Role 1")
+                .WithActiveStatus(ActiveStatus.Active)
+                .Build();
+            _entityBuilder = new();
+            CustomRoleEntity customRoleEntity2 = _entityBuilder
+                .WithName("Custom Role 2")
+                .WithActiveStatus(ActiveStatus.Active)
+                .Build();
+            _entityBuilder = new();
+            CustomRoleEntity customRoleEntity3 = _entityBuilder
+                .WithName("Custom Role 3")
+                .WithActiveStatus(ActiveStatus.Inactive)
+                .Build();
+
+            try
+            {
+                // First create test custom roles
+                _dbContext.CustomRoles.Add(customRoleEntity2);
+                _dbContext.CustomRoles.Add(customRoleEntity1);
+                _dbContext.CustomRoles.Add(customRoleEntity3);
+                await _dbContext.SaveChangesAsync();
+
+                // Act
+                var result = await _httpClient.GetAsync(
+                    $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles" +
+                    $"?page={page}&pageSize={pageSize}" +
+                    $"&filters[activeStatus]={filterStatus}&orderBy[name]=ascending");
+                var pagedResponse = await result.Content.ReadFromJsonAsync<PagedResponse<CustomRole>>();
+
+                // Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(HttpStatusCode.OK, result.StatusCode);
+                Assert.IsNotNull(pagedResponse);
+                Assert.AreEqual(page, pagedResponse.CurrentPage);
+                Assert.AreEqual(pageSize, pagedResponse.PageSize);
+                Assert.AreEqual(2, pagedResponse.TotalCount);
+                Assert.AreEqual(1, pagedResponse.Data.Count());
+                Assert.AreEqual(customRoleEntity2.Name, pagedResponse.Data.First().Name);
+            }
+            finally
+            {
+                // Cleanup
+                _dbContext.Remove(customRoleEntity1);
+                _dbContext.Remove(customRoleEntity2);
+                _dbContext.Remove(customRoleEntity3);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        [TestMethod]
+        public async Task GetCustomRolesAsync_WithInvalidQueryParameters_ShouldReturnBadRequest()
+        {
+            // Arrange
+            TestAuthHandler.Scopes = "CustomRoles.Read";
+            string invalidFilters = "Invalid Filters";
+
+            // Act
+            var result = await _httpClient.GetAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles?filters={invalidFilters}");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(HttpStatusCode.BadRequest, result.StatusCode);
+        }
+
+        [TestMethod]
         public async Task GetCustomRolesAsync_UnauthenticatedUser_ShouldReturnUnauthorized()
         {
             // Arrange
@@ -106,7 +191,7 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
 
             // Act
             var result = await _httpClient.GetAsync(
-                    $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles");
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles");
 
             // Assert
             Assert.IsNotNull(result);
@@ -120,7 +205,8 @@ namespace MatchPoint.AccessControlService.Tests.Integration.Controllers
             TestAuthHandler.Scopes = "Wrong.Scopes";
 
             // Act
-            var result = await _httpClient.GetAsync($"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles");
+            var result = await _httpClient.GetAsync(
+                $"api/v{AccessControlServiceEndpoints.CurrentVersion}/customRoles");
 
             // Assert
             Assert.IsNotNull(result);

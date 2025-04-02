@@ -1,4 +1,5 @@
 ﻿using MatchPoint.AccessControlService.Entities;
+using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Infrastructure.Interfaces;
 
@@ -20,15 +21,30 @@ namespace MatchPoint.AccessControlService.Interfaces
         public Task<IServiceResult<CustomRoleEntity>> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Retrieves all <see cref="CustomRoleEntity"/> from the database.
+        /// Retrieves all <see cref="CustomRoleEntity"/> from the database that fit the specification.
+        /// This method allows for filtering, ordering and paging.
         /// </summary>
+        /// <param name="pageNumber"> The number of the page to retrieve, based on page size. Default is 1. </param>
+        /// <param name="pageSize"> The number of elements to return. Default is 500. </param>
         /// <param name="cancellationToken">
         /// A token to monitor for cancellation requests, allowing the operation to be stopped if no longer needed.
         /// </param>
-        /// A <see cref="IServiceResult{T}"/> class containing an IEnumerable of <see cref="CustomRoleEntity"/>
-        /// found or details about the error.
+        /// <param name="filters"> 
+        /// A Dictionary containing property name as the key and the filter value. Default is null.
+        /// </param>
+        /// <param name="orderBy"> 
+        /// A Dictionary with property names and <see cref="SortDirection"/>. Default is null.
+        /// </param>
+        /// <returns> 
+        /// A <see cref="IServiceResult{T}"/> class containing the <see cref="PagedResponse{T}"/>
+        /// with a collection of <see cref="CustomRoleEntity"/> found or details about the error.
         /// </returns>
-        public Task<IServiceResult<IEnumerable<CustomRoleEntity>>> GetAllAsync(CancellationToken cancellationToken);
+        public Task<IServiceResult<PagedResponse<CustomRoleEntity>>> GetAllWithSpecificationAsync(
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken,
+            Dictionary<string, string>? filters = null,
+            Dictionary<string, SortDirection>? orderBy = null);
 
         /// <summary>
         /// Adds a new <see cref="CustomRoleEntity"/> to the database.
