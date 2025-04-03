@@ -48,6 +48,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             _dbContext = new(DataContextHelpers.TestingConfiguration);
             _entityBuilder = new ClubEntityBuilder();
             _dtoBuilder = new ClubBuilder();
+            TestAuthHandler.SystemRole = SystemRole.None;
 
             // Calls custom Extension method to set up a test http client for tests
             _httpClient = _factory.GetTestHttpClientWithRoleCheck(

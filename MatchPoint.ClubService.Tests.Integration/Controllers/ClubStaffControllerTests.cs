@@ -53,6 +53,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Controllers
             _azureAdService = new AzureAdService(DataContextHelpers.TestingConfiguration);
             _entityBuilder = new ClubStaffEntityBuilder();
             _dtoBuilder = new ClubStaffBuilder();
+            TestAuthHandler.SystemRole = SystemRole.None;
 
             // Calls custom Extension method to set up a test http client for tests
             _httpClient = _factory.GetTestHttpClientWithRoleCheck(
