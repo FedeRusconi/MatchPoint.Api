@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.ClubService.Entities;
@@ -31,6 +32,8 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
                 .RuleFor(c => c.Address, f => addressGenerator.Generate())
                 .RuleFor(c => c.Email, f => f.Person.Email)
                 .RuleFor(c => c.PhoneNumber, f => f.Phone.PhoneNumber())
+                .RuleFor(c => c.Logo, f => $"{f.Random.AlphaNumeric(10)}.png")
+                .RuleFor(c => c.TimezoneId, f => TimeZoneInfo.Utc.Id)
                 .Generate();
         }
 
@@ -96,6 +99,19 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         public ClubEntityBuilder WithActiveStatus(ActiveStatus activeStatus)
         {
             _entity.ActiveStatus = activeStatus;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the tracking fields (crated, modified) for the <see cref="ClubEntity"/>.
+        /// <returns> This <see cref="ClubEntityBuilder"/>. </returns>
+        public ClubEntityBuilder WithTrackingFields()
+        {
+            var faker = new Faker();
+            _entity.CreatedBy = Guid.NewGuid();
+            _entity.CreatedOnUtc = faker.Date.Past();
+            _entity.ModifiedBy = Guid.NewGuid();
+            _entity.ModifiedOnUtc = faker.Date.Past();
             return this;
         }
 

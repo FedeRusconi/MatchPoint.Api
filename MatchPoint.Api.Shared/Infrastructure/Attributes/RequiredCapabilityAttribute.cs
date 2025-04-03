@@ -3,6 +3,9 @@ using System.Net.Http.Json;
 using MatchPoint.Api.Shared.AccessControlService.Enums;
 using MatchPoint.Api.Shared.AccessControlService.Models;
 using MatchPoint.Api.Shared.ClubService.Models;
+using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.ServiceDefaults;
+using MatchPoint.ServiceDefaults.MockEventBus;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -11,26 +14,35 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MatchPoint.Api.Shared.Infrastructure.Attributes
 {
+    /// <summary>
+    /// This attribute is used to implement RBAC to endpoints.
+    /// This allows users to pass only if they have the required permissions for a given feature.
+    /// </summary>
+    /// <param name="_feature"> The <see cref="RoleCapabilityFeature"/> to check for. </param>
+    /// <param name="_action"> The minimum <see cref="RoleCapabilityAction"/> allowed. </param>
     [AttributeUsage(AttributeTargets.Method)]
     public class RequiredCapabilityAttribute(RoleCapabilityFeature _feature, RoleCapabilityAction _action)
-        : Attribute, IAsyncAuthorizationFilter
+        : Attribute, IAsyncAuthorizationFilter, IAsyncDisposable
     {
+        RequiredCapabilityService? _service;
+
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
-            var service = new RequiredCapabilityService(context);
+            _service = new RequiredCapabilityService(context);
 
             // Bypass checks if user is system admin
-            if (service.IsSystemAdmin()) return;
+            if (_service.IsSystemAdmin()) return;
 
             // Extract Ids
-            if (!service.TryGetClubId(out Guid clubId) || !service.TryGetRoleId(out Guid roleId))
+            if (!_service.TryGetClubId(out Guid clubId) || !_service.TryGetRoleId(out Guid roleId))
             {
-                context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
+                context.Result = new StatusCodeResult(StatusCodes.Status400BadRequest);
                 return;
             }
 
-            // Find ClubRole
-            var clubRole = await service.GetClubRoleAsync(clubId, roleId);
+            // Find ClubRole and add listener for role changes
+            var clubRole = await _service.GetClubRoleAsync(clubId, roleId);
+            await _service.SubscribeToRoleChanges(roleId);
             if (clubRole == null)
             {
                 context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
@@ -44,28 +56,38 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
                 context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
             }
         }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_service != null)
+            {
+                await _service.UnsubscribeToRoleChanges();
+            }
+        }
     }
 
     public class RequiredCapabilityService(AuthorizationFilterContext _context)
     {
         private readonly IHttpClientFactory _httpClientFactory = _context.HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
         private readonly HybridCache _hybridCache = _context.HttpContext.RequestServices.GetRequiredService<HybridCache>();
+        private readonly IEventBusClient _eventBus = _context.HttpContext.RequestServices.GetRequiredService<IEventBusClient>();
 
         /// <summary>
-        /// NOTE: This method temporarily returns always False, to allow the other checks to happen.
-        /// This will be implemented when the admin app is built. 
-        /// Easiest option seem to be adding new custom attributes to Aure Ad b2c users for IsAdmin and IsSuperAdmin
+        /// Extract user's SystemRole from custom claim and returns true if user is Admin or SuperAdmin.
         /// </summary>
         /// <returns>
-        /// <c>true</c> if current user is System Admin or SuperAdmin.
+        /// <c>true</c> if current user is <see cref="SystemRole.Admin"/> or <see cref="SystemRole.SuperAdmin"/>.
         /// </returns>
         public bool IsSystemAdmin()
         {
-            return false;
+            var systemRoleString = _context.HttpContext.User.FindFirst("extension_SystemRole")?.Value;
+            return !string.IsNullOrEmpty(systemRoleString)
+                && Enum.TryParse<SystemRole>(systemRoleString, out var systemRole)
+                && systemRole > SystemRole.None;
         }
 
         /// <summary>
-        /// Try to extract club id from incoming request and output reesult.
+        /// Try to extract club id from incoming request and output result.
         /// </summary>
         /// <param name="clubId">
         /// The <see cref="Guid"/> extracted belonging to the <see cref="Club"/>.
@@ -83,7 +105,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
         }
 
         /// <summary>
-        /// Try to extract role id from incoming request and output reesult.
+        /// Try to extract role id from incoming request and output result.
         /// </summary>
         /// <param name="roleId">
         /// The <see cref="Guid"/> extracted belonging to the <see cref="ClubRole"/>.
@@ -109,8 +131,8 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
         public async Task<ClubRole?> GetClubRoleAsync(Guid clubId, Guid roleId)
         {
             // Set http client
-            var client = _httpClientFactory.CreateClient("AccessControlService");
-            var userToken = _context.HttpContext.Request.Headers["Authorization"];
+            var client = _httpClientFactory.CreateClient(HttpClients.AccessControlService);
+            var userToken = _context.HttpContext.Request.Headers.Authorization;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Bearer", userToken.ToString().Replace("Bearer ", ""));
             // Set cache
@@ -123,7 +145,7 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
                 return await _hybridCache.GetOrCreateAsync(
                     cacheKey,
                     async cancel => await client.GetFromJsonAsync<ClubRole>($"api/v1/clubs/{clubId}/roles/{roleId}", cancel),
-                    new HybridCacheEntryOptions { Expiration = TimeSpan.FromDays(7) }, // Simplified to just Expiration
+                    new HybridCacheEntryOptions { Expiration = TimeSpan.FromDays(7) },
                     tags: cacheTags,
                     cancellationToken: CancellationToken.None);
             }
@@ -131,6 +153,24 @@ namespace MatchPoint.Api.Shared.Infrastructure.Attributes
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Subscribe to the events regarding club roles. If a changes to the selected club role is detected
+        /// the cache is invalidated so next time the updated role is loaded.
+        /// </summary>
+        /// <param name="roleId"> The <see cref="Guid"/> of the selected role. </param>
+        public async Task SubscribeToRoleChanges(Guid roleId)
+        {
+            await _eventBus.SubscribeAsync(Topics.ClubRoles, GetType().Name, async message => await _hybridCache.RemoveByTagAsync(roleId.ToString()));
+        }
+
+        /// <summary>
+        /// Unsubscribe to the events regarding club roles.
+        /// </summary>
+        public async Task UnsubscribeToRoleChanges()
+        {
+            await _eventBus.UnsubscribeAsync(Topics.ClubRoles, GetType().Name);
         }
     }
 }

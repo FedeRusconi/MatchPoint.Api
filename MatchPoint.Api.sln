@@ -31,6 +31,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchPoint.AccessControlSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchPoint.AccessControlService.Tests.Unit", "MatchPoint.AccessControlService.Tests.Unit\MatchPoint.AccessControlService.Tests.Unit.csproj", "{11B0B023-A476-4B75-9A21-D5704E2A4795}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MockEventBus", "MockEventBus", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockEventBus.Broker", "MockEventBus.Broker\MockEventBus.Broker.csproj", "{28C66052-2F3B-9949-12DF-BD3B1A121CF8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +85,10 @@ Global
 		{11B0B023-A476-4B75-9A21-D5704E2A4795}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11B0B023-A476-4B75-9A21-D5704E2A4795}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11B0B023-A476-4B75-9A21-D5704E2A4795}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28C66052-2F3B-9949-12DF-BD3B1A121CF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28C66052-2F3B-9949-12DF-BD3B1A121CF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28C66052-2F3B-9949-12DF-BD3B1A121CF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28C66052-2F3B-9949-12DF-BD3B1A121CF8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -95,5 +103,9 @@ Global
 		{90373771-51BE-40AA-879F-201FF9349AC8} = {5312D4F6-5694-48BB-85AD-6F06A310EB6B}
 		{9C65814A-90AC-4A98-ABB5-5C70295A9DA8} = {5312D4F6-5694-48BB-85AD-6F06A310EB6B}
 		{11B0B023-A476-4B75-9A21-D5704E2A4795} = {5312D4F6-5694-48BB-85AD-6F06A310EB6B}
+		{28C66052-2F3B-9949-12DF-BD3B1A121CF8} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BF25B007-A8A0-4FD5-8232-511E8196D59A}
 	EndGlobalSection
 EndGlobal

@@ -12,7 +12,7 @@ namespace MatchPoint.Api.Shared.Common.Models
 
         #region Parsing Methods
 
-        private static JsonSerializerOptions serializerOptions = new() { PropertyNameCaseInsensitive = true };
+        private static readonly JsonSerializerOptions serializerOptions = new() { PropertyNameCaseInsensitive = true };
 
         public static Address Parse(string value)
         {

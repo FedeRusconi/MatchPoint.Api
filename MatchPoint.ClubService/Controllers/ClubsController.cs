@@ -167,7 +167,7 @@ namespace MatchPoint.ClubService.Controllers
         // DELETE: api/v1/clubs/[guid]
         [MapToApiVersion(1)]
         [RequiredScope($"{Scopes.Clubs}.{Scopes.Delete}")]
-        [RequiredCapability(RoleCapabilityFeature.ManageClub, RoleCapabilityAction.ReadWriteDelete)]
+        [RequiredSystemRole(SystemRole.SuperAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClubAsync(Guid id, CancellationToken cancellationToken)
         {

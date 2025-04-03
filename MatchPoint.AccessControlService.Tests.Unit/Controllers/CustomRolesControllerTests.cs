@@ -58,10 +58,15 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Controllers
         public async Task GetCustomRolesAsync_SuccessScenario_ShouldReturnConvertedResponse()
         {
             // Arrange
-            List<CustomRoleEntity> serviceResponse = [_entityBuilder.Build()];
+            PagedResponse<CustomRoleEntity> serviceResponse = new() { Data = [_entityBuilder.Build()] };
             _customRoleServiceMock
-                .Setup(s => s.GetAllAsync(_cancellationToken))
-                .ReturnsAsync(ServiceResult<IEnumerable<CustomRoleEntity>>.Success(serviceResponse))
+                .Setup(s => s.GetAllWithSpecificationAsync(
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    _cancellationToken,
+                    It.IsAny<Dictionary<string, string>>(),
+                    It.IsAny<Dictionary<string, SortDirection>>()))
+                .ReturnsAsync(ServiceResult<PagedResponse<CustomRoleEntity>>.Success(serviceResponse))
                 .Verifiable(Times.Once);
 
             // Act
@@ -72,7 +77,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Controllers
             Assert.IsNotNull(result);
             var response = result.Value;
             Assert.IsNotNull(response);
-            Assert.IsInstanceOfType<IEnumerable<CustomRole>>(response);
+            Assert.IsInstanceOfType<PagedResponse<CustomRole>>(response);
         }
 
         [TestMethod]
@@ -82,8 +87,13 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Controllers
             string errorMsg = "This is a test error";
             ServiceResultType resultType = ServiceResultType.BadRequest;
             _customRoleServiceMock
-                .Setup(s => s.GetAllAsync(_cancellationToken))
-                .ReturnsAsync(ServiceResult<IEnumerable<CustomRoleEntity>>.Failure(errorMsg, resultType))
+                .Setup(s => s.GetAllWithSpecificationAsync(
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    _cancellationToken,
+                    It.IsAny<Dictionary<string, string>>(),
+                    It.IsAny<Dictionary<string, SortDirection>>()))
+                .ReturnsAsync(ServiceResult<PagedResponse<CustomRoleEntity>>.Failure(errorMsg, resultType))
                 .Verifiable(Times.Once);
 
             // Act
@@ -102,8 +112,13 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Controllers
         {
             // Arrange
             _customRoleServiceMock
-                .Setup(s => s.GetAllAsync(_cancellationToken))
-                .ReturnsAsync(ServiceResult<IEnumerable<CustomRoleEntity>>.Success(null!))
+                .Setup(s => s.GetAllWithSpecificationAsync(
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    _cancellationToken,
+                    It.IsAny<Dictionary<string, string>>(),
+                    It.IsAny<Dictionary<string, SortDirection>>()))
+                .ReturnsAsync(ServiceResult<PagedResponse<CustomRoleEntity>>.Success(null!))
                 .Verifiable(Times.Once);
 
             // Act

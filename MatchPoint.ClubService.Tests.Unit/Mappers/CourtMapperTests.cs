@@ -20,52 +20,46 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         [TestMethod]
         public void ToCourtEntity_FromCourtDto_AllExpectedPropertiesShouldBeSet()
         {
-            #region Arrange
+            // Arrange
             Court courtDto = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 1",
                 ActiveStatus = ActiveStatus.Inactive
             };
-            #endregion
 
-            #region Act
+            // Act
             ClubCourtEntity result = courtDto.ToCourtEntity();
-            #endregion
 
-            #region Assert
+            // Assert
             PropertyInfo[] properties = result.GetType().GetProperties();
             Assert.IsTrue(properties.All(prop => expectedCourtEntityProperties.Contains(prop.Name)));
-            #endregion
         }
 
         [TestMethod]
         public void ToCourtEntity_FromCourtDto_ValidParameter_ShouldReturnCourtEntity()
         {
-            #region Arrange
+            // Arrange
             Court courtDto = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 1",
                 ActiveStatus = ActiveStatus.Inactive
             };
-            #endregion
 
-            #region Act
+            // Act
             ClubCourtEntity result = courtDto.ToCourtEntity();
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.AreEqual(courtDto.Id, result.Id);
             Assert.AreEqual(courtDto.Name, result.Name);
             Assert.AreEqual(courtDto.ActiveStatus, result.ActiveStatus);
-            #endregion
         }
 
         [TestMethod]
         public void ToCourtEntityEnumerable_ValidParameter_ShouldReturnEnumerableOfCourtEntity()
         {
-            #region Arrange
+            // Arrange
             Court court1 = new()
             {
                 Id = Guid.NewGuid(),
@@ -82,24 +76,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 Name = "Court 3",
             };
             List<Court> courts = [court1, court2, court3];
-            #endregion
 
-            #region  Act
+            // Act
             IEnumerable<ClubCourtEntity> result = courts.ToCourtEntityEnumerable();
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.AreEqual(courts.Count, result.Count());
             Assert.AreEqual(courts[0].Id, result.ElementAt(0).Id);
             Assert.AreEqual(courts[1].Id, result.ElementAt(1).Id);
             Assert.AreEqual(courts[2].Id, result.ElementAt(2).Id);
-            #endregion
         }
 
         [TestMethod]
         public void ToCourtEntityEnumerable_NullCourt_ShouldThrowNullReferenceException()
         {
-            #region  Arrange
+            //  Arrange
             Court court1 = new()
             {
                 Id = Guid.NewGuid(),
@@ -112,12 +103,10 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 Name = "Court 3",
             };
             List<Court> courts = [court1, court2, court3];
-            #endregion
 
-            #region Act & Assert
+            // Act & Assert
             var result = courts.ToCourtEntityEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
-            #endregion
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion
@@ -126,52 +115,46 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
         [TestMethod]
         public void ToCourtDto_FromCourtEntity_AllExpectedPropertiesShouldBeSet()
         {
-            #region Arrange
+            // Arrange
             ClubCourtEntity courtEntity = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 1",
                 ActiveStatus = ActiveStatus.Inactive
             };
-            #endregion
 
-            #region Act
+            // Act
             Court result = courtEntity.ToCourtDto();
-            #endregion
 
-            #region Assert
+            // Assert
             PropertyInfo[] properties = result.GetType().GetProperties();
             Assert.IsTrue(properties.All(prop => expectedCourtDtoProperties.Contains(prop.Name)));
-            #endregion
         }
 
         [TestMethod]
         public void ToCourtDto_FromCourtEntity_ValidParameter_ShouldReturnCourtDto()
         {
-            #region Arrange
+            // Arrange
             ClubCourtEntity courtEntity = new()
             {
                 Id = Guid.NewGuid(),
                 Name = "Court 1",
                 ActiveStatus = ActiveStatus.Inactive
             };
-            #endregion
 
-            #region Act
+            // Act
             Court result = courtEntity.ToCourtDto();
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.AreEqual(courtEntity.Id, result.Id);
             Assert.AreEqual(courtEntity.Name, result.Name);
             Assert.AreEqual(courtEntity.ActiveStatus, result.ActiveStatus);
-            #endregion
         }
 
         [TestMethod]
         public void ToCourtDtoEnumerable_ValidParameter_ShouldReturnEnumerableOfCourtDto()
         {
-            #region Arrange
+            // Arrange
             ClubCourtEntity courtEntity1 = new()
             {
                 Id = Guid.NewGuid(),
@@ -188,24 +171,21 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 Name = "Court 3",
             };
             List<ClubCourtEntity> courtEntities = [courtEntity1, courtEntity2, courtEntity3];
-            #endregion
 
-            #region  Act
+            // Act
             IEnumerable<Court> result = courtEntities.ToCourtDtoEnumerable();
-            #endregion
 
-            #region Assert
+            // Assert
             Assert.AreEqual(courtEntities.Count, result.Count());
             Assert.AreEqual(courtEntities[0].Id, result.ElementAt(0).Id);
             Assert.AreEqual(courtEntities[1].Id, result.ElementAt(1).Id);
             Assert.AreEqual(courtEntities[2].Id, result.ElementAt(2).Id);
-            #endregion
         }
 
         [TestMethod]
         public void ToCourtDtoEnumerable_NullCourt_ShouldThrowNullReferenceException()
         {
-            #region  Arrange
+            // Arrange
             ClubCourtEntity courtEntity1 = new()
             {
                 Id = Guid.NewGuid(),
@@ -218,12 +198,10 @@ namespace MatchPoint.ClubService.Tests.Unit.Mappers
                 Name = "Court 3",
             };
             List<ClubCourtEntity> courtEntities = [courtEntity1, courtEntity2, courtEntity3];
-            #endregion
 
-            #region Act & Assert
+            // Act & Assert
             var result = courtEntities.ToCourtDtoEnumerable();
-            Assert.ThrowsException<NullReferenceException>(result.ToList);
-            #endregion
+            Assert.ThrowsExactly<NullReferenceException>(() => _ = result.ToList());
         }
 
         #endregion

@@ -1,18 +1,18 @@
-using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using MatchPoint.ServiceDefaults;
+using MatchPoint.ServiceDefaults.MockEventBus;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.ServiceDiscovery;
 using Microsoft.Identity.Web;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using MatchPoint.ServiceDefaults;
-using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Microsoft.Extensions.Hosting
 {
@@ -29,7 +29,7 @@ namespace Microsoft.Extensions.Hosting
 
             builder.AddDefaultHealthChecks();
 
-            builder.Services.AddServiceDiscovery();
+            builder.Services.AddServiceDiscovery();            
 
             builder.Logging.AddConsole();
             builder.Services.AddLogging();
@@ -49,12 +49,18 @@ namespace Microsoft.Extensions.Hosting
                 http.AddServiceDiscovery();
             });
             // Http client for AccessControlService
-            builder.Services.AddHttpClient("AccessControlService", client =>
+            builder.Services.AddHttpClient(HttpClients.AccessControlService, client =>
             {
                 client.BaseAddress = new Uri("https+http://matchpoint-accesscontrolservice");
             });
+            // Http client for MockEventBus Broker
+            builder.Services.AddHttpClient(HttpClients.EventBusBroker, client =>
+            {
+                client.BaseAddress = new Uri("https+http://mockeventbus-broker");
+            });
 
             builder.Services.AddScoped<ISessionService, SessionService>();
+            builder.Services.AddSingleton<IEventBusClient, EventBusClient>();
 
             // Uncomment the following to restrict the allowed schemes for service discovery.
             // builder.Services.Configure<ServiceDiscoveryOptions>(options =>

@@ -7,6 +7,7 @@ using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Enums;
 using MatchPoint.Api.Tests.Shared.AccessControlService.Helpers;
 using MatchPoint.ServiceDefaults;
+using MatchPoint.ServiceDefaults.MockEventBus;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -17,6 +18,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
     {
         private Mock<IClubRoleRepository> _clubRoleRepositoryMock = default!;
         private Mock<ISessionService> _sessionServiceServiceMock = default!;
+        private Mock<IEventBusClient> _eventBusClientMock = default!;
         private Mock<ILogger<ClubRoleService>> _loggerMock = default!;
         private ClubRoleEntityBuilder _clubRoleEntityBuilder = default!;
         private ClubRoleService _clubRoleService = default!;
@@ -28,9 +30,14 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
         {
             _clubRoleRepositoryMock = new();
             _sessionServiceServiceMock = new();
+            _eventBusClientMock = new();
             _loggerMock = new();
             _clubRoleEntityBuilder = new();
-            _clubRoleService = new(_clubRoleRepositoryMock.Object, _sessionServiceServiceMock.Object, _loggerMock.Object);
+            _clubRoleService = new(
+                _clubRoleRepositoryMock.Object, 
+                _sessionServiceServiceMock.Object,
+                _eventBusClientMock.Object,
+                _loggerMock.Object);
             _cancellationToken = new CancellationToken();
 
             _sessionServiceServiceMock.SetupGet(s => s.CurrentUserId).Returns(Guid.NewGuid());
@@ -361,7 +368,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             ClubRoleEntity clubRoleEntity = null!;
 
             // Act & Assert
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(
                 () => _clubRoleService.CreateAsync(_clubId, clubRoleEntity, _cancellationToken));
         }
 
@@ -378,12 +385,16 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             _clubRoleRepositoryMock.Setup(repo => repo.UpdateAsync(clubRoleEntity, _cancellationToken))
                 .ReturnsAsync(clubRoleEntity)
                 .Verifiable(Times.Once);
+            _eventBusClientMock.Setup(
+                client => client.PublishAsync(Topics.ClubRoles, EventType.Update, clubRoleEntity.Id))
+                .Verifiable(Times.Once);
 
             // Act
             var result = await _clubRoleService.UpdateAsync(_clubId, clubRoleEntity, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
+            _eventBusClientMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);
@@ -421,7 +432,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             ClubRoleEntity clubRoleEntity = null!;
 
             // Act & Assert
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(
                 () => _clubRoleService.UpdateAsync(_clubId, clubRoleEntity, _cancellationToken));
         }
 
@@ -447,12 +458,16 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             _clubRoleRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<ClubRoleEntity>(), _cancellationToken))
                 .ReturnsAsync(clubRoleEntity)
                 .Verifiable(Times.Once); ;
+            _eventBusClientMock.Setup(
+                client => client.PublishAsync(Topics.ClubRoles, EventType.Update, clubRoleEntity.Id))
+                .Verifiable(Times.Once);
 
             // Act
             var result = await _clubRoleService.PatchAsync(_clubId, clubRoleEntity.Id, updates, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
+            _eventBusClientMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);
@@ -573,7 +588,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             List<PropertyUpdate> updates = null!;
 
             // Act & Assert
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(
                 () => _clubRoleService.PatchAsync(_clubId, clubRoleId, updates, _cancellationToken));
         }
 
@@ -593,12 +608,16 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
             _clubRoleRepositoryMock.Setup(repo => repo.DeleteAsync(clubRoleEntity, _cancellationToken))
                 .ReturnsAsync(clubRoleEntity)
                 .Verifiable(Times.Once);
+            _eventBusClientMock.Setup(
+                client => client.PublishAsync(Topics.ClubRoles, EventType.Delete, clubRoleEntity.Id))
+                .Verifiable(Times.Once);
 
             // Act
             var result = await _clubRoleService.DeleteAsync(_clubId, clubRoleEntity.Id, _cancellationToken);
 
             // Assert
             _clubRoleRepositoryMock.VerifyAll();
+            _eventBusClientMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.IsSuccess);

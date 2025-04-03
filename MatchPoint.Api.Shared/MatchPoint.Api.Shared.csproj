@@ -13,4 +13,8 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MatchPoint.ServiceDefaults\MatchPoint.ServiceDefaults.csproj" />
+  </ItemGroup>
+
 </Project>

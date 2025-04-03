@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using MatchPoint.Api.Shared.Common.Enums;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
@@ -16,11 +17,15 @@ namespace MatchPoint.Api.Tests.Shared.Common.Helpers
         public static readonly Guid ObjectIdValue = Guid.Parse("806d23a6-f382-4a81-a21b-6a761a74331d");
         public static readonly Guid ManagerObjectIdValue = Guid.Parse("3316286a-af59-430b-b506-fb341239288f");
         public static string Scopes { get; set; } = string.Empty;
+        public static Guid ClubRoleId { get; set; } = Guid.NewGuid();
+        public static SystemRole SystemRole { get; set; } = SystemRole.None;
         public static Claim[] Claims =>
             [
                 new Claim(ClaimTypes.Name, "Test user"),
                 new Claim(ObjectIdClaim, ObjectIdValue.ToString()),
-                new Claim("scp", Scopes)
+                new Claim("scp", Scopes),
+                new Claim("extension_RoleId", ClubRoleId.ToString()),
+                new Claim("extension_SystemRole", SystemRole.ToString())
             ];
         public static ClaimsIdentity Identity => new(Claims, "Test");
         public static ClaimsPrincipal Principal => new(Identity);
