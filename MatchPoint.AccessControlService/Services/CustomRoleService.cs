@@ -1,5 +1,6 @@
 ﻿using MatchPoint.AccessControlService.Entities;
 using MatchPoint.AccessControlService.Interfaces;
+using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Extensions;
 using MatchPoint.Api.Shared.Common.Models;
 using MatchPoint.Api.Shared.Infrastructure.Enums;
@@ -10,7 +11,7 @@ using MatchPoint.ServiceDefaults;
 namespace MatchPoint.AccessControlService.Services
 {
     public class CustomRoleService(
-        IRepository<CustomRoleEntity> _customRoleRepository,
+        ICustomRoleRepository _customRoleRepository,
         ISessionService _sessionService,
         ILogger<CustomRoleService> _logger) : ICustomRoleService
     {
@@ -31,15 +32,32 @@ namespace MatchPoint.AccessControlService.Services
         }
 
         /// <inheritdoc />
-        public async Task<IServiceResult<IEnumerable<CustomRoleEntity>>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IServiceResult<PagedResponse<CustomRoleEntity>>> GetAllWithSpecificationAsync(
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken,
+            Dictionary<string, string>? filters = null,
+            Dictionary<string, SortDirection>? orderBy = null)
         {
+            // Validate params
+            var paginationValidation = QuerySpecificationHelpers.ValidatePagination<CustomRoleEntity>(pageNumber, pageSize);
+            if (paginationValidation != null) return paginationValidation;
+
+            var orderByValidation = QuerySpecificationHelpers.ValidateOrderBy<CustomRoleEntity>(orderBy);
+            if (orderByValidation != null) return orderByValidation;
+
+            var filtersValidation = QuerySpecificationHelpers.ValidateFilters<CustomRoleEntity>(filters);
+            if (filtersValidation != null) return filtersValidation;
+
             _logger.LogDebug(
-                "Attempting to retrieve all custom roles");
-            var customRoles = await _customRoleRepository.GetAllAsync(cancellationToken, trackChanges: false);
+                "Attempting to retrieve custom roles with {Count} filters", filters != null ? filters.Count : "no");
 
-            _logger.LogDebug("Received {Count} custom roles found.", customRoles.Count());
+            var customRoles = await _customRoleRepository.GetAllWithSpecificationAsync(
+                    pageNumber, pageSize, cancellationToken, filters, orderBy, trackChanges: false);
 
-            return ServiceResult<IEnumerable<CustomRoleEntity>>.Success(customRoles);
+            _logger.LogDebug("Received {PageSize} of {Count} Custom roles found.", customRoles.Data.Count(), customRoles.TotalCount);
+
+            return ServiceResult<PagedResponse<CustomRoleEntity>>.Success(customRoles);
         }
 
         /// <inheritdoc />
@@ -105,7 +123,7 @@ namespace MatchPoint.AccessControlService.Services
 
             _logger.LogDebug("Attempting to patch custom role with Id: {Id}", id);
 
-            // Find club
+            // Find custom role
             var customRoleEntity = await _customRoleRepository.GetByIdAsync(id, cancellationToken, trackChanges: false);
             if (customRoleEntity == null)
             {

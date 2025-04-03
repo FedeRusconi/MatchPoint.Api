@@ -1,9 +1,10 @@
 ﻿using MatchPoint.AccessControlService.Entities;
+using MatchPoint.AccessControlService.Interfaces;
 using MatchPoint.AccessControlService.Services;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Models;
+using MatchPoint.Api.Shared.Common.Utilities;
 using MatchPoint.Api.Shared.Infrastructure.Enums;
-using MatchPoint.Api.Shared.Infrastructure.Interfaces;
 using MatchPoint.Api.Tests.Shared.AccessControlService.Helpers;
 using MatchPoint.ServiceDefaults;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,7 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
     [TestClass]
     public class CustomRoleServiceTests
     {
-        private Mock<IRepository<CustomRoleEntity>> _customRoleRepositoryMock = default!;
+        private Mock<ICustomRoleRepository> _customRoleRepositoryMock = default!;
         private Mock<ISessionService> _sessionServiceServiceMock = default!;
         private Mock<ILogger<CustomRoleService>> _loggerMock = default!;
         private CustomRoleEntityBuilder _customRoleEntityBuilder = default!;
@@ -77,30 +78,174 @@ namespace MatchPoint.AccessControlService.Tests.Unit.Services
 
         #endregion
 
-        #region GetAllAsync
+        #region GetAllWithSpecificationAsync
 
         [TestMethod]
-        public async Task GetAllAsync_WhenRequestIsValid_ShouldReturnSuccessResult()
+        public async Task GetAllWithSpecificationAsync_WhenPagingIsProvided_ShouldReturnSuccessResult()
         {
             // Arrange
-            var customRoleEntityBuilder2 = new CustomRoleEntityBuilder();
-            List<CustomRoleEntity> customRoleEntities = [
-                _customRoleEntityBuilder.Build(),
-                customRoleEntityBuilder2.Build()
-            ];
+            int pageNumber = 3;
+            int pageSize = 10;
+            var customRoleEntity = _customRoleEntityBuilder.Build();
+            PagedResponse<CustomRoleEntity> expectedResponse = new()
+            {
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalCount = 40,
+                Data = [customRoleEntity]
+            };
 
-            _customRoleRepositoryMock.Setup(repo => repo.GetAllAsync(_cancellationToken, It.IsAny<bool>()))
-                .ReturnsAsync(customRoleEntities)
+            _customRoleRepositoryMock
+                .Setup(repo => repo.GetAllWithSpecificationAsync(
+                    pageNumber, pageSize, _cancellationToken, It.IsAny<Dictionary<string, string>>(), null, false))
+                .ReturnsAsync(expectedResponse)
                 .Verifiable(Times.Once);
 
             // Act
-            var result = await _customRoleService.GetAllAsync(_cancellationToken);
+            var result = await _customRoleService.GetAllWithSpecificationAsync(pageNumber, pageSize, _cancellationToken);
 
             // Assert
             _customRoleRepositoryMock.VerifyAll();
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
+            Assert.AreNotEqual(0, result.Data.Data.Count());
             Assert.IsTrue(result.IsSuccess);
+        }
+
+        [TestMethod]
+        public async Task GetAllWithSpecificationAsync_WhenFiltersAreProvided_ShouldCallRepoMethodWithFiltersAndReturnSuccessResult()
+        {
+            // Arrange
+            var customRoleEntity = _customRoleEntityBuilder.Build();
+            Dictionary<string, string> filters = new()
+            {
+                { nameof(CustomRoleEntity.Name), "Test" },
+                { nameof(CustomRoleEntity.ActiveStatus), ActiveStatus.Active.ToString() }
+            };
+            PagedResponse<CustomRoleEntity> expectedResponse = new()
+            {
+                CurrentPage = 1,
+                PageSize = 500,
+                TotalCount = 40,
+                Data = [customRoleEntity]
+            };
+
+            _customRoleRepositoryMock.Setup(repo => repo.GetAllWithSpecificationAsync(
+                    expectedResponse.CurrentPage,
+                    expectedResponse.PageSize,
+                    _cancellationToken,
+                    filters,
+                    null,
+                    false))
+                .ReturnsAsync(expectedResponse)
+                .Verifiable(Times.Once);
+
+            // Act
+            var result = await _customRoleService.GetAllWithSpecificationAsync(
+                1, 500, filters: filters, cancellationToken: _cancellationToken);
+
+            // Assert
+            _customRoleRepositoryMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.AreNotEqual(0, result.Data.Data.Count());
+            Assert.IsTrue(result.IsSuccess);
+        }
+
+        [TestMethod]
+        public async Task GetAllWithSpecificationAsync_WhenSortingIsProvided_ShouldCallRepoMethodWithSortingAndReturnSuccessResult()
+        {
+            // Arrange
+            var customRoleEntity = _customRoleEntityBuilder.Build();
+            Dictionary<string, SortDirection> orderBy = new()
+            {
+                { nameof(CustomRoleEntity.Name), SortDirection.Descending }
+            };
+            PagedResponse<CustomRoleEntity> expectedResponse = new()
+            {
+                CurrentPage = 1,
+                PageSize = 500,
+                TotalCount = 40,
+                Data = [customRoleEntity]
+            };
+
+            _customRoleRepositoryMock.Setup(repo => repo.GetAllWithSpecificationAsync(
+                    It.IsAny<int>(),
+                    It.IsAny<int>(),
+                    _cancellationToken,
+                    It.IsAny<Dictionary<string, string>>(),
+                    orderBy,
+                    false))
+                .ReturnsAsync(expectedResponse)
+                .Verifiable(Times.Once);
+
+            // Act
+            var result = await _customRoleService.GetAllWithSpecificationAsync(
+                1, 500, orderBy: orderBy, cancellationToken: _cancellationToken);
+
+            // Assert
+            _customRoleRepositoryMock.VerifyAll();
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.AreNotEqual(0, result.Data.Data.Count());
+            Assert.IsTrue(result.IsSuccess);
+        }
+
+        [TestMethod]
+        [DataRow(0, 10)]
+        [DataRow(1, 0)]
+        [DataRow(1, Constants.MaxPageSizeAllowed + 1)]
+        public async Task GetAllWithSpecificationAsync_WhenPagingIsInvalid_ShouldReturnFailResult(int pageNumber, int pageSize)
+        {
+            // Act
+            var result = await _customRoleService.GetAllWithSpecificationAsync(
+                pageNumber, pageSize, _cancellationToken);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
+        }
+
+        [TestMethod]
+        public async Task GetAllWithSpecificationAsync_WhenFiltersAreInvalid_ShouldReturnFailResult()
+        {
+            // Arrange
+            Dictionary<string, string> filters = new()
+            {
+                { "NonExistentProperty", "Test" }
+            };
+
+            // Act
+            var result = await _customRoleService.GetAllWithSpecificationAsync(
+                1, 500, filters: filters, cancellationToken: _cancellationToken);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
+        }
+
+        [TestMethod]
+        public async Task GetAllWithSpecificationAsync_WhenSortingIsInvalid_ShouldReturnFailResult()
+        {
+            // Arrange=
+            Dictionary<string, SortDirection> orderBy = new()
+            {
+                { "NonExistentProperty", SortDirection.Descending }
+            };
+
+            // Act
+            var result = await _customRoleService.GetAllWithSpecificationAsync(
+                1, 500, orderBy: orderBy, cancellationToken: _cancellationToken);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Data);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual(ServiceResultType.BadRequest, result.ResultType);
         }
 
         #endregion

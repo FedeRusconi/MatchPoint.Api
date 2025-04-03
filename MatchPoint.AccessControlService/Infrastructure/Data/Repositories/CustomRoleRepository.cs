@@ -1,6 +1,9 @@
 ﻿using System.Net;
 using MatchPoint.AccessControlService.Entities;
-using MatchPoint.Api.Shared.Infrastructure.Interfaces;
+using MatchPoint.AccessControlService.Interfaces;
+using MatchPoint.Api.Shared.Common.Enums;
+using MatchPoint.Api.Shared.Common.Models;
+using MatchPoint.Api.Shared.Infrastructure.Extensions;
 using MatchPoint.Api.Shared.Infrastructure.Utilities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MatchPoint.AccessControlService.Infrastructure.Data.Repositories
 {
     public class CustomRoleRepository(AccessControlServiceDbContext _context, ILogger<CustomRoleRepository> _logger) :
-        IRepository<CustomRoleEntity>
+        ICustomRoleRepository
     {
         /// <inheritdoc />
         public async Task<int> CountAsync(CancellationToken cancellationToken, Dictionary<string, string>? filters = null)
@@ -69,6 +72,46 @@ namespace MatchPoint.AccessControlService.Infrastructure.Data.Repositories
 
             _logger.LogTrace("Returning {Count} custom roles found in the database", customRoles.Count);
             return customRoles;
+        }
+
+        /// <inheritdoc />
+        public async Task<PagedResponse<CustomRoleEntity>> GetAllWithSpecificationAsync(
+            int pageNumber, 
+            int pageSize, 
+            CancellationToken cancellationToken, 
+            Dictionary<string, string>? filters = null, 
+            Dictionary<string, SortDirection>? orderBy = null, 
+            bool trackChanges = true)
+        {
+            _logger.LogTrace(
+                "Querying database for custom roles with {Count} filters", filters != null ? filters.Count : "no");
+            IQueryable<CustomRoleEntity> query = _context.CustomRoles.AsQueryable();
+
+            if (!trackChanges)
+            {
+                query = query.AsNoTracking();
+            }
+            if (filters != null)
+            {
+                query = query.WithFilters(filters);
+            }
+            if (orderBy != null)
+            {
+                query = query.WithOrderBy(orderBy);
+            }
+
+            // Get count and Apply pagination
+            int totalCount = await query.CountAsync(cancellationToken);
+            int skip = (pageNumber - 1) * pageSize;
+            var data = await query.Skip(skip).Take(pageSize).ToListAsync(cancellationToken);
+            _logger.LogTrace("Returning {PageSize} of {Count} custom roles found in the database", pageSize, totalCount);
+            return new PagedResponse<CustomRoleEntity>()
+            {
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                Data = data
+            };
         }
 
         /// <inheritdoc />
