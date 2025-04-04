@@ -93,6 +93,7 @@ namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
 
         /// <summary>
         /// Set the tracking fields (crated, modified) for the <see cref="ClubRole"/>.
+        /// </summary>
         /// <returns> This <see cref="ClubRoleBuilder"/>. </returns>
         public ClubRoleBuilder WithTrackingFields()
         {

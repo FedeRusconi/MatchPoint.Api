@@ -85,6 +85,7 @@ namespace MatchPoint.Api.Tests.Shared.AccessControlService.Helpers
 
         /// <summary>
         /// Set the tracking fields (crated, modified) for the <see cref="CustomRole"/>.
+        /// </summary>
         /// <returns> This <see cref="CustomRoleBuilder"/>. </returns>
         public CustomRoleBuilder WithTrackingFields()
         {

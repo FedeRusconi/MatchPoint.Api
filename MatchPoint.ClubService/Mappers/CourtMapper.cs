@@ -1,4 +1,4 @@
-﻿using MatchPoint.Api.Shared.CourtService.Models;
+﻿using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.ClubService.Entities;
 
 namespace MatchPoint.ClubService.Mappers

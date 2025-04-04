@@ -17,6 +17,7 @@ namespace MatchPoint.ClubService.Configuration
             #region Repositories
             builder.Services.AddScoped<IClubRepository, ClubRepository>();
             builder.Services.AddScoped<IClubStaffRepository, ClubStaffRepository>();
+            builder.Services.AddScoped<ICourtRepository, CourtRepository>();
             #endregion
 
             #region Services

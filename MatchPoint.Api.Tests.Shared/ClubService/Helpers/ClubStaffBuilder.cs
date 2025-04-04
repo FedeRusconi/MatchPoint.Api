@@ -139,6 +139,7 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
 
         /// <summary>
         /// Set the tracking fields (crated, modified) for the <see cref="ClubStaff"/>.
+        /// </summary>
         /// <returns> This <see cref="ClubStaffBuilder"/>. </returns>
         public ClubStaffBuilder WithTrackingFields()
         {

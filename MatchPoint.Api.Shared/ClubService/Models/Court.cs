@@ -1,11 +1,10 @@
 ﻿using MatchPoint.Api.Shared.ClubService.Enums;
-using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Interfaces;
 
-namespace MatchPoint.ClubService.Entities
+namespace MatchPoint.Api.Shared.ClubService.Models
 {
-    public class CourtEntity : IDeactivable, ITrackable, IPatchable
+    public class Court : IDeactivable, ITrackable, IPatchable
     {
         public Guid Id { get; set; }
         public Guid ClubId { get; set; }
@@ -14,12 +13,10 @@ namespace MatchPoint.ClubService.Entities
         public ActiveStatus ActiveStatus { get; set; } = ActiveStatus.Active;
         public Surface? Surface { get; set; }
         public CourtMaintenance? CourtMaintenance { get; set; }
-        public Dictionary<CourtRatingAttribute, int>? Rating {  get; set; }
-        public List<CourtFeature>? Features { get; set; }
+        public Dictionary<CourtRatingAttribute, int>? Rating { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public Guid? ModifiedBy { get; set; }
         public DateTime? ModifiedOnUtc { get; set; }
-        // Add: availability, etc.
     }
 }

@@ -1,7 +1,6 @@
 ﻿using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Interfaces;
 using MatchPoint.Api.Shared.Common.Models;
-using MatchPoint.Api.Shared.CourtService.Models;
 
 namespace MatchPoint.Api.Shared.ClubService.Models
 {

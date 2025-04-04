@@ -283,8 +283,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 Assert.IsNotNull(result);
                 Assert.AreEqual(2, result.Data.Count());
                 Assert.AreEqual(2, result.TotalCount);
-                Assert.IsTrue(result.Data.First().FirstName == clubStaffEntity2.FirstName);
-                Assert.IsTrue(result.Data.ElementAt(1).FirstName == clubStaffEntity1.FirstName);
+                Assert.AreEqual(clubStaffEntity2.FirstName, result.Data.First().FirstName);
+                Assert.AreEqual(clubStaffEntity1.FirstName, result.Data.ElementAt(1).FirstName);
             }
             finally
             {
@@ -326,8 +326,8 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
                 Assert.IsNotNull(result);
                 Assert.AreEqual(2, result.Data.Count());
                 Assert.AreEqual(2, result.TotalCount);
-                Assert.IsTrue(result.Data.First().FirstName == clubStaffEntity1.FirstName);
-                Assert.IsTrue(result.Data.ElementAt(1).FirstName == clubStaffEntity2.FirstName);
+                Assert.AreEqual(clubStaffEntity1.FirstName, result.Data.First().FirstName);
+                Assert.AreEqual(clubStaffEntity2.FirstName, result.Data.ElementAt(1).FirstName);
             }
             finally
             {
@@ -459,7 +459,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             ClubStaffEntity clubEntity = null!;
 
             // Act
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(
                 () => _clubStaffRepository.CreateAsync(clubEntity, _cancellationToken));
         }
 
@@ -514,7 +514,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             ClubStaffEntity clubStaffEntity = null!;
 
             // Act
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(
                 () => _clubStaffRepository.UpdateAsync(clubStaffEntity, _cancellationToken));
         }
 
@@ -566,7 +566,7 @@ namespace MatchPoint.ClubService.Tests.Integration.Infrastructure.Data.Repositor
             ClubStaffEntity clubStaffEntity = null!;
 
             // Act & Assert
-            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+            await Assert.ThrowsExactlyAsync<ArgumentNullException>(
                 () => _clubStaffRepository.DeleteAsync(clubStaffEntity, _cancellationToken));
         }
 

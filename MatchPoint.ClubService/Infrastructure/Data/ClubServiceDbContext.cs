@@ -8,6 +8,7 @@ namespace MatchPoint.ClubService.Infrastructure.Data
         #region DB Sets
         public DbSet<ClubEntity> Clubs { get; set; } = default!;
         public DbSet<ClubStaffEntity> ClubStaff { get; set; } = default!;
+        public DbSet<CourtEntity> Courts { get; set; } = default!;
         #endregion
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -31,7 +32,11 @@ namespace MatchPoint.ClubService.Infrastructure.Data
             modelBuilder.Entity<ClubStaffEntity>()
                 .ToContainer(nameof(ClubStaff))
                 .HasPartitionKey(s => s.ClubId)
-                .HasKey(e => e.Id);
+                .HasKey(s => s.Id);
+            modelBuilder.Entity<CourtEntity>()
+                .ToContainer(nameof(Courts))
+                .HasPartitionKey(c => c.ClubId)
+                .HasKey(c => c.Id);
         }
     }
 }

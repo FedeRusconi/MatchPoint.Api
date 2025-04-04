@@ -104,6 +104,7 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
 
         /// <summary>
         /// Set the tracking fields (crated, modified) for the <see cref="ClubEntity"/>.
+        /// </summary>
         /// <returns> This <see cref="ClubEntityBuilder"/>. </returns>
         public ClubEntityBuilder WithTrackingFields()
         {

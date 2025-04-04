@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
+using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
-using MatchPoint.Api.Shared.CourtService.Models;
 using MatchPoint.ClubService.Entities;
 using MatchPoint.ClubService.Mappers;
 
