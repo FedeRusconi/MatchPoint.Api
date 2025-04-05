@@ -8,26 +8,36 @@ namespace MatchPoint.ClubService.Mappers
         #region To CourtEntity
 
         /// <summary>
-        /// Map a <see cref="Court"/> instance to a <see cref="ClubCourtEntity"/>.
+        /// Map a <see cref="Court"/> instance to a <see cref="CourtEntity"/>.
         /// </summary>
         /// <param name="court"> The instance to convert. </param>
-        /// <returns> An instance of <see cref="ClubCourtEntity"/>. </returns>
-        public static ClubCourtEntity ToCourtEntity(this Court court)
+        /// <returns> An instance of <see cref="CourtEntity"/>. </returns>
+        public static CourtEntity ToCourtEntity(this Court court)
         {
-            return new ClubCourtEntity()
+            return new CourtEntity()
             {
                 Id = court.Id,
+                ClubId = court.ClubId,
                 Name = court.Name,
-                ActiveStatus = court.ActiveStatus
+                Description = court.Description,
+                ActiveStatus = court.ActiveStatus,
+                Surface = court.Surface,
+                CourtMaintenance = court.CourtMaintenance,
+                Ratings = court.Ratings,
+                Features = court.Features,
+                CreatedBy = court.CreatedBy,
+                CreatedOnUtc = court.CreatedOnUtc,
+                ModifiedBy = court.ModifiedBy,
+                ModifiedOnUtc = court.ModifiedOnUtc
             };
         }
 
         /// <summary>
-        /// Map an Enumerable of <see cref="Court"/> instances to an Enumerable of <see cref="ClubCourtEntity"/>.
+        /// Map an Enumerable of <see cref="Court"/> instances to an Enumerable of <see cref="CourtEntity"/>.
         /// </summary>
         /// <param name="courts"> The instances to convert. </param>
-        /// <returns> An Enumerable of <see cref="ClubCourtEntity"/>. </returns>
-        public static IEnumerable<ClubCourtEntity> ToCourtEntityEnumerable(this IEnumerable<Court> courts)
+        /// <returns> An Enumerable of <see cref="CourtEntity"/>. </returns>
+        public static IEnumerable<CourtEntity> ToCourtEntityEnumerable(this IEnumerable<Court> courts)
         {
             return courts.Select(court => court.ToCourtEntity());
         }
@@ -36,26 +46,36 @@ namespace MatchPoint.ClubService.Mappers
         #region To CourtDto
 
         /// <summary>
-        /// Map a <see cref="ClubCourtEntity"/> instance to a <see cref="Court"/>.
+        /// Map a <see cref="CourtEntity"/> instance to a <see cref="Court"/>.
         /// </summary>
         /// <param name="courtEntity"> The instance to convert. </param>
         /// <returns> An instance of <see cref="Court"/>. </returns>
-        public static Court ToCourtDto(this ClubCourtEntity courtEntity)
+        public static Court ToCourtDto(this CourtEntity courtEntity)
         {
             return new Court()
             {
                 Id = courtEntity.Id,
+                ClubId = courtEntity.ClubId,
                 Name = courtEntity.Name,
-                ActiveStatus = courtEntity.ActiveStatus
+                Description = courtEntity.Description,
+                ActiveStatus = courtEntity.ActiveStatus,
+                Surface = courtEntity.Surface,
+                CourtMaintenance = courtEntity.CourtMaintenance,
+                Ratings = courtEntity.Ratings,
+                Features = courtEntity.Features,
+                CreatedBy = courtEntity.CreatedBy,
+                CreatedOnUtc = courtEntity.CreatedOnUtc,
+                ModifiedBy = courtEntity.ModifiedBy,
+                ModifiedOnUtc = courtEntity.ModifiedOnUtc
             };
         }
 
         /// <summary>
-        /// Map an Enumerable of <see cref="ClubCourtEntity"/> instances to an Enumerable of <see cref="Court"/>.
+        /// Map an Enumerable of <see cref="CourtEntity"/> instances to an Enumerable of <see cref="Court"/>.
         /// </summary>
         /// <param name="courtEntities"> The instances to convert. </param>
         /// <returns> An Enumerable of <see cref="Court"/>. </returns>
-        public static IEnumerable<Court> ToCourtDtoEnumerable(this IEnumerable<ClubCourtEntity> courtEntities)
+        public static IEnumerable<Court> ToCourtDtoEnumerable(this IEnumerable<CourtEntity> courtEntities)
         {
             return courtEntities.Select(courtEntity => courtEntity.ToCourtDto());
         }

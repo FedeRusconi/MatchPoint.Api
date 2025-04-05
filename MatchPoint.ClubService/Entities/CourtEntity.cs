@@ -1,5 +1,4 @@
-﻿using MatchPoint.Api.Shared.ClubService.Enums;
-using MatchPoint.Api.Shared.ClubService.Models;
+﻿using MatchPoint.Api.Shared.ClubService.Models;
 using MatchPoint.Api.Shared.Common.Enums;
 using MatchPoint.Api.Shared.Common.Interfaces;
 
@@ -14,7 +13,7 @@ namespace MatchPoint.ClubService.Entities
         public ActiveStatus ActiveStatus { get; set; } = ActiveStatus.Active;
         public Surface? Surface { get; set; }
         public CourtMaintenance? CourtMaintenance { get; set; }
-        public Dictionary<CourtRatingAttribute, int>? Rating {  get; set; }
+        public List<CourtRating>? Ratings { get; set; }
         public List<CourtFeature>? Features { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime CreatedOnUtc { get; set; }

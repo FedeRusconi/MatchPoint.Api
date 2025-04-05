@@ -13,7 +13,8 @@ namespace MatchPoint.Api.Shared.ClubService.Models
         public ActiveStatus ActiveStatus { get; set; } = ActiveStatus.Active;
         public Surface? Surface { get; set; }
         public CourtMaintenance? CourtMaintenance { get; set; }
-        public Dictionary<CourtRatingAttribute, int>? Rating { get; set; }
+        public List<CourtRating>? Ratings { get; set; }
+        public List<CourtFeature>? Features { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public Guid? ModifiedBy { get; set; }

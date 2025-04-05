@@ -15,7 +15,6 @@ namespace MatchPoint.ClubService.Entities
         public ActiveStatus ActiveStatus { get; set; } = ActiveStatus.Active;
         public string? TaxId { get; set; }
         public List<TimeSlot> OpeningTimes { get; set; } = [];
-        public List<ClubCourtEntity> Courts { get; set; } = [];
         public List<SocialMediaLink> SocialMedia { get; set; } = [];
         public List<ClubMemberEntity> Members { get; set; } = [];
         public Guid CreatedBy { get; set; }

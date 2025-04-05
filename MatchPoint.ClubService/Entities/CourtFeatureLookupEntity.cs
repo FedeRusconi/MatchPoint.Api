@@ -4,7 +4,7 @@
     {
         public Guid Id { get; set; }
         public required string Name { get; set; }
-        public object[] Choices { get; set; } = [];
+        public string[] Choices { get; set; } = [];
     }
 
     /// Example of features from Grok:

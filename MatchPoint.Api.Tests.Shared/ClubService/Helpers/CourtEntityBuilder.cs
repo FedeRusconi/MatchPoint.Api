@@ -121,10 +121,14 @@ namespace MatchPoint.Api.Tests.Shared.ClubService.Helpers
         public CourtEntityBuilder WithRating()
         {
             var faker = new Faker();
-            _courtEntity.Rating = [];
+            _courtEntity.Ratings = [];
             foreach (var rating in Enum.GetValues<CourtRatingAttribute>())
             {
-                _courtEntity.Rating.Add(rating, faker.Random.Int(1, 5));
+                _courtEntity.Ratings.Add(new CourtRating()
+                {
+                    Attribute = rating,
+                    Value = faker.Random.Int(1, 5)
+                });
             }
             return this;
         }
